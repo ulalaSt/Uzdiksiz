@@ -13,7 +13,7 @@ struct MainView: View {
     var body: some View {
         Group {
             if let _ = sleepLogViewModel.expectedWakeTime {
-                SleepLogsView(viewModel: sleepLogViewModel) // Main app view
+                TodayView(viewModel: sleepLogViewModel) // Main app view
             } else {
                 SetupExpectedWakeTimeView(viewModel: sleepLogViewModel)
             }

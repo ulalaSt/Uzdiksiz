@@ -10,6 +10,8 @@ import FirebaseAuth
 class SleepLogViewModel: ObservableObject {
     @Published var logs: [SleepLog] = []
     @Published var expectedWakeTime: String?
+    let reasons = ["😴 Too tired", "⏰ Slept through alarm", "😓 Stress or overthinking", "🔊 Noise or disturbance", "🤒 Feeling sick", "📱 Scrolled phone too long", "💻 Worked late", "🧠 Couldn't fall asleep", "🍔 Ate too late", "🧃 Drank caffeine late", "📺 Watched movies/TV", "🎮 Played games late", "🗓️ Irregular schedule", "👶 Kids or family interrupted", "✈️ Jet lag or travel", "📞 Late call or chat", "📚 Studied late", "❓ No specific reason"
+    ]
 
     private var db = Firestore.firestore()
 
@@ -92,5 +94,47 @@ class SleepLogViewModel: ObservableObject {
                 print("✅ Expected wake time saved")
             }
         }
+    }
+
+    func checkIfLogExistsForToday(completion: @escaping (Bool) -> Void) {
+        let today = todayDateString()
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("users").document(uid)
+            .collection("sleepLogs")
+            .whereField("date", isEqualTo: today)
+            .getDocuments { snapshot, error in
+                if let count = snapshot?.documents.count, count > 0 {
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            }
+    }
+
+    func shouldAskReason(actualWakeTime: Date) -> Bool {
+        guard let expectedWakeTime else { return false }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        let actual = formatter.string(from: actualWakeTime)
+        return actual > expectedWakeTime // simple string compare works in "HH:mm"
+    }
+
+    func todayDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+
+    func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
+    }
+
+    func wasOnTimeToday() -> Bool {
+        guard let log = logs.first(where: { $0.date == todayDateString() }), let expectedWakeTime else {
+            return false
+        }
+        return log.wakeTime <= expectedWakeTime
     }
 }
