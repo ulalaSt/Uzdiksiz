@@ -9,6 +9,7 @@ import FirebaseAuth
 
 class SleepLogViewModel: ObservableObject {
     @Published var logs: [SleepLog] = []
+    @Published var expectedWakeTime: String?
 
     private var db = Firestore.firestore()
 
@@ -64,5 +65,32 @@ class SleepLogViewModel: ObservableObject {
                     )
                 }
             }
+    }
+    
+    func fetchExpectedWakeTime() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        db.collection("users").document(uid).getDocument { [weak self] snapshot, error in
+            if let data = snapshot?.data(), let wakeTime = data["expectedWakeTime"] as? String {
+                self?.expectedWakeTime = wakeTime
+            } else {
+                self?.expectedWakeTime = nil
+            }
+        }
+    }
+
+    func saveExpectedWakeTime(_ time: String) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        db.collection("users").document(uid).setData([
+            "expectedWakeTime": time
+        ], merge: true) { [weak self] error in
+            if let error = error {
+                print("🔥 Error saving expected wake time: \(error)")
+            } else {
+                self?.fetchExpectedWakeTime()
+                print("✅ Expected wake time saved")
+            }
+        }
     }
 }
