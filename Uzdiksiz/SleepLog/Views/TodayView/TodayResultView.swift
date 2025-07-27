@@ -10,20 +10,30 @@ struct TodayResultView: View {
     @ObservedObject var viewModel: SleepLogViewModel
 
     var body: some View {
-        VStack(spacing: 20) {
-            if viewModel.wasOnTimeToday() {
-                Text("👏 You woke up on time today!")
-                    .font(.title2)
-                    .foregroundColor(.green)
-            } else {
-                Text("😌 It's okay to miss a day.")
-                    .font(.title2)
-                    .foregroundColor(.orange)
-                Text("Try sleeping 30 mins earlier tonight.")
-                    .font(.body)
-                    .multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(alignment: .top) {
+                Text(viewModel.wasOnTimeToday() ? "✅ Бүгінгі көрсеткіш" : "☑️ Бүгінгі көрсеткіш")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
+                Spacer()
+                Button {
+                    
+                } label: {
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 16))
+                        .foregroundColor(.white)
+                }
+            }
+            if let text = viewModel.todaysResultText() {
+                Text(text)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
             }
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(16)
     }
 }

@@ -13,27 +13,29 @@ struct SetupExpectedWakeTimeView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Set Your Expected Wake Time")
-                .font(.headline)
-
+            Text("🌅 Ояну уақытыңызды орнатыңыз")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
             DatePicker(
-                "Wake Up Time",
+                "",
                 selection: $selectedTime,
                 in: allowedRange,
                 displayedComponents: .hourAndMinute
             )
             .labelsHidden()
-            .datePickerStyle(WheelDatePickerStyle())
-
-            Button("Save Wake Time") {
+            .colorScheme(.dark)
+            Button {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "HH:mm"
                 let timeString = formatter.string(from: selectedTime)
                 viewModel.saveExpectedWakeTime(timeString)
+            } label: {
+                DefaultButtonView(title: "Ояну уақытын сақтау")
             }
-            .padding()
         }
-        .padding()
+        .padding(16)
     }
 
     // 🔒 Only allow 04:00–10:00

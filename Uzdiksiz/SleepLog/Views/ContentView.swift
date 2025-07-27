@@ -15,11 +15,13 @@ struct ContentView: View {
             if authViewModel.isLoading {
                 ProgressView("Checking session...")
             } else if let _ = authViewModel.user {
-                MainView() // ✅ your real app view (sleep logs etc.)
+                MainView(authViewModel: authViewModel) // ✅ your real app view (sleep logs etc.)
             } else {
                 LoginView(authViewModel: authViewModel)
             }
         }
         .animation(.default, value: authViewModel.isLoading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(red: 34/255, green: 40/255, blue: 52/255).ignoresSafeArea())
     }
 }

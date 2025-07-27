@@ -10,15 +10,31 @@
 		62ABDB1B2E23FF8100B2BA97 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 62ABDB1A2E23FF8100B2BA97 /* FirebaseAuth */; };
 		62ABDB1D2E23FF8100B2BA97 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 62ABDB1C2E23FF8100B2BA97 /* FirebaseFirestore */; };
 		62ABDB1F2E2401D100B2BA97 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 62ABDB1E2E2401D100B2BA97 /* FirebaseCore */; };
+		62ABDB4B2E263B7500B2BA97 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 62ABDB4A2E263B7500B2BA97 /* GoogleSignIn */; };
+		62ABDB4D2E263B7500B2BA97 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 62ABDB4C2E263B7500B2BA97 /* GoogleSignInSwift */; };
+		62ABDB542E26ABAA00B2BA97 /* Solar in Frameworks */ = {isa = PBXBuildFile; productRef = 62ABDB532E26ABAA00B2BA97 /* Solar */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		62DD3B1B2D8D0FDE00B8B088 /* Uzdiksiz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Uzdiksiz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		62ABDB482E26359400B2BA97 /* Exceptions for "Uzdiksiz" folder in "Uzdiksiz" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 62DD3B1A2D8D0FDE00B8B088 /* Uzdiksiz */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		62DD3B1D2D8D0FDE00B8B088 /* Uzdiksiz */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				62ABDB482E26359400B2BA97 /* Exceptions for "Uzdiksiz" folder in "Uzdiksiz" target */,
+			);
 			path = Uzdiksiz;
 			sourceTree = "<group>";
 		};
@@ -29,7 +45,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				62ABDB542E26ABAA00B2BA97 /* Solar in Frameworks */,
+				62ABDB4D2E263B7500B2BA97 /* GoogleSignInSwift in Frameworks */,
 				62ABDB1B2E23FF8100B2BA97 /* FirebaseAuth in Frameworks */,
+				62ABDB4B2E263B7500B2BA97 /* GoogleSignIn in Frameworks */,
 				62ABDB1F2E2401D100B2BA97 /* FirebaseCore in Frameworks */,
 				62ABDB1D2E23FF8100B2BA97 /* FirebaseFirestore in Frameworks */,
 			);
@@ -77,6 +96,9 @@
 				62ABDB1A2E23FF8100B2BA97 /* FirebaseAuth */,
 				62ABDB1C2E23FF8100B2BA97 /* FirebaseFirestore */,
 				62ABDB1E2E2401D100B2BA97 /* FirebaseCore */,
+				62ABDB4A2E263B7500B2BA97 /* GoogleSignIn */,
+				62ABDB4C2E263B7500B2BA97 /* GoogleSignInSwift */,
+				62ABDB532E26ABAA00B2BA97 /* Solar */,
 			);
 			productName = Uzdiksiz;
 			productReference = 62DD3B1B2D8D0FDE00B8B088 /* Uzdiksiz.app */;
@@ -108,6 +130,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				62ABDB192E23FF8100B2BA97 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				62ABDB492E263B7500B2BA97 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				62ABDB522E26ABAA00B2BA97 /* XCRemoteSwiftPackageReference "Solar" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 62DD3B1C2D8D0FDE00B8B088 /* Products */;
@@ -270,6 +294,8 @@
 				DEVELOPMENT_TEAM = 7T48NRQ98D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Uzdiksiz/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to provide local sun and moon visuals.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -299,6 +325,8 @@
 				DEVELOPMENT_TEAM = 7T48NRQ98D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Uzdiksiz/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We use your location to provide local sun and moon visuals.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -349,6 +377,22 @@
 				minimumVersion = 11.15.0;
 			};
 		};
+		62ABDB492E263B7500B2BA97 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+		62ABDB522E26ABAA00B2BA97 /* XCRemoteSwiftPackageReference "Solar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ceeK/Solar";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -366,6 +410,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 62ABDB192E23FF8100B2BA97 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		62ABDB4A2E263B7500B2BA97 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 62ABDB492E263B7500B2BA97 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		62ABDB4C2E263B7500B2BA97 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 62ABDB492E263B7500B2BA97 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		62ABDB532E26ABAA00B2BA97 /* Solar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 62ABDB522E26ABAA00B2BA97 /* XCRemoteSwiftPackageReference "Solar" */;
+			productName = Solar;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
