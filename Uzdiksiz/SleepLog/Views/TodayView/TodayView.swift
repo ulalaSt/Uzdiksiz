@@ -19,6 +19,26 @@ struct TodayView: View {
                 Text("Бүгін: \(formattedDate())")
                     .font(.system(size: 24, weight: .regular))
                     .foregroundColor(.white)
+                if let expectedWakeTime = viewModel.expectedWakeTime.value, let expectedWakeTime {
+                    HStack(spacing: 10) {
+                        if let logs = viewModel.logs.value, !logs.isEmpty, let strike = viewModel.currentStrike(), strike > 0 {
+                            Text("🔥 \(strike) күн қатар")
+                                .foregroundColor(.white)
+                                .font(.system(size: 18, weight: .medium))
+                            Rectangle()
+                                .fill(.white.opacity(0.2))
+                                .frame(width: 1)
+                        }
+                        Text("Мақсат: \(expectedWakeTime) ояну")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .medium))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(16)
+                    .background(BlurredBackgroundView())
+                }
                 Group {
                     if let error = viewModel.expectedWakeTime.error {
                         Text(error.errorDescription)
@@ -56,45 +76,6 @@ struct TodayView: View {
 
                     }
                 }
-                if let expectedWakeTime = viewModel.expectedWakeTime.value, let expectedWakeTime {
-                    HStack(spacing: 10) {
-                        if let logs = viewModel.logs.value, !logs.isEmpty, let strike = viewModel.currentStrike(), strike > 0 {
-                            Text("🔥 \(strike) күн қатар")
-                                .foregroundColor(.white)
-                                .font(.system(size: 18, weight: .medium))
-                            Rectangle()
-                                .fill(.white.opacity(0.2))
-                                .frame(width: 1)
-                        }
-                        Text("Бекітілген ояну уақыты \(expectedWakeTime)")
-                            .foregroundColor(.white)
-                            .font(.system(size: 18, weight: .medium))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .multilineTextAlignment(.leading)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(16)
-                    .background(BlurredBackgroundView())
-                }
-                NavigationLink(destination: SleepHistoryView(viewModel: viewModel)) {
-                    HStack {
-                        Text("Ұйқы тарихы")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .resizable()
-                            .renderingMode(.template)
-                            .scaledToFit()
-                            .foregroundColor(.white.opacity(0.2))
-                            .frame(height: 17)
-                    }
-                    .padding(16)
-                    .background(
-                        BlurredBackgroundView()
-                    )
-                }
-
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)

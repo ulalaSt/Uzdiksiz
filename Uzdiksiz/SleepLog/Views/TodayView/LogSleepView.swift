@@ -29,7 +29,7 @@ struct LogSleepView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text("🛌 Бүгінгі ұйқы журналын толтырыңыз")
+            Text("🛌 Бүгінгі ұйқы деректерін енгізіңіз")
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -13,7 +13,7 @@ struct SetupExpectedWakeTimeView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("🌅 Ояну уақытыңызды орнатыңыз")
+            Text("🌅 Күн сайын оянғыңыз келетін уақытты таңдаңыз")
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -63,7 +63,7 @@ struct LoginView: View {
                         .background(innerShadowBg)
                         .cornerRadius(10)
                 }
-                if let error = authViewModel.errorMessage {
+                if let error = authViewModel.user.error?.errorDescription {
                     Text(error)
                         .foregroundColor(Color(red: 255/255, green: 95/255, blue: 87/255))
                         .font(.system(size: 12, weight: .medium))

@@ -11,7 +11,6 @@ import FirebaseAuth
 struct ProfileView: View {
     @ObservedObject var authViewModel: AuthViewModel
     @ObservedObject var locationManager: LocationManager
-    @State private var isDeleting = false
     @State private var showConfirmDelete = false
     @State private var sunrise: String = "—"
     @State private var sunset: String = "—"
@@ -23,7 +22,7 @@ struct ProfileView: View {
                 .scaledToFit()
                 .frame(width: 100, height: 100)
             VStack(alignment: .leading, spacing: 16) {
-                if let email = authViewModel.user?.email {
+                if let email = authViewModel.user.value??.email {
                     infoView("Email", desc: "📧 \(email)")
                 }
                 infoView("Күннің шығуы", desc: "🌅 \(sunrise)")
@@ -36,7 +35,7 @@ struct ProfileView: View {
 //                Text("Getting location...")
 //            }
             
-            if let error = authViewModel.errorMessage {
+            if let error = authViewModel.user.error?.errorDescription {
                 Text(error)
                     .foregroundColor(.red)
                     .multilineTextAlignment(.center)
@@ -72,15 +71,14 @@ struct ProfileView: View {
             Spacer()
         }
         .padding(16)
-        .alert("Are you sure you want to delete your account?", isPresented: $showConfirmDelete) {
-            Button("Delete", role: .destructive) {
-                isDeleting = true
+        .alert("Аккаунтыңызды жойғыңыз келетініне сенімдісіз бе?", isPresented: $showConfirmDelete) {
+            Button("Жою", role: .destructive) {
                 authViewModel.deleteAccount()
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Болдырмау", role: .cancel) { }
         }
-        .disabled(authViewModel.isLoading || isDeleting)
-        .opacity((authViewModel.isLoading || isDeleting) ? 0.5 : 1)
+        .disabled(authViewModel.user.isLoading)
+        .opacity((authViewModel.user.isLoading) ? 0.5 : 1)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Профиль")

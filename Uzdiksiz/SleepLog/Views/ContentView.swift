@@ -12,15 +12,15 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if authViewModel.isLoading {
+            if authViewModel.user.isLoading {
                 ProgressView("Сеанс тексерілуде...")
-            } else if let _ = authViewModel.user {
+            } else if let userData = authViewModel.user.value, userData != nil {
                 MainView(authViewModel: authViewModel) // ✅ your real app view (sleep logs etc.)
             } else {
                 LoginView(authViewModel: authViewModel)
             }
         }
-        .animation(.default, value: authViewModel.isLoading)
+        .animation(.default, value: authViewModel.user.isLoading)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(red: 34/255, green: 40/255, blue: 52/255).ignoresSafeArea())
     }

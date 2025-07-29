@@ -9,49 +9,46 @@ import FirebaseAuth
 import Combine
 import GoogleSignIn
 import FirebaseCore
+import FirebaseFirestore
 
 class AuthViewModel: ObservableObject {
-    @Published var user: User?
-    @Published var errorMessage: String?
-    @Published var isLoading = true
+    @Published var user: Loadable<User?> = .notRequested
+    private var cancelBag = CancelBag()
+    private var db = Firestore.firestore()
 
     init() {
-        Auth.auth().addStateDidChangeListener { _, user in
-            self.user = user
-            self.isLoading = false
+        user.setIsLoading(cancelBag: cancelBag)
+        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            self?.user = .loaded(user)
         }
     }
 
     func signIn(email: String, password: String) {
-        isLoading = true
-        Auth.auth().signIn(withEmail: email, password: password) { result, error in
-            self.isLoading = false
+        user.setIsLoading(cancelBag: cancelBag)
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] result, error in
             if let error = error {
-                self.errorMessage = error.localizedDescription
+                self?.user = .failed(.unexpectedError(error.localizedDescription))
             } else {
-                self.user = result?.user
+                self?.user = .loaded(result?.user)
             }
         }
     }
 
     func signUp(email: String, password: String) {
-        isLoading = true
-        Auth.auth().createUser(withEmail: email, password: password) { result, error in
-            self.isLoading = false
+        user.setIsLoading(cancelBag: cancelBag)
+        Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
             if let error = error {
-                self.errorMessage = error.localizedDescription
+                self?.user = .failed(.unexpectedError(error.localizedDescription))
             } else {
-                self.user = result?.user
+                self?.user = .loaded(result?.user)
             }
         }
     }
     
     func signInWithGoogle(presenting: UIViewController) {
-        isLoading = true
-
+        user.setIsLoading(cancelBag: cancelBag)
         guard let clientID = FirebaseApp.app()?.options.clientID else {
-            self.errorMessage = "Missing Google client ID."
-            self.isLoading = false
+            user = .failed(.clientError("Missing Google client ID."))
             return
         }
 
@@ -61,14 +58,12 @@ class AuthViewModel: ObservableObject {
             guard let self = self else { return }
 
             if let error = error {
-                self.errorMessage = error.localizedDescription
-                self.isLoading = false
+                user = .failed(.clientError(error.localizedDescription))
                 return
             }
 
             guard let result = result else {
-                self.errorMessage = "Google Sign-In failed."
-                self.isLoading = false
+                user = .failed(.clientError("Google Sign-In failed."))
                 return
             }
 
@@ -77,8 +72,7 @@ class AuthViewModel: ObservableObject {
             let accessToken = user.accessToken.tokenString
 
             guard let idToken = idToken else {
-                self.errorMessage = "Failed to retrieve ID token."
-                self.isLoading = false
+                self.user = .failed(.clientError("Failed to retrieve ID token."))
                 return
             }
 
@@ -88,11 +82,10 @@ class AuthViewModel: ObservableObject {
             )
 
             Auth.auth().signIn(with: credential) { authResult, error in
-                self.isLoading = false
                 if let error = error {
-                    self.errorMessage = error.localizedDescription
+                    self.user = .failed(.clientError(error.localizedDescription))
                 } else {
-                    self.user = authResult?.user
+                    self.user = .loaded(authResult?.user)
                 }
             }
         }
@@ -101,23 +94,40 @@ class AuthViewModel: ObservableObject {
     func signOut() {
         do {
             try Auth.auth().signOut()
-            self.user = nil
+            self.user = .loaded(nil)
         } catch {
-            self.errorMessage = error.localizedDescription
+            self.user = .failed(.unexpectedError(error.localizedDescription))
         }
     }
 
     func deleteAccount() {
+        user.setIsLoading(cancelBag: cancelBag)
         guard let user = Auth.auth().currentUser else {
-            self.errorMessage = "No user found."
+            self.user = .failed(.unexpectedError("No user found."))
             return
         }
 
-        user.delete { error in
+        let uid = user.uid
+        
+        // 1. Удаляем связанные данные из Firestore
+        db.collection("users").document(uid).delete { error in
             if let error = error {
-                self.errorMessage = error.localizedDescription
-            } else {
-                self.user = nil
+                self.user = .failed(.unexpectedError("Failed to delete user data: \(error.localizedDescription)"))
+                return
+            }
+
+            // 2. Теперь удаляем аккаунт из Firebase Auth
+            user.delete { error in
+                if let error = error {
+                    self.user = .failed(.unexpectedError("Failed to delete account: \(error.localizedDescription)"))
+                } else {
+                    do {
+                        try Auth.auth().signOut()
+                    } catch {
+                        print("Sign-out failed: \(error.localizedDescription)")
+                    }
+                    self.user = .loaded(nil)
+                }
             }
         }
     }

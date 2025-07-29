@@ -14,7 +14,7 @@ struct SleepHistoryView: View {
         ScrollView {
             VStack(spacing: 32) {
                 if let expected = viewModel.expectedWakeTime.value, let expected {
-                    Text("☀️ Бекітілген ояну уақыты: \(expected)")
+                    Text("☀️ Мақсат: \(expected) ояну")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -22,7 +22,7 @@ struct SleepHistoryView: View {
                 }
                 if let logs = viewModel.logs.value {
                     if logs.isEmpty {
-                        Text("💤 ӘЛІ ЖАЗБАЛАР ЖОҚ")
+                        Text("💤 ӘЗІРГЕ ДЕРЕКТЕР ЖОҚ")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
