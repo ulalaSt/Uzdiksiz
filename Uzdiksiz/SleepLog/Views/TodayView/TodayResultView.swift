@@ -10,7 +10,7 @@ struct TodayResultView: View {
     @ObservedObject var viewModel: SleepLogViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
                 Text(viewModel.wasOnTimeToday() ? "✅ Бүгінгі көрсеткіш" : "☑️ Бүгінгі көрсеткіш")
                     .font(.system(size: 18, weight: .medium))

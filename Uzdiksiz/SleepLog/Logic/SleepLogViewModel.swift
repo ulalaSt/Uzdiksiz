@@ -163,15 +163,8 @@ class SleepLogViewModel: ObservableObject {
         guard let log = logs.first(where: { $0.date == todayDateString() }) else {
             return nil
         }
-
-        let summary = """
-        🛌 Ұйықтаған уақыты: \(log.sleepTime)
-        🌅 Оянған уақыты: \(log.wakeTime)
-        😴 Ұйқы ұзақтығы: \(calculateDuration(from: log.sleepTime, to: log.wakeTime))
-        """
-
         let motivation: String
-        if wasOnTimeToday() {
+        if log.wakeTime <= log.expectedWakeTime {
             motivation = "\n👏 Сіз бүгін уақытылы ояндыңыз!"
         } else {
             let earlierTime = subtract30Minutes(from: log.sleepTime)
@@ -182,7 +175,15 @@ class SleepLogViewModel: ObservableObject {
     """
         }
 
-        return summary + motivation
+        return resultText(for: log) + motivation
+    }
+    
+    func resultText(for log: SleepLog) -> String {
+        """
+        🛌 Ұйықтаған уақыты: \(log.sleepTime)
+        🌅 Оянған уақыты: \(log.wakeTime)
+        😴 Ұйқы ұзақтығы: \(calculateDuration(from: log.sleepTime, to: log.wakeTime))
+        """
     }
 
     private func calculateDuration(from start: String, to end: String) -> String {

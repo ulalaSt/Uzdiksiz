@@ -75,7 +75,6 @@ struct ProfileView: View {
             Spacer()
         }
         .padding()
-        .navigationTitle("Profile")
         .alert("Are you sure you want to delete your account?", isPresented: $showConfirmDelete) {
             Button("Delete", role: .destructive) {
                 isDeleting = true
