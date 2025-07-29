@@ -9,6 +9,7 @@ import Foundation
 import FirebaseCore
 
 struct SleepLog: Codable {
+    var documentID: String
     var date: String
     var sleepTime: String
     var wakeTime: String

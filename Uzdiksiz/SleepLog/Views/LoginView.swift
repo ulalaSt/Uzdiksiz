@@ -15,6 +15,7 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var state: AuthState = .login
+    @Namespace private var animation
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -173,12 +174,11 @@ struct LoginView: View {
                         ? Color(red: 35/255, green: 36/255, blue: 71/255)      // #232447
                         : Color(red: 125/255, green: 125/255, blue: 145/255)  // #7D7D91
                     )
-                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity)
                     .background(
-                        state == option ? Color.white : Color.clear
+                        state == option ? RoundedRectangle(cornerRadius: 6).fill(Color.white).matchedGeometryEffect(id: "selector", in: animation) : nil
                     )
-                    .cornerRadius(6)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         withAnimation {

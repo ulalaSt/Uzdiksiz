@@ -27,8 +27,6 @@ struct LogSleepView: View {
     @State private var showReasonPicker = false
     @State private var error = ""
     
-    var onSuccess: () -> Void
-
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("🛌 Бүгінгі ұйқы журналын толтырыңыз")
@@ -114,25 +112,16 @@ struct LogSleepView: View {
     }
 
     func saveLog() {
-        guard let expectedWakeTime = viewModel.expectedWakeTime else {
-            return
+        if showReasonPicker {
+            if reasonId == nil {
+                error = "Себепті таңдаңыз"
+                return
+            } else if customReason.isEmpty {
+                error = "Кешігу себебін толтырыңыз"
+                return
+            }
         }
-        
-        if showReasonPicker && reasonId == nil {
-            error = "Please select a reason."
-            return
-        }
-        
-        let log = SleepLog(
-            date: viewModel.todayDateString(),
-            sleepTime: viewModel.formatTime(sleepTime),
-            wakeTime: viewModel.formatTime(wakeTime),
-            expectedWakeTime: expectedWakeTime,
-            reasonId: reasonId,
-            customReason: reasonId == 999 ? customReason : nil,
-            createdAt: Date()
-        )
 
-        viewModel.saveSleepLog(log)
+        viewModel.saveSleepLog(wakeTime: wakeTime, sleepTime: sleepTime, reasonId: reasonId, customReason: customReason)
     }
 }

@@ -8,9 +8,9 @@ import FirebaseFirestore
 import FirebaseAuth
 
 class SleepLogViewModel: ObservableObject {
-    @Published var logs: [SleepLog] = []
-    @Published var expectedWakeTime: String?
-    @Published var isLoading: Bool = false
+    @Published var logs: Loadable<[SleepLog]> = .notRequested
+    @Published var expectedWakeTime: Loadable<String?> = .notRequested
+    let cancelBag = CancelBag()
     let reasons = [
         "😴 Өте шаршадым",
         "⏰ Оятқышты естімей қалдым",
@@ -35,7 +35,23 @@ class SleepLogViewModel: ObservableObject {
     
     private var db = Firestore.firestore()
     
-    func saveSleepLog(_ log: SleepLog) {
+    func saveSleepLog(wakeTime: Date, sleepTime: Date, reasonId: Int?, customReason: String?) {
+        guard let expectedWakeTime = expectedWakeTime.value, let expectedWakeTime else {
+            return
+        }
+                
+        let log = SleepLog(
+            documentID: "",
+            date: todayDateString(),
+            sleepTime: formatTime(sleepTime),
+            wakeTime: formatTime(wakeTime),
+            expectedWakeTime: expectedWakeTime,
+            reasonId: reasonId,
+            customReason: reasonId == 999 ? customReason : nil,
+            createdAt: Date()
+        )
+
+
         guard let uid = Auth.auth().currentUser?.uid else {
             print("❌ No user logged in")
             return
@@ -61,7 +77,7 @@ class SleepLogViewModel: ObservableObject {
             print("❌ No user logged in")
             return
         }
-        self.logs = []
+        self.logs.setIsLoading(cancelBag: cancelBag)
         db.collection("users")
             .document(uid)
             .collection("sleepLogs")
@@ -69,14 +85,16 @@ class SleepLogViewModel: ObservableObject {
             .getDocuments { [weak self] snapshot, error in
                 if let error = error {
                     print("🔥 Error fetching logs: \(error)")
+                    self?.logs = .failed(.unexpectedError(error.localizedDescription))
                     return
                 }
                 
                 guard let documents = snapshot?.documents else { return }
                 
-                self?.logs = documents.compactMap { doc -> SleepLog? in
+                let logs = documents.compactMap { doc -> SleepLog? in
                     let data = doc.data()
                     return SleepLog(
+                        documentID: doc.documentID,
                         date: data["date"] as? String ?? "",
                         sleepTime: data["sleepTime"] as? String ?? "",
                         wakeTime: data["wakeTime"] as? String ?? "",
@@ -86,18 +104,21 @@ class SleepLogViewModel: ObservableObject {
                         createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
                     )
                 }
+                self?.logs = .loaded(logs)
             }
     }
     
     func fetchExpectedWakeTime() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        isLoading = true
+        expectedWakeTime.setIsLoading(cancelBag: cancelBag)
         db.collection("users").document(uid).getDocument { [weak self] snapshot, error in
-            self?.isLoading = false
+            if let error {
+                self?.expectedWakeTime = .failed(.unexpectedError(error.localizedDescription))
+            }
             if let data = snapshot?.data(), let wakeTime = data["expectedWakeTime"] as? String {
-                self?.expectedWakeTime = wakeTime
+                self?.expectedWakeTime = .loaded(wakeTime)
             } else {
-                self?.expectedWakeTime = nil
+                self?.expectedWakeTime = .loaded(nil)
             }
         }
     }
@@ -116,24 +137,9 @@ class SleepLogViewModel: ObservableObject {
             }
         }
     }
-    
-    func checkIfLogExistsForToday(completion: @escaping (Bool) -> Void) {
-        let today = todayDateString()
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        db.collection("users").document(uid)
-            .collection("sleepLogs")
-            .whereField("date", isEqualTo: today)
-            .getDocuments { snapshot, error in
-                if let count = snapshot?.documents.count, count > 0 {
-                    completion(true)
-                } else {
-                    completion(false)
-                }
-            }
-    }
-    
+        
     func shouldAskReason(actualWakeTime: Date) -> Bool {
-        guard let expectedWakeTime else { return false }
+        guard let expectedWakeTimeData = expectedWakeTime.value, let expectedWakeTime = expectedWakeTimeData else { return false }
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         let actual = formatter.string(from: actualWakeTime)
@@ -153,14 +159,41 @@ class SleepLogViewModel: ObservableObject {
     }
     
     func wasOnTimeToday() -> Bool {
-        guard let log = logs.first(where: { $0.date == todayDateString() }), let expectedWakeTime else {
+        guard let log = logs.value?.first(where: { $0.date == todayDateString() }), let expectedWakeTimeData = expectedWakeTime.value, let expectedWakeTime = expectedWakeTimeData else {
             return false
         }
         return log.wakeTime <= expectedWakeTime
     }
     
+    func deleteTodayLog() {
+        guard let log = logs.value?.first(where: { $0.date == todayDateString() }), let expectedWakeTimeData = expectedWakeTime.value, let expectedWakeTime = expectedWakeTimeData else {
+            return
+        }
+        deleteSleepLog(log)
+    }
+    
+    func deleteSleepLog(_ log: SleepLog) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("❌ No user logged in")
+            return
+        }
+        
+        db.collection("users")
+            .document(uid)
+            .collection("sleepLogs")
+            .document(log.documentID)
+            .delete { [weak self] error in
+                if let error = error {
+                    print("🔥 Error deleting log: \(error.localizedDescription)")
+                } else {
+                    print("🗑️ Log deleted")
+                    self?.fetchLogs()
+                }
+            }
+    }
+    
     func todaysResultText() -> String? {
-        guard let log = logs.first(where: { $0.date == todayDateString() }) else {
+        guard let log = logs.value?.first(where: { $0.date == todayDateString() }) else {
             return nil
         }
         let motivation: String
@@ -223,7 +256,7 @@ class SleepLogViewModel: ObservableObject {
     }
     
     func currentStrike() -> Int? {
-        guard let expectedWakeTime else { return nil }
+        guard let expectedWakeTimeData = expectedWakeTime.value, let expectedWakeTime = expectedWakeTimeData else { return nil }
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         
@@ -232,7 +265,7 @@ class SleepLogViewModel: ObservableObject {
         
         while true {
             let dateString = formatter.string(from: date)
-            guard let log = logs.first(where: { $0.date == dateString }) else { break }
+            guard let log = logs.value?.first(where: { $0.date == dateString }) else { break }
             
             if log.wakeTime <= expectedWakeTime {
                 strike += 1

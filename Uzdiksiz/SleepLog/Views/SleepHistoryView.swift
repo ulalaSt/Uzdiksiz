@@ -13,44 +13,51 @@ struct SleepHistoryView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
-                if let expected = viewModel.expectedWakeTime {
+                if let expected = viewModel.expectedWakeTime.value, let expected {
                     Text("☀️ Бекітілген ояну уақыты: \(expected)")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
                 }
-                
-                if viewModel.logs.isEmpty {
-                    Text("💤 ӘЛІ ЖАЗБАЛАР ЖОҚ")
+                if let logs = viewModel.logs.value {
+                    if logs.isEmpty {
+                        Text("💤 ӘЛІ ЖАЗБАЛАР ЖОҚ")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                    } else {
+                        ForEach(logs, id: \.createdAt) { log in
+                            VStack(alignment: .leading) {
+                                Text(log.wakeTime > log.expectedWakeTime ? "☑️ \(log.date)" : "✅ \(log.date)")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .multilineTextAlignment(.leading)
+                                Text(viewModel.resultText(for: log))
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.leading)
+                                if let reason = log.customReason, !reason.isEmpty {
+                                    Text("📝 Себеп: \(reason)")
+                                        .italic()
+                                        .font(.system(size: 14, weight: .regular))
+                                        .foregroundColor(.white)
+                                        .multilineTextAlignment(.leading)
+                                }
+                            }
+                            .padding(16)
+                            .background(BlurredBackgroundView())
+                        }
+                    }
+                } else {
+                    Text("Жүктелуде...")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
-                    Spacer()
-                } else {
-                    ForEach(viewModel.logs, id: \.createdAt) { log in
-                        VStack(alignment: .leading) {
-                            Text(log.wakeTime > log.expectedWakeTime ? "☑️ \(log.date)" : "✅ \(log.date)")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .multilineTextAlignment(.leading)
-                            Text(viewModel.resultText(for: log))
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.leading)
-                            if let reason = log.customReason, !reason.isEmpty {
-                                Text("📝 Себеп: \(reason)")
-                                    .italic()
-                                    .font(.system(size: 14, weight: .regular))
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.leading)
-                            }
-                        }
-                        .padding(16)
-                        .background(BlurredBackgroundView())
-                    }
                 }
             }
             .padding(16)

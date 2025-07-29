@@ -8,6 +8,7 @@ import SwiftUI
 
 struct TodayResultView: View {
     @ObservedObject var viewModel: SleepLogViewModel
+    @State private var showDeleteAlert = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -19,11 +20,17 @@ struct TodayResultView: View {
                     .multilineTextAlignment(.leading)
                 Spacer()
                 Button {
-                    
+                    showDeleteAlert = true
                 } label: {
-                    Image(systemName: "square.and.pencil")
+                    Image(systemName: "trash.fill")
                         .font(.system(size: 16))
                         .foregroundColor(.white)
+                }
+                .alert("Бүгінгі ұйқы дерегін өшіргіңіз келе ме?", isPresented: $showDeleteAlert) {
+                    Button("Өшіру", role: .destructive) {
+                        viewModel.deleteTodayLog()
+                    }
+                    Button("Болдырмау", role: .cancel) {}
                 }
             }
             if let text = viewModel.todaysResultText() {

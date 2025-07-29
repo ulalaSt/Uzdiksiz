@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if authViewModel.isLoading {
-                ProgressView("Checking session...")
+                ProgressView("Сеанс тексерілуде...")
             } else if let _ = authViewModel.user {
                 MainView(authViewModel: authViewModel) // ✅ your real app view (sleep logs etc.)
             } else {

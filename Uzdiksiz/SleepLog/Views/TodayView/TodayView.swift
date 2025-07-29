@@ -9,9 +9,7 @@ import SwiftUI
 
 struct TodayView: View {
     @ObservedObject var viewModel: SleepLogViewModel
-    @State private var logExists = false
-    @State private var checking = true
-
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .center, spacing: 16) {
@@ -27,40 +25,45 @@ struct TodayView: View {
                         .font(.system(size: 24, weight: .regular))
                         .foregroundColor(.white)
                     Group {
-                        if viewModel.isLoading {
+                        if let error = viewModel.expectedWakeTime.error {
+                            Text(error.errorDescription)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.red)
+                        } else if let data = viewModel.expectedWakeTime.value {
+                            if let data {
+                                Group {
+                                    if let error = viewModel.logs.error {
+                                        Text(error.errorDescription)
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.red)
+                                    } else if let logs = viewModel.logs.value {
+                                        if let _ = logs.first(where: { $0.date == viewModel.todayDateString() }) {
+                                            TodayResultView(viewModel: viewModel)
+                                                .background(BlurredBackgroundView())
+                                        } else {
+                                            LogSleepView(viewModel: viewModel)
+                                                .background(BlurredBackgroundView())
+                                        }
+                                    } else {
+                                        ProgressView("Бүгінгі тіркелім тексерілуде...")
+                                            .tint(.white)
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                            } else {
+                                SetupExpectedWakeTimeView(viewModel: viewModel)
+                                    .background(BlurredBackgroundView())
+                            }
+                        } else {
                             ProgressView("Ояну уақыты жүктелуде...")
                                 .tint(.white)
                                 .foregroundColor(.white)
-                        } else if let _ = viewModel.expectedWakeTime {
-                            Group {
-                                if checking {
-                                    ProgressView("Бүгінгі тіркелім тексерілуде...")
-                                        .tint(.white)
-                                        .foregroundColor(.white)
-                                } else if !viewModel.logs.isEmpty, logExists {
-                                    TodayResultView(viewModel: viewModel)
-                                        .background(BlurredBackgroundView())
-                                } else {
-                                    LogSleepView(viewModel: viewModel) {
-                                        logExists = true
-                                    }
-                                    .background(BlurredBackgroundView())
-                                }
-                            }
-                            .onAppear {
-                                viewModel.checkIfLogExistsForToday { exists in
-                                    logExists = exists
-                                    checking = false
-                                }
-                            }
-                        } else {
-                            SetupExpectedWakeTimeView(viewModel: viewModel)
-                                .background(BlurredBackgroundView())
+
                         }
                     }
-                    if let expectedWakeTime = viewModel.expectedWakeTime {
+                    if let expectedWakeTime = viewModel.expectedWakeTime.value, let expectedWakeTime {
                         HStack(spacing: 10) {
-                            if !viewModel.logs.isEmpty, let strike = viewModel.currentStrike(), strike > 0 {
+                            if let logs = viewModel.logs.value, !logs.isEmpty, let strike = viewModel.currentStrike(), strike > 0 {
                                 Text("🔥 \(strike) күн қатар")
                                     .foregroundColor(.white)
                                     .font(.system(size: 18, weight: .medium))
@@ -102,8 +105,10 @@ struct TodayView: View {
             .padding(.horizontal, 16)
         }
         .onAppear {
-            viewModel.fetchExpectedWakeTime()
-            viewModel.fetchLogs()
+            if viewModel.expectedWakeTime == .notRequested {
+                viewModel.fetchExpectedWakeTime()
+                viewModel.fetchLogs()
+            }
         }
     }
     
