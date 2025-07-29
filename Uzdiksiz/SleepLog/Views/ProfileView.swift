@@ -81,6 +81,15 @@ struct ProfileView: View {
         }
         .disabled(authViewModel.isLoading || isDeleting)
         .opacity((authViewModel.isLoading || isDeleting) ? 0.5 : 1)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Профиль")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .onReceive(locationManager.$location.compactMap { $0 }) { location in
             let (rise, set) = locationManager.getSunriseSunsetStrings(for: location)
             let formatter = DateFormatter()

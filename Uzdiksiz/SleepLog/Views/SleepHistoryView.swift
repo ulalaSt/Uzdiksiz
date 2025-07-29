@@ -63,45 +63,45 @@ struct SleepHistoryView: View {
             .padding(16)
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 44, alignment: .center)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(stops: [
-                                            .init(color: Color(red: 52/255, green: 200/255, blue: 232/255), location: 0.0),
-                                            .init(color: Color(red: 78/255, green: 74/255, blue: 242/255), location: 1),
-                                        ]),
-                                        startPoint: UnitPoint(x: 0.49, y: 0.0),
-                                        endPoint: UnitPoint(x: 0.5, y: 1.0)
-                                    )
-                                )
-                                .overlay(
-                                    GeometryReader(content: { proxy in
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .strokeBorder(
-                                                LinearGradient(
-                                                    gradient: Gradient(stops: [
-                                                        .init(color: Color.white.opacity(0.6), location: 0.0),
-                                                        .init(color: Color.black.opacity(0.6), location: 1)
-                                                    ]),
-                                                    startPoint: UnitPoint(x: 0.49, y: 0.0),
-                                                    endPoint: UnitPoint(x: 0.5, y: 1.0)
-                                                ),
-                                                lineWidth: 2
-                                            )
-                                    })
-                                )
-                        )
-                }
-            }
+//            ToolbarItem(placement: .topBarLeading) {
+//                Button(action: {
+//                    dismiss()
+//                }) {
+//                    Image(systemName: "chevron.left")
+//                        .font(.system(size: 16, weight: .medium))
+//                        .foregroundColor(.white)
+//                        .frame(width: 44, height: 44, alignment: .center)
+//                        .background(
+//                            RoundedRectangle(cornerRadius: 10)
+//                                .fill(
+//                                    LinearGradient(
+//                                        gradient: Gradient(stops: [
+//                                            .init(color: Color(red: 52/255, green: 200/255, blue: 232/255), location: 0.0),
+//                                            .init(color: Color(red: 78/255, green: 74/255, blue: 242/255), location: 1),
+//                                        ]),
+//                                        startPoint: UnitPoint(x: 0.49, y: 0.0),
+//                                        endPoint: UnitPoint(x: 0.5, y: 1.0)
+//                                    )
+//                                )
+//                                .overlay(
+//                                    GeometryReader(content: { proxy in
+//                                        RoundedRectangle(cornerRadius: 10)
+//                                            .strokeBorder(
+//                                                LinearGradient(
+//                                                    gradient: Gradient(stops: [
+//                                                        .init(color: Color.white.opacity(0.6), location: 0.0),
+//                                                        .init(color: Color.black.opacity(0.6), location: 1)
+//                                                    ]),
+//                                                    startPoint: UnitPoint(x: 0.49, y: 0.0),
+//                                                    endPoint: UnitPoint(x: 0.5, y: 1.0)
+//                                                ),
+//                                                lineWidth: 2
+//                                            )
+//                                    })
+//                                )
+//                        )
+//                }
+//            }
 
             ToolbarItem(placement: .principal) {
                 Text("Ұйқы тарихы")
@@ -109,12 +109,13 @@ struct SleepHistoryView: View {
                     .foregroundColor(.white)
             }
         }
-        .navigationBarBackButtonHidden()
+//        .navigationBarBackButtonHidden()
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .background(bgView)
         .onAppear {
-            viewModel.fetchLogs()
+            if viewModel.logs == .notRequested {
+                viewModel.fetchLogs()
+            }
         }
     }
     

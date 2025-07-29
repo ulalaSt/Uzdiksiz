@@ -13,17 +13,30 @@ struct MainView: View {
     @ObservedObject var authViewModel: AuthViewModel
     @State private var sunrise: Date? = nil
     @State private var sunset: Date? = nil
-    @State private var selectedTab = 0
+    @State private var selectedTab = TabState.home
 
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $selectedTab) {
                 TodayView(viewModel: sleepLogViewModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag(0)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            Image("logo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 20)
+                        }
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+                    .tag(TabState.home)
+                SleepHistoryView(viewModel: sleepLogViewModel)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .tag(TabState.history)
                 ProfileView(authViewModel: authViewModel, locationManager: locationManager)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .tag(1)
+                    .tag(TabState.profile)
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             .edgesIgnoringSafeArea(.all)
@@ -46,3 +59,4 @@ struct MainView: View {
             .ignoresSafeArea()
     }
 }
+
