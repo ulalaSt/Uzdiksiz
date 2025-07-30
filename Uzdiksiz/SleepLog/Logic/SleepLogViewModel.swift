@@ -172,6 +172,22 @@ class SleepLogViewModel: ObservableObject {
         deleteSleepLog(log)
     }
     
+    func deleteExpectedWakeTime() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        expectedWakeTime.setIsLoading(cancelBag: cancelBag)
+        db.collection("users").document(uid).updateData([
+            "expectedWakeTime": FieldValue.delete()
+        ]) { [weak self] error in
+            if let error = error {
+                self?.expectedWakeTime = .failed(.unexpectedError(error.localizedDescription))
+                print("🔥 Error deleting expected wake time: \(error)")
+            } else {
+                print("✅ Expected wake time deleted")
+                self?.expectedWakeTime = .loaded(nil)
+            }
+        }
+    }
+    
     func deleteSleepLog(_ log: SleepLog) {
         guard let uid = Auth.auth().currentUser?.uid else {
             print("❌ No user logged in")

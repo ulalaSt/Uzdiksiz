@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TodayView: View {
     @ObservedObject var viewModel: SleepLogViewModel
-    
+    @State var showDeleteAim: Bool = false
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -29,11 +29,25 @@ struct TodayView: View {
                                 .fill(.white.opacity(0.2))
                                 .frame(width: 1)
                         }
-                        Text("Мақсат: \(expectedWakeTime) ояну")
+                        Text("🎯 Мақсат: \(expectedWakeTime) ояну")
                             .foregroundColor(.white)
                             .font(.system(size: 18, weight: .medium))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .multilineTextAlignment(.leading)
+                        Button {
+                            showDeleteAim = true
+                        } label: {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                        .alert("Күндік ояну мақсатын қайта орнатқыңыз келе ме?", isPresented: $showDeleteAim) {
+                            Button("Иә", role: .destructive) {
+                                viewModel.deleteExpectedWakeTime()
+                            }
+                            Button("Болдырмау", role: .cancel) {}
+                        }
+
                     }
                     .frame(maxWidth: .infinity)
                     .padding(16)

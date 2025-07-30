@@ -66,36 +66,6 @@
             endingLineNumber = "94"
             landmarkName = "fetchLogs()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "040A3EF4-9B13-44A6-AEC1-DFDB46FCF7A0 - 7831ad9e4f25c8a8"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (Swift.Optional&lt;__C.FIRQuerySnapshot&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in Uzdiksiz.SleepLogViewModel.fetchLogs() -&gt; ()"
-                  moduleName = "Uzdiksiz.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/ulanseitkali/Desktop/Uzdiksiz/Uzdiksiz/SleepLog/Logic/SleepLogViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "94"
-                  endingLineNumber = "94">
-               </Location>
-               <Location
-                  uuid = "040A3EF4-9B13-44A6-AEC1-DFDB46FCF7A0 - 723fedd818b879c7"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 (__C.FIRQueryDocumentSnapshot) -&gt; Swift.Optional&lt;Uzdiksiz.SleepLog&gt; in closure #1 (Swift.Optional&lt;__C.FIRQuerySnapshot&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in Uzdiksiz.SleepLogViewModel.fetchLogs() -&gt; ()"
-                  moduleName = "Uzdiksiz.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/ulanseitkali/Desktop/Uzdiksiz/Uzdiksiz/SleepLog/Logic/SleepLogViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "95"
-                  endingLineNumber = "95">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
