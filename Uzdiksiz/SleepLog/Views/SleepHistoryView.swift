@@ -9,7 +9,8 @@ import SwiftUI
 struct SleepHistoryView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: SleepLogViewModel
-
+    @State var logToDelete: SleepLog? = nil
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -31,11 +32,30 @@ struct SleepHistoryView: View {
                     } else {
                         ForEach(logs, id: \.createdAt) { log in
                             VStack(alignment: .leading) {
-                                Text(log.wakeTime > log.expectedWakeTime ? "☑️ \(log.date)" : "✅ \(log.date)")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .multilineTextAlignment(.leading)
+                                HStack {
+                                    Text(log.wakeTime > log.expectedWakeTime ? "☑️ \(log.date)" : "✅ \(log.date)")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .multilineTextAlignment(.leading)
+                                    Spacer()
+                                    Button {
+                                        logToDelete = log
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.white.opacity(0.5))
+                                    }
+                                    .alert(item: $logToDelete) { log in
+                                        Alert(
+                                            title: Text("Күндік ояну мақсатын қайта орнатқыңыз келе ме?"),
+                                            primaryButton: .destructive(Text("Иә")) {
+                                                viewModel.deleteSleepLog(log)
+                                            },
+                                            secondaryButton: .cancel(Text("Болдырмау"))
+                                        )
+                                    }
+                                }
                                 Text(viewModel.resultText(for: log))
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(.white)
@@ -63,50 +83,21 @@ struct SleepHistoryView: View {
             .padding(16)
         }
         .toolbar {
-//            ToolbarItem(placement: .topBarLeading) {
-//                Button(action: {
-//                    dismiss()
-//                }) {
-//                    Image(systemName: "chevron.left")
-//                        .font(.system(size: 16, weight: .medium))
-//                        .foregroundColor(.white)
-//                        .frame(width: 44, height: 44, alignment: .center)
-//                        .background(
-//                            RoundedRectangle(cornerRadius: 10)
-//                                .fill(
-//                                    LinearGradient(
-//                                        gradient: Gradient(stops: [
-//                                            .init(color: Color(red: 52/255, green: 200/255, blue: 232/255), location: 0.0),
-//                                            .init(color: Color(red: 78/255, green: 74/255, blue: 242/255), location: 1),
-//                                        ]),
-//                                        startPoint: UnitPoint(x: 0.49, y: 0.0),
-//                                        endPoint: UnitPoint(x: 0.5, y: 1.0)
-//                                    )
-//                                )
-//                                .overlay(
-//                                    GeometryReader(content: { proxy in
-//                                        RoundedRectangle(cornerRadius: 10)
-//                                            .strokeBorder(
-//                                                LinearGradient(
-//                                                    gradient: Gradient(stops: [
-//                                                        .init(color: Color.white.opacity(0.6), location: 0.0),
-//                                                        .init(color: Color.black.opacity(0.6), location: 1)
-//                                                    ]),
-//                                                    startPoint: UnitPoint(x: 0.49, y: 0.0),
-//                                                    endPoint: UnitPoint(x: 0.5, y: 1.0)
-//                                                ),
-//                                                lineWidth: 2
-//                                            )
-//                                    })
-//                                )
-//                        )
-//                }
-//            }
-
             ToolbarItem(placement: .principal) {
                 Text("Ұйқы тарихы")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
+            }
+            if let wakeTime = viewModel.expectedWakeTime.value, let wakeTime {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        SleepChartView(logs: viewModel.logs.value ?? [], targetWakeTime: wakeTime)
+                    } label: {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                }
             }
         }
 //        .navigationBarBackButtonHidden()
