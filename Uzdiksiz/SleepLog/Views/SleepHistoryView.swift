@@ -82,13 +82,15 @@ struct SleepHistoryView: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showAddLogSheet = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
+            if let wakeTime = viewModel.expectedWakeTime.value, let wakeTime {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAddLogSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                    }
                 }
             }
             if let wakeTime = viewModel.expectedWakeTime.value, let wakeTime {
