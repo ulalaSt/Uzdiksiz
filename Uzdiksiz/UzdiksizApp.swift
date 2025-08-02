@@ -34,6 +34,7 @@ struct UzdiksizApp: App {
             NavigationView {
                 ContentView()
             }
+            .navigationViewStyle(.stack)
         }
     }
 }

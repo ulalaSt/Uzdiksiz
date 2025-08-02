@@ -46,5 +46,6 @@ struct AddSleepLogView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
     }
 }
