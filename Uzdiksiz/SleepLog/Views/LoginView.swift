@@ -115,6 +115,29 @@ struct LoginView: View {
                             }
                     }
                 }
+                Button {
+                    authViewModel.performAppleSignIn()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image("apple")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 18, height: 18)
+                        Text("Apple арқылы жалғастыру")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.vertical, 15)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.white.opacity(0.1))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                            }
+                    }
+                }
                 Spacer()
             }
             .padding(24)
