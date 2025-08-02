@@ -92,42 +92,97 @@ struct SleepChartView: View {
     }
     
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                if let sunrise, let sunset {
-                    VStack(spacing: 0) {
-                        backgroundColor(sunrise: sunrise, sunset: sunset, date: minY)
-                            .frame(height: geo.safeAreaInsets.top)
-                            .ignoresSafeArea()
-                        gradientBackground(sunrise: sunrise, sunset: sunset, min: minY, max: maxY)
-                        backgroundColor(sunrise: sunrise, sunset: sunset, date: maxY)
-                            .frame(height: geo.safeAreaInsets.bottom)
-                            .ignoresSafeArea()
-                    }.ignoresSafeArea()
-                }
-                let contentWidth = CGFloat(sleepWakePairs.count) * 60
-                if #available(iOS 17, *) {
-                    if let lastWake = sleepWakePairs.last?.wake {
-                        chart
-                            .chartScrollableAxes(.horizontal)
-                            .chartXVisibleDomain(length: 86400*7)
-                            .chartScrollPosition(initialX: lastWake)
-                            .padding(.horizontal, 16)
+        VStack(alignment: .leading, spacing: 0) {
+            GeometryReader { geo in
+                ZStack {
+                    if let sunrise, let sunset {
+                        VStack(spacing: 0) {
+                            backgroundColor(sunrise: sunrise, sunset: sunset, date: minY)
+                                .frame(height: geo.safeAreaInsets.top)
+                                .ignoresSafeArea()
+                            gradientBackground(sunrise: sunrise, sunset: sunset, min: minY, max: maxY)
+                            backgroundColor(sunrise: sunrise, sunset: sunset, date: maxY)
+                                .frame(height: geo.safeAreaInsets.bottom)
+                                .ignoresSafeArea()
+                        }.ignoresSafeArea()
                     }
-                } else {
-                    if contentWidth > geo.size.width - 32 {
-                        ScrollView(.horizontal, showsIndicators: false) {
+                    let contentWidth = CGFloat(sleepWakePairs.count) * 60
+                    if #available(iOS 17, *) {
+                        if let lastWake = sleepWakePairs.last?.wake {
                             chart
-                                .frame(width: CGFloat(sleepWakePairs.count) * 60)
+                                .chartScrollableAxes(.horizontal)
+                                .chartXVisibleDomain(length: 86400*7)
+                                .chartScrollPosition(initialX: lastWake)
                                 .padding(.horizontal, 16)
                         }
                     } else {
-                        chart
-                            .padding(.horizontal, 16)
+                        if contentWidth > geo.size.width - 32 {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                chart
+                                    .frame(width: CGFloat(sleepWakePairs.count) * 60)
+                                    .padding(.horizontal, 16)
+                            }
+                        } else {
+                            chart
+                                .padding(.horizontal, 16)
+                        }
                     }
                 }
             }
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Line()
+                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        .frame(width: 24, height: 10)
+                    Image(systemName: "alarm.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
+                    Text("Мақсат: \(targetWakeTime)")
+                        .font(.system(size: 12))
+                }
+                .foregroundColor(.red)
+                if let sunrise {
+                    HStack(spacing: 6) {
+                        Line()
+                            .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                            .frame(width: 24, height: 10)
+                        Image(systemName: "sunrise.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 12, height: 12)
+                        Text("Күн шығуы: \(sunrise.formatted(.dateTime.hour().minute()))")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundColor(.yellow)
+                }
+                if let sunset {
+                    HStack(spacing: 6) {
+                        Line()
+                            .stroke(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                            .frame(width: 24, height: 10)
+                        Image(systemName: "sunset.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 12, height: 12)
+                        Text("Күн бату: \(sunset.formatted(.dateTime.hour().minute()))")
+                            .font(.system(size: 12))
+                    }
+                    .foregroundColor(.white)
+                }
+            }
+            .padding(.top, 16)
+            .padding(.horizontal, 24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(0.6)
+            .background {
+                if let sunrise, let sunset {
+                    backgroundColor(sunrise: sunrise, sunset: sunset, date: maxY)
+                        .ignoresSafeArea()
+                }
+            }
         }
+        .padding(.vertical, 16)
         .onReceive(locationManager.$location.compactMap { $0 }) { location in
             if sunrise == nil || sunset == nil {
                 let (rise, set) = locationManager.getSunriseSunsetStrings(for: location)
@@ -408,3 +463,12 @@ extension Color {
 //            createdAt: Date()
 //        )
 //    }
+
+struct Line: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.width, y: rect.midY))
+        return path
+    }
+}
