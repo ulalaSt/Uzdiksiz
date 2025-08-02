@@ -35,6 +35,47 @@ class SleepLogViewModel: ObservableObject {
     
     private var db = Firestore.firestore()
     
+    func createSleepLog(date: String, sleepTime: String, wakeTime: String) {
+        guard let expectedWakeTime = expectedWakeTime.value,
+              let expectedWakeTimeStr = expectedWakeTime,
+              let uid = Auth.auth().currentUser?.uid else {
+            print("❌ Can't create sleep log — missing expected wake time or user not logged in")
+            return
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let parsedDate = formatter.date(from: date) else {
+            print("❌ Invalid date format")
+            return
+        }
+
+        let log = SleepLog(
+            documentID: "",
+            date: date,
+            sleepTime: sleepTime,
+            wakeTime: wakeTime,
+            expectedWakeTime: expectedWakeTimeStr,
+            reasonId: nil,
+            customReason: nil,
+            createdAt: parsedDate
+        )
+
+        let data = log.toDict()
+
+        db.collection("users")
+            .document(uid)
+            .collection("sleepLogs")
+            .addDocument(data: data) { [weak self] error in
+                if let error = error {
+                    print("🔥 Error saving manual log: \(error.localizedDescription)")
+                } else {
+                    print("✅ Manual sleep log created")
+                    self?.fetchLogs()
+                }
+            }
+    }
+    
     func saveSleepLog(wakeTime: Date, sleepTime: Date, reasonId: Int?, customReason: String?) {
         guard let expectedWakeTime = expectedWakeTime.value, let expectedWakeTime else {
             return
@@ -125,7 +166,12 @@ class SleepLogViewModel: ObservableObject {
     
     func saveExpectedWakeTime(_ time: String) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        
+
+        if case let .loaded(currentTime) = expectedWakeTime, currentTime == time {
+            print("ℹ️ Expected wake time hasn't changed")
+            return
+        }
+
         db.collection("users").document(uid).setData([
             "expectedWakeTime": time
         ], merge: true) { [weak self] error in
@@ -133,11 +179,11 @@ class SleepLogViewModel: ObservableObject {
                 print("🔥 Error saving expected wake time: \(error)")
             } else {
                 self?.fetchExpectedWakeTime()
-                print("✅ Expected wake time saved")
+                print("✅ Expected wake time saved: \(time)")
             }
         }
     }
-        
+
     func shouldAskReason(actualWakeTime: Date) -> Bool {
         guard let expectedWakeTimeData = expectedWakeTime.value, let expectedWakeTime = expectedWakeTimeData else { return false }
         let formatter = DateFormatter()

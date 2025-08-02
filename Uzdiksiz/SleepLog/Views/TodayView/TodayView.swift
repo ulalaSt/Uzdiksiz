@@ -9,7 +9,8 @@ import SwiftUI
 
 struct TodayView: View {
     @ObservedObject var viewModel: SleepLogViewModel
-    @State var showDeleteAim: Bool = false
+    @State private var showTimePicker = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -34,20 +35,20 @@ struct TodayView: View {
                             .font(.system(size: 18, weight: .medium))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .multilineTextAlignment(.leading)
-                        Button {
-                            showDeleteAim = true
-                        } label: {
-                            Image(systemName: "arrow.counterclockwise")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white.opacity(0.5))
-                        }
-                        .alert("Күндік ояну мақсатын қайта орнатқыңыз келе ме?", isPresented: $showDeleteAim) {
-                            Button("Иә", role: .destructive) {
-                                viewModel.deleteExpectedWakeTime()
+                        if let expectedWakeTime = viewModel.expectedWakeTime.value, let expectedWakeTime {
+                            Button {
+                                showTimePicker = true
+                            } label: {
+                                Image(systemName: "square.and.pencil")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white.opacity(0.5))
                             }
-                            Button("Болдырмау", role: .cancel) {}
+                            .sheet(isPresented: $showTimePicker) {
+                                ChangeWakeTimeView(isPresented: $showTimePicker, currentTimeString: expectedWakeTime) { newTime in
+                                    viewModel.saveExpectedWakeTime(newTime)
+                                }
+                            }
                         }
-
                     }
                     .frame(maxWidth: .infinity)
                     .padding(16)

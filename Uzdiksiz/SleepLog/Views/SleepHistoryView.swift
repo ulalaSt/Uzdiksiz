@@ -10,7 +10,8 @@ struct SleepHistoryView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: SleepLogViewModel
     @State var logToDelete: SleepLog? = nil
-    
+    @State private var showAddLogSheet = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -88,6 +89,15 @@ struct SleepHistoryView: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showAddLogSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                }
+            }
             if let wakeTime = viewModel.expectedWakeTime.value, let wakeTime {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
@@ -99,6 +109,7 @@ struct SleepHistoryView: View {
                     }
                 }
             }
+            
         }
 //        .navigationBarBackButtonHidden()
         .navigationBarTitleDisplayMode(.inline)
@@ -106,6 +117,12 @@ struct SleepHistoryView: View {
         .onAppear {
             if viewModel.logs == .notRequested {
                 viewModel.fetchLogs()
+            }
+        }
+        .sheet(isPresented: $showAddLogSheet) {
+            AddSleepLogView { date, sleep, wake in
+                viewModel.createSleepLog(date: date, sleepTime: sleep, wakeTime: wake)
+                showAddLogSheet = false
             }
         }
     }

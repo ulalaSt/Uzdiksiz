@@ -8,53 +8,21 @@ import SwiftUI
 import Charts
 
 struct SleepChartView: View {
+    struct SleepEntry: Identifiable {
+        let id: String
+        let date: Date
+        let sleep: Date
+        let wake: Date
+        let isPrimary: Bool
+    }
+    
     @StateObject var locationManager = LocationManager()
     @State var sunrise: Date? = nil
     @State var sunset: Date? = nil
     @Environment(\.dismiss) var dismiss
     let logs: [SleepLog]
     let targetWakeTime: String
-    let sampleLogs: [SleepLog] = (0..<20).map { offset in
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let baseDate = formatter.date(from: "2025-07-10")!
-        let currentDate = Calendar.current.date(byAdding: .day, value: offset, to: baseDate)!
-        
-        let dateString = formatter.string(from: currentDate)
-        
-        // sleep between 22:00 – 01:30
-        let sleepHour = Int.random(in: 22...25) % 24
-        let sleepMinute = [0, 15, 30, 45].randomElement()!
-        
-        // wake between 06:00 – 09:00
-        let wakeHour = Int.random(in: 6...9)
-        let wakeMinute = [0, 15, 30, 45].randomElement()!
-        
-        let sleepTime = String(format: "%02d:%02d", sleepHour, sleepMinute)
-        let wakeTime = String(format: "%02d:%02d", wakeHour, wakeMinute)
-        
-        let reasons = [
-            (1, "Late movie"),
-            (2, "Work deadline"),
-            (3, "Scrolling phone"),
-            (4, "Insomnia"),
-            (5, "Social event")
-        ]
-        let useReason = Bool.random()
-        let reason = useReason ? reasons.randomElement()! : (nil, nil)
-        
-        return SleepLog(
-            documentID: UUID().uuidString,
-            date: dateString,
-            sleepTime: sleepTime,
-            wakeTime: wakeTime,
-            expectedWakeTime: "07:00",
-            reasonId: reason.0,
-            customReason: reason.1,
-            createdAt: Date()
-        )
-    }
-
+    
     private let calendar: Calendar = {
         var calendar = Calendar.current
         calendar.timeZone = TimeZone.current
@@ -64,7 +32,7 @@ struct SleepChartView: View {
     let nightColor = Color(red: 0/255, green: 9/255, blue: 45/255)
     let dayColor   = Color(red: 2/255, green: 25/255, blue: 68/255)
 
-    var sleepWakePairs: [(date: Date, sleep: Date, wake: Date)] {
+    var sleepWakePairs: [SleepEntry] {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.timeZone = TimeZone.current
@@ -72,15 +40,25 @@ struct SleepChartView: View {
         let today = calendar.startOfDay(for: Date())
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
-        return sampleLogs.compactMap { log in
+        let rawPairs: [(id: String, date: Date, sleep: Date, wake: Date)] = logs.compactMap { log in
             guard let date = formatter.date(from: log.date),
                   let sleep = timeToDate(log.sleepTime, reference: log.sleepTime > log.wakeTime ? yesterday : today),
                   let wake = timeToDate(log.wakeTime, reference: today) else {
                 return nil
             }
-
-            return (date, sleep, wake)
+            return (log.id, date, sleep, wake)
         }
+
+        let grouped = Dictionary(grouping: rawPairs, by: { calendar.startOfDay(for: $0.date) })
+
+        var result: [SleepEntry] = []
+        for (_, entries) in grouped {
+            let sorted = entries.sorted { $0.sleep < $1.sleep }
+            for (index, e) in sorted.enumerated() {
+                result.append(SleepEntry(id: e.id, date: e.date, sleep: e.sleep, wake: e.wake, isPrimary: index == 0))
+            }
+        }
+        return result.sorted { $0.date < $1.date }
     }
 
     var minY: Date {
@@ -127,10 +105,26 @@ struct SleepChartView: View {
                             .ignoresSafeArea()
                     }.ignoresSafeArea()
                 }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    chart
-                        .frame(width: CGFloat(sleepWakePairs.count) * 60)
-                        .padding(.horizontal, 16)
+                let contentWidth = CGFloat(sleepWakePairs.count) * 60
+                if #available(iOS 17, *) {
+                    if let lastWake = sleepWakePairs.last?.wake {
+                        chart
+                            .chartScrollableAxes(.horizontal)
+                            .chartXVisibleDomain(length: 86400*7)
+                            .chartScrollPosition(initialX: lastWake)
+                            .padding(.horizontal, 16)
+                    }
+                } else {
+                    if contentWidth > geo.size.width - 32 {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            chart
+                                .frame(width: CGFloat(sleepWakePairs.count) * 60)
+                                .padding(.horizontal, 16)
+                        }
+                    } else {
+                        chart
+                            .padding(.horizontal, 16)
+                    }
                 }
             }
         }
@@ -161,23 +155,54 @@ struct SleepChartView: View {
     }
     var chart: some View {
         Chart {
-            ForEach(sleepWakePairs, id: \.date) { entry in
+            if let targetWakeDate = timeToDate(targetWakeTime, reference: .now) {
+                RuleMark(
+                    y: .value("Target Wake Time", targetWakeDate)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
+                .foregroundStyle(.red.opacity(0.5))
+            }
+            if let sunrise {
+                RuleMark(
+                    y: .value("Sunrise", sunrise)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
+                .foregroundStyle(.orange.opacity(0.5))
+            }
+            if let sunset {
+                RuleMark(
+                    y: .value("Sunset", sunset)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
+                .foregroundStyle(.white)
+            }
+            ForEach(sleepWakePairs) { entry in
                 BarMark(
                     x: .value("Date", entry.date, unit: .day),
                     yStart: .value("Sleep", entry.sleep),
                     yEnd: .value("Wake", entry.wake),
                     width: .fixed(12)
                 )
-                .foregroundStyle(.teal.gradient)
+                .foregroundStyle(entry.isPrimary ? Color.cyan.gradient : Color.cyan.opacity(0.3).gradient)
                 .annotation(position: .bottom) {
                     Text(entry.wake.formatted(.dateTime.hour().minute()))
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.3))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 2)
+                        .background {
+                            RoundedRectangle(cornerRadius: 2).fill(nightColor)
+                        }
+                        .opacity(entry.isPrimary ? 1 : 0.3)
                 }
                 .annotation(position: .top) {
                     Text(entry.sleep.formatted(.dateTime.hour().minute()))
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.3))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 2)
+                        .background {
+                            RoundedRectangle(cornerRadius: 2).fill(nightColor)
+                        }
+                        .opacity(entry.isPrimary ? 1 : 0.3)
                 }
                 .annotation(position: .overlay, alignment: .center) {
                     let duration = entry.wake.timeIntervalSince(entry.sleep)
@@ -189,18 +214,6 @@ struct SleepChartView: View {
                         .font(.caption2.bold())
                         .foregroundColor(nightColor)
                         .rotationEffect(.degrees(-90)) // Поворот текста
-                }
-            }
-            if let targetWakeDate = timeToDate(targetWakeTime, reference: .now) {
-                RuleMark(
-                    y: .value("Target Wake Time", targetWakeDate)
-                )
-                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4]))
-                .foregroundStyle(.red)
-                .annotation(position: .trailing, alignment: .leading) {
-                    Text("Мақсат: \(targetWakeTime)")
-                        .font(.caption2)
-                        .foregroundColor(.red.opacity(0.4))
                 }
             }
         }
@@ -354,3 +367,44 @@ extension Color {
         return Color(red: r, green: g, blue: b, opacity: a)
     }
 }
+
+//    let sampleLogs: [SleepLog] = (0..<20).map { offset in
+//        let formatter = DateFormatter()
+//        formatter.dateFormat = "yyyy-MM-dd"
+//        let baseDate = formatter.date(from: "2025-07-10")!
+//        let currentDate = Calendar.current.date(byAdding: .day, value: offset, to: baseDate)!
+//
+//        let dateString = formatter.string(from: currentDate)
+//
+//        // sleep between 22:00 – 01:30
+//        let sleepHour = Int.random(in: 22...25) % 24
+//        let sleepMinute = [0, 15, 30, 45].randomElement()!
+//
+//        // wake between 06:00 – 09:00
+//        let wakeHour = Int.random(in: 6...9)
+//        let wakeMinute = [0, 15, 30, 45].randomElement()!
+//
+//        let sleepTime = String(format: "%02d:%02d", sleepHour, sleepMinute)
+//        let wakeTime = String(format: "%02d:%02d", wakeHour, wakeMinute)
+//
+//        let reasons = [
+//            (1, "Late movie"),
+//            (2, "Work deadline"),
+//            (3, "Scrolling phone"),
+//            (4, "Insomnia"),
+//            (5, "Social event")
+//        ]
+//        let useReason = Bool.random()
+//        let reason = useReason ? reasons.randomElement()! : (nil, nil)
+//
+//        return SleepLog(
+//            documentID: UUID().uuidString,
+//            date: dateString,
+//            sleepTime: sleepTime,
+//            wakeTime: wakeTime,
+//            expectedWakeTime: "07:00",
+//            reasonId: reason.0,
+//            customReason: reason.1,
+//            createdAt: Date()
+//        )
+//    }
