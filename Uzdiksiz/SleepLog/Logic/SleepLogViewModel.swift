@@ -269,25 +269,27 @@ class SleepLogViewModel: ObservableObject {
     Бүгін түнде 30 минут бұрын (\(earlierTime)) ұйықтап көріңіз.
     """
         }
-
-        return resultText(for: log) + motivation
-    }
-    
-    func resultText(for log: SleepLog) -> String {
-        """
+        let resultText = """
         🛌 Ұйықтаған уақыты: \(log.sleepTime)
         🌅 Оянған уақыты: \(log.wakeTime)
-        😴 Ұйқы ұзақтығы: \(calculateDuration(from: log.sleepTime, to: log.wakeTime))
+        😴 Ұйқы ұзақтығы: \(duration(for: log))
         """
+
+        return resultText + motivation
+    }
+    
+    func duration(for log: SleepLog) -> String {
+        let (hour, minute) = calculateDuration(for: log)
+        return "\(hour) сағат \(minute) минут"
     }
 
-    private func calculateDuration(from start: String, to end: String) -> String {
+    func calculateDuration(for log: SleepLog) -> (hour: Int, minute: Int) {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
 
-        guard let sleep = formatter.date(from: start),
-              let wake = formatter.date(from: end) else {
-            return ""
+        guard let sleep = formatter.date(from: log.sleepTime),
+              let wake = formatter.date(from: log.wakeTime) else {
+            return (0,0)
         }
 
         let calendar = Calendar.current
@@ -304,7 +306,18 @@ class SleepLogViewModel: ObservableObject {
         let hour = components.hour ?? 0
         let minute = components.minute ?? 0
 
-        return "\(hour) сағат \(minute) минут"
+        return (hour, minute)
+    }
+    
+    func calculateTotalDuration(for logs: [SleepLog]) -> (hour: Int, minute: Int) {
+        let totalSeconds = logs.reduce(0.0) { sum, log in
+            let duration = calculateDuration(for: log)
+            return sum + Double(duration.hour * 3600 + duration.minute * 60)
+        }
+
+        let hours = Int(totalSeconds) / 3600
+        let minutes = (Int(totalSeconds) % 3600) / 60
+        return (hours, minutes)
     }
     
     private func subtract30Minutes(from timeString: String) -> String {

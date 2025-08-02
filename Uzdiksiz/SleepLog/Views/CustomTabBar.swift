@@ -34,7 +34,7 @@ struct CustomTabBar: View {
                 Image(systemName: icon)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: selectedTab == state ? 17 : 16, height: selectedTab == state ? 17 : 16, alignment: .center)
+                    .frame(width: selectedTab == state ? 17 : 19, height: selectedTab == state ? 17 : 19, alignment: .center)
                     .foregroundColor(selectedTab == state ? .white : Color(red: 171 / 255, green: 173 / 255, blue: 179 / 255))
                     .animation(.interactiveSpring(
                         response: 0.3,

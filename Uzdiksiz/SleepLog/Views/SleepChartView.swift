@@ -171,7 +171,7 @@ struct SleepChartView: View {
                     .foregroundColor(.white)
                 }
             }
-            .padding(.top, 16)
+            .padding(.vertical, 16)
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(0.6)
@@ -182,7 +182,6 @@ struct SleepChartView: View {
                 }
             }
         }
-        .padding(.vertical, 16)
         .onReceive(locationManager.$location.compactMap { $0 }) { location in
             if sunrise == nil || sunset == nil {
                 let (rise, set) = locationManager.getSunriseSunsetStrings(for: location)
