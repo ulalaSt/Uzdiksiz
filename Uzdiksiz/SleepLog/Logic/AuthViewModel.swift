@@ -21,7 +21,7 @@ class AuthViewModel: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        user.setIsLoading(cancelBag: cancelBag)
+        Auth.auth().languageCode = "ru"
         Auth.auth().addStateDidChangeListener { [weak self] _, user in
             self?.user = .loaded(user)
         }

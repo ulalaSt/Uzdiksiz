@@ -12,11 +12,22 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if authViewModel.user.isLoading {
+            switch authViewModel.user {
+            case .notRequested:
                 ProgressView("Сеанс тексерілуде...")
-            } else if let userData = authViewModel.user.value, userData != nil {
-                MainView(authViewModel: authViewModel) // ✅ your real app view (sleep logs etc.)
-            } else {
+            case .isLoading(let last, _):
+                if let last, last != nil {
+                    MainView(authViewModel: authViewModel)
+                } else {
+                    LoginView(authViewModel: authViewModel)
+                }
+            case .loaded(let t):
+                if t != nil {
+                    MainView(authViewModel: authViewModel)
+                } else {
+                    LoginView(authViewModel: authViewModel)
+                }
+            case .failed:
                 LoginView(authViewModel: authViewModel)
             }
         }

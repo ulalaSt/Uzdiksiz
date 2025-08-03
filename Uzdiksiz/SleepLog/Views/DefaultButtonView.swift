@@ -8,8 +8,15 @@ import SwiftUI
 
 struct DefaultButtonView: View {
     var title: String
+    var isLoading: Bool = false
     var body: some View {
-        Text(title)
+        HStack(spacing: 4) {
+            if isLoading {
+                ProgressView()
+                    .frame(width: 14, height: 14)
+            }
+            Text(title)
+        }
             .foregroundColor(.white)
             .font(.system(size: 14, weight: .medium))
             .padding(.vertical, 13)

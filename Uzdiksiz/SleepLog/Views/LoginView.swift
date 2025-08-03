@@ -11,12 +11,13 @@ import GoogleSignIn
 
 struct LoginView: View {
     @ObservedObject var authViewModel: AuthViewModel
-
+    
     @State private var email = ""
     @State private var password = ""
     @State private var state: AuthState = .login
+    @FocusState private var textfieldState: LoginTextFieldState?
     @Namespace private var animation
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 32) {
@@ -25,10 +26,10 @@ struct LoginView: View {
                     .scaledToFit()
                     .frame(width: 120)
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Бүгіннен баста!")
+                    Text("Қош келдіңіз!")
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
-                    Text("Өзгерісті бастау үшін тіркеліңіз немесе жүйеге кіріңіз")
+                    Text("Бастау үшін – тіркеліңіз немесе жүйеге кіріңіз")
                         .font(.system(size: 16, weight: .regular))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.leading)
@@ -38,32 +39,8 @@ struct LoginView: View {
             Spacer(minLength: 64)
             VStack(spacing: 24) {
                 selector
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Email")
-                        .foregroundColor(Color(red: 213/255, green: 213/255, blue: 213/255))
-                        .font(.system(size: 12, weight: .medium))
-                    TextField("", text: $email, prompt: Text("Email енгізіңіз").foregroundColor(Color(red: 125/255, green: 125/255, blue: 145/255)))
-                        .foregroundColor(.white)
-                        .font(.system(size: 14, weight: .medium))
-                        .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 20)
-                        .background(innerShadowBg)
-                        .cornerRadius(10)
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Құпиясөз")
-                        .foregroundColor(Color(red: 213/255, green: 213/255, blue: 213/255))
-                        .font(.system(size: 12, weight: .medium))
-                    SecureField("", text: $password, prompt: Text("Құпиясөз енгізіңіз").foregroundColor(Color(red: 125/255, green: 125/255, blue: 145/255)))
-                        .foregroundColor(.white)
-                        .font(.system(size: 14, weight: .medium))
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 20)
-                        .background(innerShadowBg)
-                        .cornerRadius(10)
-                }
+                emailField
+                passwordField
                 if let error = authViewModel.user.error?.errorDescription {
                     Text(error)
                         .foregroundColor(Color(red: 255/255, green: 95/255, blue: 87/255))
@@ -71,14 +48,10 @@ struct LoginView: View {
                         .multilineTextAlignment(.center)
                 }
                 Button {
-                    switch state {
-                    case .login:
-                        authViewModel.signIn(email: email, password: password)
-                    case .register:
-                        authViewModel.signUp(email: email, password: password)
-                    }
+                    textfieldState = nil
+                    auth()
                 } label: {
-                    DefaultButtonView(title: state.title)
+                    DefaultButtonView(title: state.title, isLoading: authViewModel.user.isLoading)
                 }
                 HStack(spacing: 16) {
                     Rectangle().fill(Color(red: 237/255, green: 241/255, blue: 243/255))
@@ -89,56 +62,8 @@ struct LoginView: View {
                     Rectangle().fill(Color(red: 237/255, green: 241/255, blue: 243/255))
                         .frame(height: 1)
                 }
-                Button {
-                    if let rootVC = UIApplication.shared.connectedScenes
-                        .compactMap({ $0 as? UIWindowScene })
-                        .first?.windows.first?.rootViewController {
-                        authViewModel.signInWithGoogle(presenting: rootVC)
-                    }
-                } label: {
-                    HStack(spacing: 10) {
-                        Image("google")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 18, height: 18)
-                        Text("Google-мен жалғастыру")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.vertical, 15)
-                    .frame(maxWidth: .infinity)
-                    .background {
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(.white.opacity(0.1))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color(red: 239/255, green: 240/255, blue: 246/255).opacity(0.5), lineWidth: 1)
-                            }
-                    }
-                }
-                Button {
-                    authViewModel.performAppleSignIn()
-                } label: {
-                    HStack(spacing: 10) {
-                        Image("apple")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 18, height: 18)
-                        Text("Apple арқылы жалғастыру")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.white)
-                    }
-                    .padding(.vertical, 15)
-                    .frame(maxWidth: .infinity)
-                    .background {
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(.white.opacity(0.1))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.white.opacity(0.5), lineWidth: 1)
-                            }
-                    }
-                }
+                googleButton
+                appleButton
                 Spacer()
             }
             .padding(24)
@@ -186,12 +111,14 @@ struct LoginView: View {
                     videoURLString: "https://github.com/ulalaSt/Uzdiksiz-Assets/raw/refs/heads/main/stars_bg.mp4",
                     placeholderImageName: "stars_bg_placeholder"
                 )
-                Color.black.opacity(0.3)
+                //                Color.black.opacity(0.3)
             }
             .ignoresSafeArea()
         }
+        .onTapGesture {
+            textfieldState = nil
+        }
     }
-    
     var selector: some View {
         HStack(spacing: 10) {
             ForEach(AuthState.allCases) { option in
@@ -216,32 +143,124 @@ struct LoginView: View {
             }
         }
         .padding(5)
-        .background(
-            innerShadowBg
-        )
+        .background(NeumorphShape(shape: RoundedRectangle(cornerRadius: 10)))
     }
     
-    var innerShadowBg: some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color(red: 40/255, green: 48/255, blue: 63/255))
-            .overlay(
+    var emailField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Email")
+                .foregroundColor(Color(red: 213/255, green: 213/255, blue: 213/255))
+                .font(.system(size: 12, weight: .medium))
+            TextField("", text: $email, prompt: Text("Email енгізіңіз").foregroundColor(Color(red: 125/255, green: 125/255, blue: 145/255)))
+                .focused($textfieldState, equals: LoginTextFieldState.email)
+                .foregroundColor(.white)
+                .font(.system(size: 14, weight: .medium))
+                .keyboardType(.emailAddress)
+                .autocapitalization(.none)
+                .onSubmit {
+                    textfieldState = .password
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 20)
+                .background(NeumorphShape(shape: RoundedRectangle(cornerRadius: 10)))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    textfieldState = .email
+                }
+        }
+    }
+    
+    var passwordField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Құпиясөз")
+                .foregroundColor(Color(red: 213/255, green: 213/255, blue: 213/255))
+                .font(.system(size: 12, weight: .medium))
+            SecureField("", text: $password, prompt: Text("Құпиясөз енгізіңіз").foregroundColor(Color(red: 125/255, green: 125/255, blue: 145/255)))
+                .focused($textfieldState, equals: LoginTextFieldState.password)
+                .foregroundColor(.white)
+                .font(.system(size: 14, weight: .medium))
+                .onSubmit {
+                    textfieldState = nil
+                    auth()
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 20)
+                .background(NeumorphShape(shape: RoundedRectangle(cornerRadius: 10)))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    textfieldState = .password
+                }
+        }
+    }
+    
+    var googleButton: some View {
+        Button {
+            if let rootVC = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first?.windows.first?.rootViewController {
+                authViewModel.signInWithGoogle(presenting: rootVC)
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image("google")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+                Text("Google-мен жалғастыру")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .padding(.vertical, 15)
+            .frame(maxWidth: .infinity)
+            .background {
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.white,
-                            lineWidth: 32)
-                    .padding(-16)
-                    .shadow(color: Color(red: 25/255, green: 30/255, blue: 40/255),
-                            radius: 6, x: 4, y: 4)
-                    .shadow(color: Color(red: 54/255, green: 64/255, blue: 85/255), radius: 3, x: -4, y: -4)
-                    .clipShape(
+                    .fill(.white.opacity(0.1))
+                    .overlay {
                         RoundedRectangle(cornerRadius: 10)
-                    )
-            )
+                            .stroke(Color(red: 239/255, green: 240/255, blue: 246/255).opacity(0.5), lineWidth: 1)
+                    }
+            }
+        }
+    }
+    
+    var appleButton: some View {
+        Button {
+            authViewModel.performAppleSignIn()
+        } label: {
+            HStack(spacing: 10) {
+                Image("apple")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+                Text("Apple арқылы жалғастыру")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .padding(.vertical, 15)
+            .frame(maxWidth: .infinity)
+            .background {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.white.opacity(0.1))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                    }
+            }
+        }
     }
         
+    func auth() {
+        switch state {
+        case .login:
+            authViewModel.signIn(email: email, password: password)
+        case .register:
+            authViewModel.signUp(email: email, password: password)
+        }
+    }
     enum AuthState: CaseIterable, Identifiable {
         case login
         case register
-
+        
         var id: AuthState { self }
         var title: String {
             switch self {
@@ -251,5 +270,12 @@ struct LoginView: View {
                 "Тіркелу"
             }
         }
+    }
+    
+    enum LoginTextFieldState: Identifiable {
+        case email
+        case password
+
+        var id: LoginTextFieldState { self }
     }
 }
