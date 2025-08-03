@@ -23,14 +23,15 @@ struct LoginView: View {
                 Image("logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 100)
+                    .frame(width: 120)
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Бүгіннен баста!")
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                     Text("Өзгерісті бастау үшін тіркеліңіз немесе жүйеге кіріңіз")
-                        .font(.system(size: 12, weight: .regular))
+                        .font(.system(size: 16, weight: .regular))
                         .foregroundColor(.white)
+                        .multilineTextAlignment(.leading)
                 }
             }
             .padding(.horizontal, 24)
@@ -180,9 +181,10 @@ struct LoginView: View {
         }
         .padding(.top, 24)
         .background(
-            Image("stars_bg")
-                .resizable()
-                .scaledToFill()
+            ZStack {
+                LoopingVideoPlayer(videoName: "stars_bg")
+                Color.black.opacity(0.3)
+            }
                 .ignoresSafeArea()
         )
     }
