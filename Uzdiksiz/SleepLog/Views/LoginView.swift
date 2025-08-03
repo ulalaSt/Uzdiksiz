@@ -180,13 +180,16 @@ struct LoginView: View {
             )
         }
         .padding(.top, 24)
-        .background(
+        .background {
             ZStack {
-                LoopingVideoPlayer(videoName: "stars_bg")
+                LoopingVideoPlayer(
+                    videoURLString: "https://github.com/ulalaSt/Uzdiksiz-Assets/raw/refs/heads/main/stars_bg.mp4",
+                    placeholderImageName: "stars_bg_placeholder"
+                )
                 Color.black.opacity(0.3)
             }
-                .ignoresSafeArea()
-        )
+            .ignoresSafeArea()
+        }
     }
     
     var selector: some View {

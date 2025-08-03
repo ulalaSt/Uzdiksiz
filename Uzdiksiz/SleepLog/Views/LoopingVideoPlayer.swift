@@ -4,58 +4,77 @@
 //
 //  Created by Ulan Seitkali on 03.08.2025.
 //
-
 import SwiftUI
 import AVKit
 
-struct LoopingVideoPlayer: UIViewRepresentable {
-    let videoName: String
+struct LoopingVideoPlayer: View {
+    let videoURLString: String
+    let placeholderImageName: String
+
+    var body: some View {
+        LoopingPlayerUIView(urlString: videoURLString)
+            .aspectRatio(contentMode: .fill)
+            .background(
+                Image(placeholderImageName)
+                    .resizable()
+                    .scaledToFill()
+            )
+    }
+}
+
+struct LoopingPlayerUIView: UIViewRepresentable {
+    let urlString: String
 
     func makeUIView(context: Context) -> UIView {
-        return QueuePlayerUIView(videoName: videoName)
+        return LoopingPlayerView(urlString: urlString)
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
-class QueuePlayerUIView: UIView {
+class LoopingPlayerView: UIView {
     private var playerLooper: AVPlayerLooper?
-    private var player: AVQueuePlayer?
-    private var playerLayer: AVPlayerLayer?
+    private var queuePlayer: AVQueuePlayer?
 
-    init(videoName: String) {
+    init(urlString: String) {
         super.init(frame: .zero)
-        guard let path = Bundle.main.path(forResource: videoName, ofType: "mp4") else {
-            print("❌ Video file '\(videoName).mp4' not found in bundle.")
-            return
-        }
-
-        let url = URL(fileURLWithPath: path)
-        let asset = AVAsset(url: url)
-        let item = AVPlayerItem(asset: asset)
-
-        let player = AVQueuePlayer()
-        self.player = player
-        player.isMuted = true
-        playerLooper = AVPlayerLooper(player: player, templateItem: item)
-
-        let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = .resizeAspectFill
-        self.playerLayer = playerLayer
-
-        layer.addSublayer(playerLayer)
-
-        player.play()
-
         backgroundColor = .clear
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        playerLayer?.frame = bounds
+        playLoopingVideo(from: urlString)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func playLoopingVideo(from urlString: String) {
+        guard let url = URL(string: urlString) else {
+            print("Invalid video URL.")
+            return
+        }
+
+        let asset = AVAsset(url: url)
+        let item = AVPlayerItem(asset: asset)
+        let queuePlayer = AVQueuePlayer()
+        let looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
+
+        let playerLayer = AVPlayerLayer(player: queuePlayer)
+        playerLayer.frame = bounds
+        playerLayer.videoGravity = .resizeAspectFill
+        layer.addSublayer(playerLayer)
+
+        self.queuePlayer = queuePlayer
+        self.playerLooper = looper
+
+        queuePlayer.play()
+
+        // Resize layer on bounds change
+        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            playerLayer.frame = self?.bounds ?? .zero
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        layer.sublayers?.first?.frame = bounds
     }
 }
