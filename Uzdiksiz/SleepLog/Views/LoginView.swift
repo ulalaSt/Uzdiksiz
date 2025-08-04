@@ -12,6 +12,7 @@ import GoogleSignIn
 struct LoginView: View {
     @ObservedObject var authViewModel: AuthViewModel
     
+    @State private var nickname = ""
     @State private var email = ""
     @State private var password = ""
     @State private var state: AuthState = .login
@@ -39,6 +40,9 @@ struct LoginView: View {
             Spacer(minLength: 64)
             VStack(spacing: 24) {
                 selector
+                if state == .register {
+                    nicknameField
+                }
                 emailField
                 passwordField
                 if let error = authViewModel.user.error?.errorDescription {
@@ -170,6 +174,30 @@ struct LoginView: View {
         }
     }
     
+    var nicknameField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Есіміңіз")
+                .foregroundColor(Color(red: 213/255, green: 213/255, blue: 213/255))
+                .font(.system(size: 12, weight: .medium))
+            TextField("", text: $nickname, prompt: Text("Сізді қалай атаймыз?").foregroundColor(Color(red: 125/255, green: 125/255, blue: 145/255)))
+                .focused($textfieldState, equals: LoginTextFieldState.username)
+                .foregroundColor(.white)
+                .font(.system(size: 14, weight: .medium))
+                .keyboardType(.emailAddress)
+                .autocapitalization(.none)
+                .onSubmit {
+                    textfieldState = .email
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 20)
+                .background(NeumorphShape(shape: RoundedRectangle(cornerRadius: 10)))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    textfieldState = .username
+                }
+        }
+    }
+    
     var passwordField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Құпиясөз")
@@ -254,7 +282,7 @@ struct LoginView: View {
         case .login:
             authViewModel.signIn(email: email, password: password)
         case .register:
-            authViewModel.signUp(email: email, password: password)
+            authViewModel.signUp(email: email, password: password, nickname: nickname)
         }
     }
     enum AuthState: CaseIterable, Identifiable {
@@ -273,6 +301,7 @@ struct LoginView: View {
     }
     
     enum LoginTextFieldState: Identifiable {
+        case username
         case email
         case password
 

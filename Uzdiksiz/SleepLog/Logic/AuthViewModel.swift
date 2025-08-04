@@ -38,17 +38,77 @@ class AuthViewModel: NSObject, ObservableObject {
         }
     }
 
-    func signUp(email: String, password: String) {
-        user.setIsLoading(cancelBag: cancelBag)
-        Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
-            if let error = error {
-                self?.user = .failed(.unexpectedError(error.localizedDescription))
-            } else {
-                self?.user = .loaded(result?.user)
+    func signUp(email: String, password: String, nickname: String) {
+        switch validateUsername(nickname) {
+        case .failure(let validationError):
+            self.user = .failed(.unexpectedError(validationError.rawValue))
+        case .success:
+            user.setIsLoading(cancelBag: cancelBag)
+
+            Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
+                guard let self = self else { return }
+
+                if let error = error {
+                    self.user = .failed(.unexpectedError(error.localizedDescription))
+                    return
+                }
+
+                guard let firebaseUser = result?.user else {
+                    self.user = .failed(.unexpectedError("Пайдаланушы регистрациясы сәтсіз аяқталды"))
+                    return
+                }
+
+                // Try setting nickname
+                let changeRequest = firebaseUser.createProfileChangeRequest()
+                changeRequest.displayName = nickname
+                changeRequest.commitChanges { error in
+                    if let error = error {
+                        firebaseUser.delete { deleteError in
+                            if let deleteError = deleteError {
+                                self.user = .failed(.unexpectedError("Failed to set nickname and failed to delete user: \(deleteError.localizedDescription)"))
+                            } else {
+                                self.user = .failed(.unexpectedError("Failed to set nickname. User creation rolled back."))
+                            }
+                        }
+                        return
+                    }
+
+                    self.user = .loaded(firebaseUser)
+                }
             }
         }
     }
-    
+
+    enum UsernameValidationError: String, Error {
+        case empty = "Пайдаланушы аты бос болмауы керек"
+        case tooShort = "Пайдаланушы аты кемінде 3 таңбадан тұруы керек"
+        case tooLong = "Пайдаланушы аты 20 таңбадан аспауы керек"
+        case invalidCharacters = "Пайдаланушы аты тек әріптерден, сандардан және астыңғы сызықтан тұруы керек"
+    }
+
+    func validateUsername(_ username: String) -> Result<Void, UsernameValidationError> {
+        if username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return .failure(.empty)
+        }
+
+        if username.count < 3 {
+            return .failure(.tooShort)
+        }
+
+        if username.count > 20 {
+            return .failure(.tooLong)
+        }
+
+        let regex = "^[\\p{L}0-9_]+$"
+        let isValid = NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: username)
+        if !isValid {
+            return .failure(.invalidCharacters)
+        }
+
+        return .success(())
+    }
+
+
     func signInWithGoogle(presenting: UIViewController) {
         user.setIsLoading(cancelBag: cancelBag)
         guard let clientID = FirebaseApp.app()?.options.clientID else {

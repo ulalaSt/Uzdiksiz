@@ -16,6 +16,28 @@ struct MainView: View {
     @State private var selectedTab = TabState.home
 
     var body: some View {
+        switch sleepLogViewModel.expectedWakeTime {
+        case .notRequested:
+            Text("")
+                .onAppear {
+                    sleepLogViewModel.fetchExpectedWakeTime()
+                }
+        case .isLoading(let last, let cancelBag):
+            ProgressView("Мақсатты ояну уақыты жүктелуде...")
+        case .loaded(let t):
+            if t == nil {
+                TargetWakeTimeCreationView(viewModel: sleepLogViewModel)
+            } else {
+                content
+            }
+        case .failed(let aPIError):
+            Text(aPIError.errorDescription)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.red)
+        }
+    }
+    
+    var content: some View {
         VStack(spacing: 0) {
             TabView(selection: $selectedTab) {
                 TodayView(viewModel: sleepLogViewModel)

@@ -55,40 +55,22 @@ struct TodayView: View {
                     .background(BlurredBackgroundView())
                 }
                 Group {
-                    if let error = viewModel.expectedWakeTime.error {
-                        Text(error.errorDescription)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.red)
-                    } else if let data = viewModel.expectedWakeTime.value {
-                        if let data {
-                            Group {
-                                if let error = viewModel.logs.error {
-                                    Text(error.errorDescription)
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(.red)
-                                } else if let logs = viewModel.logs.value {
-                                    if let _ = logs.first(where: { $0.date == viewModel.todayDateString() }) {
-                                        TodayResultView(viewModel: viewModel)
-                                            .background(BlurredBackgroundView())
-                                    } else {
-                                        LogSleepView(viewModel: viewModel)
-                                            .background(BlurredBackgroundView())
-                                    }
-                                } else {
-                                    ProgressView("Бүгінгі тіркелім тексерілуде...")
-                                        .tint(.white)
-                                        .foregroundColor(.white)
-                                }
-                            }
+                    if let error = viewModel.logs.error {
+                            Text(error.errorDescription)
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.red)
+                    } else if let logs = viewModel.logs.value {
+                        if let _ = logs.first(where: { $0.date == viewModel.todayDateString() }) {
+                            TodayResultView(viewModel: viewModel)
+                                .background(BlurredBackgroundView())
                         } else {
-                            SetupExpectedWakeTimeView(viewModel: viewModel)
+                            LogSleepView(viewModel: viewModel)
                                 .background(BlurredBackgroundView())
                         }
                     } else {
-                        ProgressView("Ояну уақыты жүктелуде...")
+                        ProgressView("Бүгінгі тіркелім тексерілуде...")
                             .tint(.white)
                             .foregroundColor(.white)
-
                     }
                 }
             }
@@ -96,8 +78,7 @@ struct TodayView: View {
             .padding(.top, 16)
         }
         .onAppear {
-            if viewModel.expectedWakeTime == .notRequested {
-                viewModel.fetchExpectedWakeTime()
+            if viewModel.logs == .notRequested {
                 viewModel.fetchLogs()
             }
         }
