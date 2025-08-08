@@ -226,7 +226,7 @@ struct LoginView: View {
             if let rootVC = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
                 .first?.windows.first?.rootViewController {
-                authViewModel.signInWithGoogle(presenting: rootVC)
+                authViewModel.signInWithGoogle()
             }
         } label: {
             HStack(spacing: 10) {
@@ -253,7 +253,7 @@ struct LoginView: View {
     
     var appleButton: some View {
         Button {
-            authViewModel.performAppleSignIn()
+            authViewModel.signInWithApple()
         } label: {
             HStack(spacing: 10) {
                 Image("apple")

@@ -77,6 +77,7 @@ struct TodayView: View {
             .padding(.horizontal, 16)
             .padding(.top, 16)
         }
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             if viewModel.logs == .notRequested {
                 viewModel.fetchLogs()

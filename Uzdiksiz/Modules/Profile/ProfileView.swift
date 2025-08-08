@@ -22,7 +22,7 @@ struct ProfileView: View {
                 .scaledToFit()
                 .frame(width: 100, height: 100)
             VStack(alignment: .leading, spacing: 16) {
-                if let email = authViewModel.user.value??.email {
+                if let email = authViewModel.user.value?.email {
                     infoView("Email", desc: "📧 \(email)")
                 }
                 infoView("Күннің шығуы", desc: "🌅 \(sunrise)")

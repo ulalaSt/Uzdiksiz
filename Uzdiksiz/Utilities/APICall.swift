@@ -19,6 +19,7 @@ enum APIError: Swift.Error, Equatable {
     case invalidURL
     case cancelled
     case invalidToken
+    case notRegistered
     case pageNotFound
     case tokenNotFound
     case httpCode(HTTPCode)
@@ -35,6 +36,7 @@ extension APIError: Identifiable, Hashable {
 extension APIError {
     var errorDescription: LocalizedStringKey {
         switch self {
+        case .notRegistered: return "Клиент тіркелмеген"
         case .invalidURL: return "default_error"
         case .httpCode: return "default_error"
         case .unexpectedResponse: return "default_error"
