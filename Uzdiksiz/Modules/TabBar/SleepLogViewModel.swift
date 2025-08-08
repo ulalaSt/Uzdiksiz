@@ -35,6 +35,12 @@ class SleepLogViewModel: ObservableObject {
     
     private var db = Firestore.firestore()
     
+    
+    init() {
+        fetchLogs()
+        fetchExpectedWakeTime()
+    }
+    
     func createSleepLog(date: String, sleepTime: String, wakeTime: String) {
         guard let expectedWakeTime = expectedWakeTime.value,
               let expectedWakeTimeStr = expectedWakeTime,

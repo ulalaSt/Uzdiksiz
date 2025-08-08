@@ -78,11 +78,6 @@ struct TodayView: View {
             .padding(.top, 16)
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            if viewModel.logs == .notRequested {
-                viewModel.fetchLogs()
-            }
-        }
     }
     
     private func formattedDate() -> String {

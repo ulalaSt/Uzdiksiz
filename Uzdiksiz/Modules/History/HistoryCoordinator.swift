@@ -26,7 +26,11 @@ final class HistoryCoordinator: Coordinator {
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }
-
+    
+    func navigateToGraph() {
+        
+    }
+    
     func stop() {
         // Optional cleanup
     }
