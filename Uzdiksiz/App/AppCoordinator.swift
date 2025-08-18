@@ -34,34 +34,42 @@ final class AppCoordinator {
     }
 
     func start() {
-        observeAuthorization()
-    }
-
-    private func observeAuthorization() {
-        appState.$user
+        switchFlow(hasCompletedOnboarding: appState.hasCompletedOnboarding)
+        appState.$hasCompletedOnboarding
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] user in
-                self?.switchFlow(user: user)
+            .dropFirst()
+            .sink { [weak self] isOnboarding in
+                self?.switchFlow(hasCompletedOnboarding: isOnboarding)
             }
             .store(in: &cancellables)
-        environment.authService.userPublisher.sink { [weak self] user in
-            self?.appState.user = user
-        }
-        .store(in: &cancellables)
     }
+
+//    private func observeAuthorization() {
+//        appState.$user
+//            .removeDuplicates()
+//            .receive(on: DispatchQueue.main)
+//            .sink { [weak self] user in
+//                self?.switchFlow(user: user)
+//            }
+//            .store(in: &cancellables)
+//        environment.authService.userPublisher.sink { [weak self] user in
+//            self?.appState.user = user
+//        }
+//        .store(in: &cancellables)
+//    }
     
-    private func switchFlow(user: Loadable<AppUser>) {
+    private func switchFlow(hasCompletedOnboarding: Bool) {
         currentCoordinator?.stop()
         currentCoordinator = nil
-        if let user = user.value {
+        if hasCompletedOnboarding {
             let mainCoordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
             currentCoordinator = mainCoordinator
             mainCoordinator.start()
         } else {
-            let authCoordinator = AuthCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
-            currentCoordinator = authCoordinator
-            authCoordinator.start()
+            let onboardingCoordinator = OnboardingCoordinator(navigationController: navigationController, appState: appState)
+            currentCoordinator = onboardingCoordinator
+            onboardingCoordinator.start()
         }
     }
 }
