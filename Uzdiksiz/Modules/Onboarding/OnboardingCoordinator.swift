@@ -13,30 +13,46 @@ import UIKit
 final class OnboardingCoordinator: Coordinator {
     private let navigationController: UINavigationController
     private let appState: AppState
-    private var onFinish: (() -> Void)?
+    private let hasCompletedInfoSections: Bool
     
     init(
         navigationController: UINavigationController,
         appState: AppState,
-        onFinish: (() -> Void)? = nil
+        hasCompletedInfoSections: Bool
     ) {
         self.navigationController = navigationController
         self.appState = appState
-        self.onFinish = onFinish
+        self.hasCompletedInfoSections = hasCompletedInfoSections
     }
     
     func start() {
+        if hasCompletedInfoSections {
+            showTimeSelectorPage()
+        } else {
+            showOnboardingPage()
+        }
+    }
+    
+    func showOnboardingPage() {
         let onboardingView = OnboardingPage(onFinish: { [weak self] in
-            self?.appState.markOnboardingCompleted()
-            self?.stop()
+            self?.appState.markInfoSectionsCompleted()
+            self?.showTimeSelectorPage()
         })
         
         let vc = UIHostingController(rootView: onboardingView)
         navigationController.setViewControllers([vc], animated: false)
     }
     
+    func showTimeSelectorPage() {
+        let targetTimeSelectorView = TargetTimeSelectionPage { [weak self] in
+            self?.appState.markOnboardingCompleted()
+        }
+        
+        let vc = UIHostingController(rootView: targetTimeSelectorView)
+        navigationController.setViewControllers([vc], animated: false)
+    }
+
     func stop() {
         navigationController.setViewControllers([], animated: false)
-        onFinish?()
     }
 }

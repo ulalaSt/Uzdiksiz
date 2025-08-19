@@ -34,13 +34,18 @@ final class AppCoordinator {
     }
 
     func start() {
-        switchFlow(hasCompletedOnboarding: appState.hasCompletedOnboarding)
-        appState.$hasCompletedOnboarding
-            .removeDuplicates()
+        switchFlow(hasCompletedOnboarding: appState.hasCompletedOnboarding, hasCompletedInfoSections: appState.hasCompletedInfoSections)
+        Publishers.CombineLatest(appState.$hasCompletedOnboarding, appState.$hasCompletedInfoSections)
+            .removeDuplicates { lhs, rhs in
+                lhs.0 == rhs.0 && lhs.1 == rhs.1
+            }
             .receive(on: DispatchQueue.main)
             .dropFirst()
-            .sink { [weak self] isOnboarding in
-                self?.switchFlow(hasCompletedOnboarding: isOnboarding)
+            .sink { [weak self] hasCompletedOnboarding, hasCompletedInfoSections in
+                self?.switchFlow(
+                    hasCompletedOnboarding: hasCompletedOnboarding,
+                    hasCompletedInfoSections: hasCompletedInfoSections
+                )
             }
             .store(in: &cancellables)
     }
@@ -59,17 +64,16 @@ final class AppCoordinator {
 //        .store(in: &cancellables)
 //    }
     
-    private func switchFlow(hasCompletedOnboarding: Bool) {
+    private func switchFlow(hasCompletedOnboarding: Bool, hasCompletedInfoSections: Bool) {
         currentCoordinator?.stop()
         currentCoordinator = nil
+        let coordinator: Coordinator
         if hasCompletedOnboarding {
-            let mainCoordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
-            currentCoordinator = mainCoordinator
-            mainCoordinator.start()
+            coordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
         } else {
-            let onboardingCoordinator = OnboardingCoordinator(navigationController: navigationController, appState: appState)
-            currentCoordinator = onboardingCoordinator
-            onboardingCoordinator.start()
+            coordinator = OnboardingCoordinator(navigationController: navigationController, appState: appState, hasCompletedInfoSections: hasCompletedInfoSections)
         }
+        currentCoordinator = coordinator
+        coordinator.start()
     }
 }
