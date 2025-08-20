@@ -15,7 +15,7 @@ final class AppCoordinator {
 
     private var currentCoordinator: Coordinator?
     private var cancellables = Set<AnyCancellable>()
-    private var appState: AppState
+    private var appState: AppState = .shared
     private let authViewModel: AuthViewModel
 
     init(navigationController: UINavigationController,
@@ -28,9 +28,7 @@ final class AppCoordinator {
         } else {
             user = .failed(.notRegistered)
         }
-        let appState = AppState(user: user)
-        self.appState = appState
-        self.authViewModel = AuthViewModel(appState: appState, service: environment.authService)
+        self.authViewModel = AuthViewModel(service: environment.authService)
     }
 
     func start() {

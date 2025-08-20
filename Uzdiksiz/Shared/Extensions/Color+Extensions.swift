@@ -20,4 +20,6 @@ extension Color {
     static var colorsRed: Color = .init(uiColor: .colorsRed)
     static var colorsYellow: Color = .init(uiColor: .colorsYellow)
     static var colorsCyan: Color = .init(uiColor: .colorsCyan)
+    static var primaryOceanBlue: Color = .init(uiColor: .primaryOceanBlue)
+    static var primarySapphireBlue: Color = .init(uiColor: .primarySapphireBlue)
 }

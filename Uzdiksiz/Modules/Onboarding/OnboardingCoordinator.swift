@@ -35,7 +35,7 @@ final class OnboardingCoordinator: Coordinator {
     
     func showOnboardingPage() {
         let onboardingView = OnboardingPage(onFinish: { [weak self] in
-            self?.appState.markInfoSectionsCompleted()
+            self?.appState.hasCompletedInfoSections = true
             self?.showTimeSelectorPage()
         })
         
@@ -44,8 +44,10 @@ final class OnboardingCoordinator: Coordinator {
     }
     
     func showTimeSelectorPage() {
-        let targetTimeSelectorView = TargetTimeSelectionPage { [weak self] in
-            self?.appState.markOnboardingCompleted()
+        let targetTimeSelectorView = TargetTimeSelectionPage { [weak self] sleepTime, wakeTime in
+            self?.appState.sleepTime = sleepTime
+            self?.appState.wakeTime = wakeTime
+            self?.appState.hasCompletedOnboarding = true
         }
         
         let vc = UIHostingController(rootView: targetTimeSelectorView)

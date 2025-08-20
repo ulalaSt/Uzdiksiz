@@ -15,7 +15,7 @@ enum MainTab: Int {
         case .home:
             return "house.fill"
         case .history:
-            return "calendar.badge.clock"
+            return "chart.pie"
         case .profile:
             return "person.fill"
         }
@@ -24,9 +24,9 @@ enum MainTab: Int {
     var title: String {
         switch self {
         case .home:
-            return "Басты бет"
+            return "Бас бет"
         case .history:
-            return "Ұйқы тарихы"
+            return "Статистика"
         case .profile:
             return "Профиль"
         }

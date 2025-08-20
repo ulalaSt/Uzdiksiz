@@ -1,0 +1,27 @@
+//
+//  AppStorage.swift
+//  Uzdiksiz
+//
+//  Created by Ulan Seitkali on 20.08.2025.
+//
+
+class AppStorage {
+    @Defaults(AppStorageKeys.hasCompletedOnboarding, defaultValue: false)
+    var hasCompletedOnboarding: Bool
+    
+    @Defaults(AppStorageKeys.hasCompletedInfoSections, defaultValue: false)
+    var hasCompletedInfoSections: Bool
+    
+    @Defaults(AppStorageKeys.sleepTime, defaultValue: Time(hour: 22, minute: 0))
+    var sleepTime: Time
+
+    @Defaults(AppStorageKeys.wakeTime, defaultValue: Time(hour: 6, minute: 0))
+    var wakeTime: Time
+}
+
+enum AppStorageKeys {
+    static let hasCompletedOnboarding = "hasCompletedOnboarding"
+    static let hasCompletedInfoSections = "hasCompletedInfoSections"
+    static let sleepTime = "sleepTime"
+    static let wakeTime = "wakeTime"
+}

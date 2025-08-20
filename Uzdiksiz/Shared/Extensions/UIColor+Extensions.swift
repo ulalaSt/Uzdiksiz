@@ -19,4 +19,6 @@ extension UIColor {
     static var colorsRed: UIColor = .init(red: 229/255, green: 115/255, blue: 115/255, alpha: 1)
     static var colorsYellow: UIColor = .init(red: 255/255, green: 215/255, blue: 109/255, alpha: 1)
     static var colorsCyan: UIColor = .init(red: 52/255, green: 200/255, blue: 232/255, alpha: 1)
+    static var primaryOceanBlue: UIColor = .init(red: 14/255, green: 107/255, blue: 168/255, alpha: 1)
+    static var primarySapphireBlue: UIColor = .init(red: 10/255, green: 36/255, blue: 114/255, alpha: 1)
 }

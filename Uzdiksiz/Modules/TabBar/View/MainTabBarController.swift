@@ -9,54 +9,29 @@ import UIKit
 
 import SwiftUI
 
-class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
-    private let bgImageView: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "night_bg"))
-        iv.contentMode = .scaleAspectFill
-        iv.translatesAutoresizingMaskIntoConstraints = false
-        return iv
-    }()
-
+final class MainTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        delegate = self
-        // Insert background at index 0
-        view.insertSubview(bgImageView, at: 0)
-        
-        NSLayoutConstraint.activate([
-            bgImageView.topAnchor.constraint(equalTo: view.topAnchor),
-            bgImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            bgImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bgImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        ])
+        configureAppearance()
     }
-    
-    func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
-       if #available(iOS 18, *) {
-         guard let fromView = selectedViewController?.view,
-               let toView = viewController.view,
-               fromView != toView else {
-           return viewController != selectedViewController
-         }
-   
-         // Custom transition, to "hide" blinking
-         UIView.transition(
-             from: fromView, to: toView,
-             duration: 0.01, // almost immediately
-             options: [.transitionCrossDissolve]
-         ) { _ in }
-       }
-       
-      return viewController != selectedViewController
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: false)
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: false)
+
+    private func configureAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .backgroundMidnightBlue
+
+        // Normal (unselected) item color
+        appearance.stackedLayoutAppearance.normal.iconColor = .textLightGray
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.textLightGray]
+
+        // Selected item color
+        appearance.stackedLayoutAppearance.selected.iconColor = .primaryOceanBlue
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.primaryOceanBlue]
+
+        // Apply to the tab bar
+        tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = appearance
+        }
     }
 }

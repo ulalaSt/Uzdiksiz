@@ -9,41 +9,45 @@ import Combine
 import Foundation
 
 final class AppState: ObservableObject {
-    @Published var user: Loadable<AppUser>
-    @Published private(set) var hasCompletedOnboarding: Bool
-    @Published private(set) var hasCompletedInfoSections: Bool
+    static let shared: AppState = AppState(storage: AppStorage())
+    let storage: AppStorage
+
+    @Published
+    var hasCompletedOnboarding: Bool
+
+    @Published
+    var hasCompletedInfoSections: Bool
+    
+    @Published
+    var sleepTime: Time
+    
+    @Published
+    var wakeTime: Time
+        
     private var cancellables = Set<AnyCancellable>()
-    
-    init(user: Loadable<AppUser>) {
-        self.user = user
-        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: AppStateKeys.hasCompletedOnboarding)
-        self.hasCompletedInfoSections = UserDefaults.standard.bool(forKey: AppStateKeys.hasCompletedInfoSections)
-        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
-                guard let self = self else { return }
-                let onboarding = UserDefaults.standard.bool(forKey: AppStateKeys.hasCompletedOnboarding)
-                let infoSections = UserDefaults.standard.bool(forKey: AppStateKeys.hasCompletedInfoSections)
-                
-                if self.hasCompletedOnboarding != onboarding {
-                    self.hasCompletedOnboarding = onboarding
-                }
-                if self.hasCompletedInfoSections != infoSections {
-                    self.hasCompletedInfoSections = infoSections
-                }
-            }
-            .store(in: &cancellables)
-    }
-    
-    func markOnboardingCompleted() {
-        UserDefaults.standard.set(true, forKey: AppStateKeys.hasCompletedOnboarding)
-    }
-    
-    func markInfoSectionsCompleted() {
-        UserDefaults.standard.set(true, forKey: AppStateKeys.hasCompletedInfoSections)
+        
+    init(storage: AppStorage) {
+        self.storage = storage
+        self.hasCompletedOnboarding = storage.hasCompletedOnboarding
+        self.hasCompletedInfoSections = storage.hasCompletedInfoSections
+        self.sleepTime = storage.sleepTime
+        self.wakeTime = storage.wakeTime
+        
+        $hasCompletedOnboarding.sink {
+            storage.hasCompletedOnboarding = $0
+        }.store(in: &cancellables)
+
+        $hasCompletedInfoSections.sink {
+            storage.hasCompletedInfoSections = $0
+        }.store(in: &cancellables)
+
+        $sleepTime.sink {
+            storage.sleepTime = $0
+        }.store(in: &cancellables)
+
+        $wakeTime.sink {
+            storage.wakeTime = $0
+        }.store(in: &cancellables)
     }
 }
 
-enum AppStateKeys {
-    static let hasCompletedOnboarding = "hasCompletedOnboarding"
-    static let hasCompletedInfoSections = "hasCompletedInfoSections"
-}

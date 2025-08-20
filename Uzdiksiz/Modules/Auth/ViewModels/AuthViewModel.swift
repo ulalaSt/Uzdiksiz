@@ -14,21 +14,18 @@ import CryptoKit
 import GoogleSignIn
 
 class AuthViewModel: NSObject, ObservableObject {
-    @Published var user: Loadable<AppUser>
+    @Published var user: Loadable<AppUser> = .notRequested
     @Published var deleteState: Loadable<Void> = .notRequested
     @Published var signoutState: Loadable<Void> = .notRequested
     private var cancelBag = CancelBag()
     private var db = Firestore.firestore()
     private let service: AuthService
-    private let appState: AppState
+    private let appState: AppState = .shared
     weak var coordinatorDelegate: AuthCoordinatorDelegate?
     
-    init(appState: AppState, service: AuthService) {
-        self.appState = appState
+    init(service: AuthService) {
         self.service = service
-        self.user = appState.user
         super.init()
-        self.appState.$user.assign(to: \.user, on: self).store(in: cancelBag)
     }
 
     func signIn(email: String, password: String) {

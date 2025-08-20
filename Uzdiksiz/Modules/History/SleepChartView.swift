@@ -265,7 +265,7 @@ struct SleepChartView: View {
                     let durationText = "\(hours) сағ"
                     Text(minutes == 0 ? durationText : durationText + " \(minutes) мин")
                         .fixedSize()
-                        .font(.caption2.bold())
+                        .font(.caption2.weight(.bold))
                         .foregroundColor(nightColor)
                         .rotationEffect(.degrees(-90)) // Поворот текста
                 }

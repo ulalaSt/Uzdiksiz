@@ -70,7 +70,7 @@ extension AuthCoordinator: ASAuthorizationControllerPresentationContextProviding
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        appState.user = .failed(.unexpectedError("Apple авторизация қатесі: \(error.localizedDescription)"))
+//        appState.user = .failed(.unexpectedError("Apple авторизация қатесі: \(error.localizedDescription)"))
     }
 }
 

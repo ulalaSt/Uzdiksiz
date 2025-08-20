@@ -82,11 +82,12 @@ struct OnboardingPage: View {
                 } label: {
                     DefaultButtonView(title: buttonTitle, state: state == .welcome ? .primary : .secondary)
                 }
+                .padding(.bottom, 32)
+                .padding(.horizontal, 32)
                 .transition(.move(edge: .bottom).combined(with: .opacity).animation(.easeInOut))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(32)
         .background(LinearGradient(colors: [.backgroundDeepNavy, .backgroundMidnightBlue], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
         .navigationBarHidden(true)
         .allowsHitTesting(showTitle)
@@ -143,7 +144,7 @@ struct OnboardingPage: View {
                                 dampingFraction: 0.5,
                                 blendDuration: 0.5).delay(0.4), value: showTitle)
                     }
-                    .font(.largeTitle.bold())
+                    .font(.largeTitle.weight(.bold))
                     .multilineTextAlignment(.center)
                     .foregroundColor(.textSoftWhite)
                     .animation(.interactiveSpring(
@@ -171,6 +172,8 @@ struct OnboardingPage: View {
                         dampingFraction: 0.5,
                         blendDuration: 0.5), value: showTitle)
             }
+            .padding(.bottom, 16)
+            .padding(.horizontal, 32)
         } else {
             Image("logo")
                 .resizable()
@@ -195,7 +198,7 @@ struct OnboardingPage: View {
         VStack(spacing: 0) {
             VStack(spacing: 24) {
                 Text(state.title)
-                    .font(.largeTitle.bold())
+                    .font(.largeTitle.weight(.bold))
                     .multilineTextAlignment(.center)
                     .foregroundColor(.textSoftWhite)
                 Text(state.description)
@@ -209,6 +212,8 @@ struct OnboardingPage: View {
                 .scaledToFit()
                 .frame(maxWidth: 500, maxHeight: 500, alignment: .center)
         }
+        .padding(.bottom, 16)
+        .padding(.horizontal, 32)
     }
 }
 

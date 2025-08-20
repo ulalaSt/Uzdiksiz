@@ -7,23 +7,10 @@
 import SwiftUI
 
 struct TargetTimeSelectionPage: View {
-    let onFinish: () -> Void
+    let onFinish: (Time, Time) -> Void
     @State var state: SelectionState = .sleep
-    @State private var sleepTime: Date = {
-        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        components.day! -= 1  // next day
-        components.hour = 22
-        components.minute = 0
-        return Calendar.current.date(from: components)!
-    }()
-
-    @State private var wakeTime: Date = {
-        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        components.hour = 7
-        components.minute = 0
-        return Calendar.current.date(from: components)!
-    }()
-
+    @State private var sleepTime: Date = Calendar.current.date(from: DateComponents(hour: 22, minute: 0)) ?? Date()
+    @State private var wakeTime: Date = Calendar.current.date(from: DateComponents(hour: 6, minute: 0)) ?? Date()
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
             ZStack {
@@ -41,6 +28,7 @@ struct TargetTimeSelectionPage: View {
                     .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.5, blendDuration: 0.5), value: state)
             }
             .frame(maxWidth: 150, maxHeight: 150, alignment: .center)
+            .padding(.top, 32)
             TabView(selection: $state) {
                 content(for: .sleep).tag(SelectionState.sleep)
                 content(for: .wake).tag(SelectionState.wake)
@@ -52,13 +40,22 @@ struct TargetTimeSelectionPage: View {
                         state = .wake
                     }
                 case .wake:
-                    onFinish()
+                    let sleepComponents = Calendar.current.dateComponents([.hour, .minute], from: sleepTime)
+                    let wakeComponents = Calendar.current.dateComponents([.hour, .minute], from: wakeTime)
+                    guard let sleepHour = sleepComponents.hour,
+                          let sleepMinute = sleepComponents.minute,
+                          let wakeHour = wakeComponents.hour,
+                          let wakeMinute = wakeComponents.minute else {
+                        return
+                    }
+                    onFinish(Time(hour: sleepHour, minute: sleepMinute), Time(hour: wakeHour, minute: wakeMinute))
                 }
             } label: {
                 DefaultButtonView(title: "Сақтау", state: .primary)
             }
+            .padding(.bottom, 32)
+            .padding(.horizontal, 32)
         }
-        .padding(32)
         .background(LinearGradient(colors: [.backgroundDeepNavy, .backgroundMidnightBlue], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
         .navigationBarHidden(true)
     }
@@ -67,7 +64,7 @@ struct TargetTimeSelectionPage: View {
         VStack(spacing: 24) {
             Spacer()
             Text(state.title)
-                .font(.largeTitle.bold())
+                .font(.largeTitle.weight(.bold))
                 .multilineTextAlignment(.center)
                 .foregroundColor(.textSoftWhite)
             Text(state.description)
@@ -88,6 +85,7 @@ struct TargetTimeSelectionPage: View {
             .datePickerStyle(.wheel)
             Spacer()
         }
+        .padding(.horizontal, 32)
     }
     
     enum SelectionState {
