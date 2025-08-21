@@ -52,25 +52,25 @@ class SleepTimeViewModel: ObservableObject {
         switch timeType {
         case .sleep:
             if sleepTime > wakeTime {
-                let diff = Time.twentyFour.toMinutes() - sleepTime.toMinutes()
+                let diff = Time.twentyFour.totalMinutes - sleepTime.totalMinutes
                 sleepTime = .zero
-                wakeTime = .init(minutes: diff + wakeTime.toMinutes())
-                todayTime = .init(minutes: diff + todayTime.toMinutes())
+                wakeTime = .init(minutes: diff + wakeTime.totalMinutes)
+                todayTime = .init(minutes: diff + todayTime.totalMinutes)
             }
             if todayTime > sleepTime {
                 if todayTime < wakeTime {
-                    return Time(minutes: sleepTime.toMinutes() - todayTime.toMinutes())
+                    return Time(minutes: sleepTime.totalMinutes - todayTime.totalMinutes)
                 } else {
-                    return Time(minutes: 24 * 60 + sleepTime.toMinutes() - todayTime.toMinutes())
+                    return Time(minutes: 24 * 60 + sleepTime.totalMinutes - todayTime.totalMinutes)
                 }
             } else {
-                return Time(minutes: sleepTime.toMinutes() - todayTime.toMinutes())
+                return Time(minutes: sleepTime.totalMinutes - todayTime.totalMinutes)
             }
         case .wake:
             if todayTime < wakeTime {
-                return Time(minutes: wakeTime.toMinutes() - todayTime.toMinutes())
+                return Time(minutes: wakeTime.totalMinutes - todayTime.totalMinutes)
             } else {
-                return Time(minutes: 24 * 60 + wakeTime.toMinutes() - todayTime.toMinutes())
+                return Time(minutes: 24 * 60 + wakeTime.totalMinutes - todayTime.totalMinutes)
             }
         }
     }

@@ -19,10 +19,26 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
         return lhs.hour == rhs.hour && lhs.minute == rhs.minute
     }
     
-    func toMinutes() -> Int {
+    /// Convert to minutes since midnight
+    var totalMinutes: Int {
         hour * 60 + minute
     }
     
+    /// Normalize hours/minutes into 0...23 and 0...59
+    func normalized() -> Time {
+        var h = hour % 24
+        if h < 0 { h += 24 }
+        var m = minute % 60
+        if m < 0 { m += 60 }
+        return Time(hour: h, minute: m)
+    }
+    
+    static func fromMinutes(_ minutes: Int) -> Time {
+        let h = (minutes / 60) % 24
+        let m = minutes % 60
+        return Time(hour: h, minute: m)
+    }
+
     init(hour: Int, minute: Int) {
         self.hour = hour
         self.minute = minute
@@ -44,9 +60,7 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
                 return "\(hour)cағ \(minute)мин өтті"
             }
         } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm"
-            return formatter.string(from: date)
+            return String(format: "%02d:%02d", hour, minute)
         }
     }
     
