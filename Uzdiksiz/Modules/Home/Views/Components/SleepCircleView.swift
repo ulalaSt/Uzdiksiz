@@ -11,7 +11,8 @@ import SwiftUI
 struct SleepCircleView: View {
     @Binding var sleepTime: Time
     @Binding var wakeTime: Time
-    
+    @State private var isDragging = false
+
     let minDurationMinutes = 60    // 1h
     let maxDurationMinutes = 20*60 // 20h
     
@@ -22,10 +23,8 @@ struct SleepCircleView: View {
             let radius = size/2
 
             ZStack {
-                Image("24_clock")
-                    .resizable()
-                    .scaledToFit()
-                    .padding(32)
+                ClockFaceView(sleepTime: sleepTime, wakeTime: wakeTime, isDragging: isDragging)
+                    .padding(16)
                 Circle()
                     .stroke(Color.white.opacity(0.1), lineWidth: 32)
                 // Arc between sleep and wake
@@ -45,8 +44,12 @@ struct SleepCircleView: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
+                                isDragging = true
                                 let newTime = time(for: value.location, center: center)
                                 updateSleepTime(newTime)
+                            }
+                            .onEnded { _ in
+                                isDragging = false
                             }
                     )
                 
@@ -56,8 +59,12 @@ struct SleepCircleView: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
+                                isDragging = true
                                 let newTime = time(for: value.location, center: center)
                                 updateWakeTime(newTime)
+                            }
+                            .onEnded { _ in
+                                isDragging = false
                             }
                     )
                 VStack(spacing: 0) {
@@ -71,7 +78,9 @@ struct SleepCircleView: View {
             }
             .frame(width: size, height: size)
         }
-        .padding()
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity) // take all available space
+        .aspectRatio(1, contentMode: .fit) // make it square
     }
     
     // MARK: - Computed

@@ -66,34 +66,20 @@ struct SleepSettingsPage: View {
     
     var sleepSettings: some View {
         VStack(spacing: 16) {
-            DatePicker(
-                "",
-                selection: $sleepTimeDate,
-                displayedComponents: .hourAndMinute
-            )
-            .labelsHidden()
-            .colorScheme(.dark)
-            .datePickerStyle(.wheel)
-            .onChange(of: sleepTimeDate) { newValue in
-                viewModel.sleepTime = sleepTime
-            }
+            MinuteIntervalDatePicker(date: $sleepTimeDate)
+                .onChange(of: sleepTimeDate) { newValue in
+                    viewModel.sleepTime = sleepTime
+                }
             Spacer()
         }
     }
     
     var alarmSettings: some View {
         VStack(spacing: 16) {
-            DatePicker(
-                "",
-                selection: $wakeTimeDate,
-                displayedComponents: .hourAndMinute
-            )
-            .labelsHidden()
-            .colorScheme(.dark)
-            .datePickerStyle(.wheel)
-            .onChange(of: wakeTimeDate) { newValue in
-                viewModel.wakeTime = wakeTime
-            }
+            MinuteIntervalDatePicker(date: $wakeTimeDate)
+                .onChange(of: wakeTimeDate) { newValue in
+                    viewModel.wakeTime = wakeTime
+                }
             Spacer()
         }
     }
@@ -131,4 +117,3 @@ struct SleepSettingsPage: View {
         return Time(hour: hour, minute: minute)
     }
 }
-
