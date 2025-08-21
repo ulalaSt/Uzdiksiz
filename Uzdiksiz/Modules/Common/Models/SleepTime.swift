@@ -71,4 +71,12 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
     var isPositive: Bool {
         hour >= 0 && minute >= 0
     }
+    
+    static var current: Time {
+        let now = Date()
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: now)
+        let minute = calendar.component(.minute, from: now)
+        return Time(hour: hour, minute: minute)
+    }
 }

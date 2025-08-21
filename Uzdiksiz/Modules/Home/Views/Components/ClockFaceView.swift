@@ -80,8 +80,11 @@ struct ClockFaceView: View {
         let baseLength: CGFloat = 4        // minimum tick length
         let maxExtraLength: CGFloat = 8   // max growth from hill
         
-        let tickLength = baseLength + (isDragging ? hill * maxExtraLength : 0)
+        let isHourTick = tick % 12 == 0   // every 12 ticks = 1 hour (12*5=60 minutes)
+        let hourExtraLength: CGFloat = isHourTick ? 4 : 0
         
+        let tickLength = baseLength + (isDragging ? hill * maxExtraLength : 0) + hourExtraLength
+
         let startRadius = radius - tickLength
         let endRadius = radius
         

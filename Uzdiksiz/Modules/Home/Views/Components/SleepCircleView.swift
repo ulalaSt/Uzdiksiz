@@ -39,6 +39,17 @@ struct SleepCircleView: View {
                 .frame(width: geo.size.width, height: geo.size.height)
                 Circle()
                     .stroke(RadialGradient(colors: [.black.opacity(0.25), .clear, .clear, .black.opacity(0.25)], center: .center, startRadius: radius - 16, endRadius: radius + 16), lineWidth: 32)
+                let currentAngle = angle(for: Time.current)
+                Image(systemName: "figure.walk")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 16)
+                    .foregroundColor(.white.opacity(0.25))
+                    .rotationEffect(currentAngle + .degrees(90))
+                    .position(
+                        x: center.x + cos(CGFloat(currentAngle.radians)) * radius,
+                        y: center.y + sin(CGFloat(currentAngle.radians)) * radius
+                    )
                 handle(imageName: "bed.double", at: angle(for: sleepTime), center: center, radius: radius)
                     .frame(width: geo.size.width, height: geo.size.height)
                     .gesture(
