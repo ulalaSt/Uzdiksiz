@@ -60,11 +60,10 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
         tabBarController.viewControllers = navControllers
         navigationController.isNavigationBarHidden = true
         navigationController.setViewControllers([tabBarController], animated: false)
+        navigationController.topViewController?.dismiss(animated: true, completion: nil)
     }
     
     func stop() {
-        navigationController.isNavigationBarHidden = false
-        navigationController.setViewControllers([], animated: false)
     }
     
     deinit {

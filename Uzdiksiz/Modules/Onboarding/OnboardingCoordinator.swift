@@ -51,10 +51,9 @@ final class OnboardingCoordinator: Coordinator {
         }
         
         let vc = UIHostingController(rootView: targetTimeSelectorView)
-        navigationController.setViewControllers([vc], animated: false)
+        navigationController.setViewControllers([vc], animated: true)
     }
 
     func stop() {
-        navigationController.setViewControllers([], animated: false)
     }
 }

@@ -19,7 +19,8 @@ final class SleepingCoordinator: Coordinator {
         // Create SwiftUI view with callback for wakeUp
         let sleepingView = SleepingPage()
         let viewController = UIHostingController(rootView: sleepingView)
-        navigationController.setViewControllers([viewController], animated: true)
+        viewController.modalPresentationStyle = .fullScreen
+        navigationController.present(viewController, animated: true, completion: nil)
     }
 
     func stop() {
