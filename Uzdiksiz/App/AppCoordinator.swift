@@ -32,17 +32,18 @@ final class AppCoordinator {
     }
 
     func start() {
-        switchFlow(hasCompletedOnboarding: appState.hasCompletedOnboarding, hasCompletedInfoSections: appState.hasCompletedInfoSections)
-        Publishers.CombineLatest(appState.$hasCompletedOnboarding, appState.$hasCompletedInfoSections)
+        switchFlow(hasCompletedOnboarding: appState.hasCompletedOnboarding, hasCompletedInfoSections: appState.hasCompletedInfoSections, sleptDate: appState.todaySleptDate)
+        Publishers.CombineLatest3(appState.$hasCompletedOnboarding, appState.$hasCompletedInfoSections, appState.$todaySleptDate)
             .removeDuplicates { lhs, rhs in
-                lhs.0 == rhs.0 && lhs.1 == rhs.1
+                lhs.0 == rhs.0 && lhs.1 == rhs.1 && lhs.2 == rhs.2
             }
             .receive(on: DispatchQueue.main)
             .dropFirst()
-            .sink { [weak self] hasCompletedOnboarding, hasCompletedInfoSections in
+            .sink { [weak self] hasCompletedOnboarding, hasCompletedInfoSections, sleptDate in
                 self?.switchFlow(
                     hasCompletedOnboarding: hasCompletedOnboarding,
-                    hasCompletedInfoSections: hasCompletedInfoSections
+                    hasCompletedInfoSections: hasCompletedInfoSections,
+                    sleptDate: sleptDate
                 )
             }
             .store(in: &cancellables)
@@ -62,12 +63,16 @@ final class AppCoordinator {
 //        .store(in: &cancellables)
 //    }
     
-    private func switchFlow(hasCompletedOnboarding: Bool, hasCompletedInfoSections: Bool) {
+    private func switchFlow(hasCompletedOnboarding: Bool, hasCompletedInfoSections: Bool, sleptDate: Date?) {
         currentCoordinator?.stop()
         currentCoordinator = nil
         let coordinator: Coordinator
         if hasCompletedOnboarding {
-            coordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
+            if let sleptDate {
+                coordinator = SleepingCoordinator(navigationController: navigationController)
+            } else {
+                coordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
+            }
         } else {
             coordinator = OnboardingCoordinator(navigationController: navigationController, appState: appState, hasCompletedInfoSections: hasCompletedInfoSections)
         }

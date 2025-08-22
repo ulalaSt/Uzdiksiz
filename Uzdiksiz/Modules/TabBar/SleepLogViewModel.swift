@@ -360,4 +360,38 @@ class SleepLogViewModel: ObservableObject {
         return strike
     }
 
+    func exportSleepLogsCSV(logs: [SleepLog]) {
+        let csvString = sleepLogsToCSV(logs: logs)
+        let fileName = "SleepLogsExport.csv"
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        
+        do {
+            try csvString.write(to: path, atomically: true, encoding: .utf8)
+            
+            let activityVC = UIActivityViewController(activityItems: [path], applicationActivities: nil)
+            
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let rootVC = windowScene.windows.first?.rootViewController {
+                rootVC.present(activityVC, animated: true, completion: nil)
+            }
+            
+        } catch {
+            print("Failed to save CSV: \(error.localizedDescription)")
+        }
+    }
+    
+    func sleepLogsToCSV(logs: [SleepLog]) -> String {
+        var csv = "Date,SleepTime,WakeTime,ExpectedWakeTime,ReasonId,CustomReason,CreatedAt,DocumentID\n"
+        let dateFormatter = ISO8601DateFormatter()
+        
+        for log in logs {
+            let customReason = log.customReason?.replacingOccurrences(of: ",", with: " ") ?? ""
+            let createdAt = dateFormatter.string(from: log.createdAt)
+            let reasonId = log.reasonId != nil ? "\(log.reasonId!)" : ""
+            
+            csv += "\(log.date),\(log.sleepTime),\(log.wakeTime),\(log.expectedWakeTime),\(reasonId),\(customReason),\(createdAt),\(log.documentID)\n"
+        }
+        
+        return csv
+    }
 }

@@ -7,10 +7,25 @@
 
 import Combine
 import Foundation
+import SwiftUI
 
 class SleepTimeViewModel: ObservableObject {
-    @Published var sleepTime: Time
-    @Published var wakeTime: Time
+    @Published private(set) var sleepTime: Time
+    @Published private(set) var wakeTime: Time
+
+    var sleepTimeBinding: Binding<Time> {
+        Binding(
+            get: { self.sleepTime },
+            set: { self.updateSleepTime($0) }
+        )
+    }
+
+    var wakeTimeBinding: Binding<Time> {
+        Binding(
+            get: { self.wakeTime },
+            set: { self.updateWakeTime($0) }
+        )
+    }
     
     private let environment: AppEnvironment
     private var cancellables = Set<AnyCancellable>()
@@ -24,10 +39,23 @@ class SleepTimeViewModel: ObservableObject {
         self.wakeTime = AppState.shared.wakeTime
         
         // subscribe to future changes
-        AppState.shared.$sleepTime.assign(to: &$sleepTime)
-        AppState.shared.$wakeTime.assign(to: &$wakeTime)
+        AppState.shared.$sleepTime
+            .removeDuplicates()
+            .assign(to: &$sleepTime)
+        
+        AppState.shared.$wakeTime
+            .removeDuplicates()
+            .assign(to: &$wakeTime)
     }
     
+    func updateSleepTime(_ time: Time) {
+        AppState.shared.sleepTime = time
+    }
+    
+    func updateWakeTime(_ time: Time) {
+        AppState.shared.wakeTime = time
+    }
+
     func openSettings(state: SleepSettingsState) {
         coordinator?.openSettings(state: state)
     }
@@ -37,6 +65,10 @@ class SleepTimeViewModel: ObservableObject {
         formatter.locale = Locale(identifier: "kk_KZ")
         formatter.dateFormat = "EE, d LLL"
         return formatter.string(from: Date()).capitalized
+    }
+    
+    func startSleep() {
+        AppState.shared.todaySleptDate = Date()
     }
     
     func timeLeft(for timeType: SleepSettingsState) -> Time {

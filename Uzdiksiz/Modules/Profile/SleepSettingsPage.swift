@@ -67,8 +67,9 @@ struct SleepSettingsPage: View {
     var sleepSettings: some View {
         VStack(spacing: 16) {
             MinuteIntervalDatePicker(date: $sleepTimeDate)
+                .colorScheme(.dark)
                 .onChange(of: sleepTimeDate) { newValue in
-                    viewModel.sleepTime = sleepTime
+                    viewModel.sleepTimeBinding.wrappedValue = sleepTime
                 }
             Spacer()
         }
@@ -77,8 +78,9 @@ struct SleepSettingsPage: View {
     var alarmSettings: some View {
         VStack(spacing: 16) {
             MinuteIntervalDatePicker(date: $wakeTimeDate)
+                .colorScheme(.dark)
                 .onChange(of: wakeTimeDate) { newValue in
-                    viewModel.wakeTime = wakeTime
+                    viewModel.wakeTimeBinding.wrappedValue = wakeTime
                 }
             Spacer()
         }

@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import BindableMacros
 
 final class AppState: ObservableObject {
     static let shared: AppState = AppState(storage: AppStorage())
@@ -23,16 +24,20 @@ final class AppState: ObservableObject {
     
     @Published
     var wakeTime: Time
-        
+    
+    @Published
+    var todaySleptDate: Date?
+    
     private var cancellables = Set<AnyCancellable>()
         
-    init(storage: AppStorage) {
+    private init(storage: AppStorage) {
         self.storage = storage
         self.hasCompletedOnboarding = storage.hasCompletedOnboarding
         self.hasCompletedInfoSections = storage.hasCompletedInfoSections
         self.sleepTime = storage.sleepTime
         self.wakeTime = storage.wakeTime
-        
+        self.todaySleptDate = storage.todaySleptDate
+
         $hasCompletedOnboarding.sink {
             storage.hasCompletedOnboarding = $0
         }.store(in: &cancellables)
@@ -47,6 +52,10 @@ final class AppState: ObservableObject {
 
         $wakeTime.sink {
             storage.wakeTime = $0
+        }.store(in: &cancellables)
+
+        $todaySleptDate.sink {
+            storage.todaySleptDate = $0
         }.store(in: &cancellables)
     }
 }

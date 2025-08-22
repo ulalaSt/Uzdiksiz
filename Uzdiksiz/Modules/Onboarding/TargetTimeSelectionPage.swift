@@ -76,6 +76,7 @@ struct TargetTimeSelectionPage: View {
                 .padding(.vertical, 10)
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color.backgroundDeepNavy))
             MinuteIntervalDatePicker(date: state == .sleep ? $sleepTime : $wakeTime)
+                .colorScheme(.dark)
             Spacer()
         }
         .padding(.horizontal, 32)

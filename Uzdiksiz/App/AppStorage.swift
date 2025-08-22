@@ -5,6 +5,8 @@
 //  Created by Ulan Seitkali on 20.08.2025.
 //
 
+import Foundation
+
 class AppStorage {
     @Defaults(AppStorageKeys.hasCompletedOnboarding, defaultValue: false)
     var hasCompletedOnboarding: Bool
@@ -14,9 +16,12 @@ class AppStorage {
     
     @Defaults(AppStorageKeys.sleepTime, defaultValue: Time(hour: 22, minute: 0))
     var sleepTime: Time
-
+    
     @Defaults(AppStorageKeys.wakeTime, defaultValue: Time(hour: 6, minute: 0))
     var wakeTime: Time
+    
+    @DefaultsOptional(AppStorageKeys.todaySleptDate)
+    var todaySleptDate: Date?
 }
 
 enum AppStorageKeys {
@@ -24,4 +29,5 @@ enum AppStorageKeys {
     static let hasCompletedInfoSections = "hasCompletedInfoSections"
     static let sleepTime = "sleepTime"
     static let wakeTime = "wakeTime"
+    static let todaySleptDate = "todaySleptDate"
 }

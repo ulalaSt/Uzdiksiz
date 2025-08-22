@@ -20,10 +20,7 @@ class GoalViewModel: ObservableObject {
     private var uid: String
 
     init() {
-        guard let currentUID = Auth.auth().currentUser?.uid else {
-            fatalError("No logged-in user found. GoalViewModel requires a user.")
-        }
-        self.uid = currentUID
+        self.uid = Auth.auth().currentUser?.uid ?? "asdf"
 
         fetchGoals()
     }

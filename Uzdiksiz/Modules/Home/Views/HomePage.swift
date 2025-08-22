@@ -15,7 +15,7 @@ struct HomePage: View {
             Text(viewModel.todayString())
                 .font(.title3.weight(.bold))
                 .foregroundColor(.textLightGray)
-            SleepCircleView(sleepTime: $viewModel.sleepTime, wakeTime: $viewModel.wakeTime)            
+            SleepCircleView(sleepTime: viewModel.sleepTimeBinding, wakeTime: viewModel.wakeTimeBinding)
             HStack(spacing: 16) {
                 Button {
                     viewModel.openSettings(state: .sleep)
@@ -30,7 +30,7 @@ struct HomePage: View {
             }
             Spacer()
             Button {
-                
+                viewModel.startSleep()
             } label: {
                 DefaultButtonView(title: "Қазір ұйықтау")
             }

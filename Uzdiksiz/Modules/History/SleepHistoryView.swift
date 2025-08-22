@@ -65,6 +65,13 @@ struct SleepHistoryView: View {
                                 }
                             }
                         }
+                        Button("CSV ретінде экспорттау") {
+                            viewModel.exportSleepLogsCSV(logs: logs)
+                        }
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                     }
                 } else {
                     Text("Жүктелуде...")
