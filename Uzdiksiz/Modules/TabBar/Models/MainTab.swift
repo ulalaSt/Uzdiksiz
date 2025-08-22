@@ -5,9 +5,10 @@
 //  Created by Ulan Seitkali on 07.08.2025.
 //
 
-enum MainTab: Int {
+enum MainTab: Int, CaseIterable {
     case home
     case history
+    case goal
     case profile
 
     var iconTitle: String {
@@ -16,6 +17,8 @@ enum MainTab: Int {
             return "house.fill"
         case .history:
             return "chart.pie"
+        case .goal:
+            return "target"
         case .profile:
             return "person.fill"
         }
@@ -27,6 +30,8 @@ enum MainTab: Int {
             return "Бас бет"
         case .history:
             return "Статистика"
+        case .goal:
+            return "Мақсат"
         case .profile:
             return "Профиль"
         }

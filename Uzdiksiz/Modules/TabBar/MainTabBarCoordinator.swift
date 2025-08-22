@@ -29,7 +29,7 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
     }
 
     func start() {
-        let tabs: [MainTab] = [.home, .history, .profile]
+        let tabs: [MainTab] = [.home, .history, .goal, .profile]
         var navControllers: [UINavigationController] = []
         childCoordinators = []
         
@@ -41,6 +41,8 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
                 coordinator = HomeCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel)
             case .history:
                 coordinator = HistoryCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel)
+            case .goal:
+                coordinator = GoalCoordinator(navigationController: nav)
             case .profile:
                 coordinator = ProfileCoordinator(navigationController: nav, appState: appState, environment: environment, authViewModel: authViewModel, locationManager: locationManager)
             }
