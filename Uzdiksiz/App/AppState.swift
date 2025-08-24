@@ -7,7 +7,6 @@
 
 import Combine
 import Foundation
-import BindableMacros
 
 final class AppState: ObservableObject {
     static let shared: AppState = AppState(storage: AppStorage())

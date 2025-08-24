@@ -17,6 +17,7 @@ final class AppCoordinator {
     private var cancellables = Set<AnyCancellable>()
     private var appState: AppState = .shared
     private let authViewModel: AuthViewModel
+    private let sleepLogViewModel: SleepLogViewModel = .init()
 
     init(navigationController: UINavigationController,
          environment: AppEnvironment) {
@@ -69,9 +70,9 @@ final class AppCoordinator {
         let coordinator: Coordinator
         if hasCompletedOnboarding {
             if let sleptDate {
-                coordinator = SleepingCoordinator(navigationController: navigationController)
+                coordinator = SleepingCoordinator(navigationController: navigationController, sleepLogViewModel: sleepLogViewModel)
             } else {
-                coordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel)
+                coordinator = MainTabBarCoordinator(navigationController: navigationController, appState: appState, environment: environment, authViewModel: authViewModel, sleepLogViewModel: sleepLogViewModel)
             }
         } else {
             coordinator = OnboardingCoordinator(navigationController: navigationController, appState: appState, hasCompletedInfoSections: hasCompletedInfoSections)

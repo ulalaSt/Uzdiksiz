@@ -18,12 +18,12 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
     private let locationManager: LocationManager
     private let authViewModel: AuthViewModel
     
-    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, authViewModel: AuthViewModel) {
+    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, authViewModel: AuthViewModel, sleepLogViewModel: SleepLogViewModel) {
         self.navigationController = navigationController
         self.appState = appState
         self.environment = environment
         self.tabBarController = MainTabBarController()
-        self.sleepLogViewModel = SleepLogViewModel()
+        self.sleepLogViewModel = sleepLogViewModel
         self.locationManager = LocationManager()
         self.authViewModel = authViewModel
     }

@@ -6,15 +6,16 @@
 //
 
 import Combine
+import Foundation
 
 final class SleepingViewModel: ObservableObject {
     @Published private(set) var wakeTime: Time
-    
+    let logService: SleepLogViewModel
     private var cancellables = Set<AnyCancellable>()
     
-    init() {
+    init(logService: SleepLogViewModel) {
         self.wakeTime = AppState.shared.wakeTime
-        
+        self.logService = logService
         AppState.shared.$wakeTime
             .removeDuplicates()
             .assign(to: &$wakeTime)
@@ -25,6 +26,9 @@ final class SleepingViewModel: ObservableObject {
     }
     
     func wakeUp() {
+        if let sleepDate = AppState.shared.todaySleptDate {
+            logService.saveSleepLog(wakeTime: Date(), sleepTime: sleepDate, reasonId: nil, customReason: nil)
+        }
         AppState.shared.todaySleptDate = nil
     }
 }

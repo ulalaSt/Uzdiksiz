@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SleepingPage: View {
-    @ObservedObject private var viewModel = SleepingViewModel()
+    @ObservedObject var viewModel: SleepingViewModel
     @State private var currentTime: Date = Date()
     private let alarmTime: Date = Calendar.current.date(bySettingHour: 5, minute: 0, second: 0, of: Date())!
     
