@@ -61,7 +61,7 @@ struct SleepSettingsPage: View {
                 }
             }
         })
-        .background(LinearGradient(colors: [.backgroundDeepNavy, .backgroundMidnightBlue], startPoint: .top, endPoint: .bottom).edgesIgnoringSafeArea([.horizontal, .top]))
+        .backgroundGradient(ignoring: [.horizontal, .top])
     }
     
     var sleepSettings: some View {

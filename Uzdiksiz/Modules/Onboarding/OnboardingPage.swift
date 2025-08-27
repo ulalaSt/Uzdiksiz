@@ -109,7 +109,7 @@ struct OnboardingPage: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(LinearGradient(colors: [.backgroundDeepNavy, .backgroundMidnightBlue], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+        .backgroundGradient()
         .navigationBarHidden(true)
         .allowsHitTesting(showTitle)
     }

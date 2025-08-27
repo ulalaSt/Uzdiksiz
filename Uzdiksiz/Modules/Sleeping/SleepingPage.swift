@@ -23,45 +23,43 @@ struct SleepingPage: View {
     }
     
     var body: some View {
-        ZStack {
-            LinearGradient(colors: [.backgroundDeepNavy, .backgroundMidnightBlue], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-            VStack(spacing: 0) {
-                VStack(spacing: 16) {
-                    Text("Қайырлы түн!")
-                        .font(.title3.weight(.semibold))
-                        .foregroundColor(.textSoftWhite)
-                    Text(currentTime, style: .time)
-                        .font(.system(size: 64, weight: .black))
-                        .foregroundColor(.textSoftWhite)
-                }
-                Image("sleeping_moon")
-                    .resizable()
-                    .scaledToFit()
-                    .padding(32)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                VStack(spacing: 8) {
-                    HStack(spacing: 10) {
-                        Image(systemName: "alarm.fill")
-                            .font(.body.weight(.medium))
-                            .foregroundColor(.textSoftWhite)
-                        Text("Оятқыш 04:30")
-                            .foregroundColor(.textSoftWhite)
-                            .font(.body.weight(.medium))
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Capsule().fill(Color.backgroundDeepNavy))
-                    Text("5сағ 6мин қалды")
-                        .font(.caption2)
-                        .foregroundColor(.textLightGray)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                LongPressButton(title: "Ояну") {
-                    viewModel.wakeUp()
-                }
+        VStack(spacing: 0) {
+            VStack(spacing: 16) {
+                Text("Қайырлы түн!")
+                    .font(.title3.weight(.semibold))
+                    .foregroundColor(.textSoftWhite)
+                Text(currentTime, style: .time)
+                    .font(.system(size: 64, weight: .black))
+                    .foregroundColor(.textSoftWhite)
             }
-            .padding()
+            Image("sleeping_moon")
+                .resizable()
+                .scaledToFit()
+                .padding(32)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: "alarm.fill")
+                        .font(.body.weight(.medium))
+                        .foregroundColor(.textSoftWhite)
+                    Text("Оятқыш 04:30")
+                        .foregroundColor(.textSoftWhite)
+                        .font(.body.weight(.medium))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Capsule().fill(Color.backgroundDeepNavy))
+                Text("5сағ 6мин қалды")
+                    .font(.caption2)
+                    .foregroundColor(.textLightGray)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            LongPressButton(title: "Ояну") {
+                viewModel.wakeUp()
+            }
         }
+        .padding()
+        .backgroundGradient()
         .onAppear {
             Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
                 currentTime = Date()

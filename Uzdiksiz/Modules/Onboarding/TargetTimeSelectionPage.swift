@@ -56,7 +56,7 @@ struct TargetTimeSelectionPage: View {
             .padding(.bottom, 32)
             .padding(.horizontal, 32)
         }
-        .background(LinearGradient(colors: [.backgroundDeepNavy, .backgroundMidnightBlue], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+        .backgroundGradient()
         .navigationBarHidden(true)
     }
     

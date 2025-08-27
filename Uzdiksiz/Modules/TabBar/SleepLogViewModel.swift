@@ -6,9 +6,11 @@
 //
 import FirebaseFirestore
 import FirebaseAuth
+import Combine
 
 class SleepLogViewModel: ObservableObject {
     @Published var logs: Loadable<[SleepLog]> = .notRequested
+    @Published var sleepReports: Loadable<[SleepReport]> = .notRequested
     @Published var expectedWakeTime: Loadable<String?> = .notRequested
     let cancelBag = CancelBag()
     let reasons = [
@@ -39,6 +41,12 @@ class SleepLogViewModel: ObservableObject {
     init() {
         fetchLogs()
         fetchExpectedWakeTime()
+        sleepReports = .isLoading(last: nil, cancelBag: CancelBag())
+        
+        SleepSessionDbService.shared.reports()
+            .map(Loadable.loaded)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$sleepReports)
     }
     
     func createSleepLog(date: String, sleepTime: String, wakeTime: String) {
@@ -152,6 +160,35 @@ class SleepLogViewModel: ObservableObject {
                     )
                 }
                 self?.logs = .loaded(logs)
+                
+                Task {
+                    do {
+                        let service = SleepSessionDbService.shared
+                        let existing = try await service.fetchReports()
+
+                        guard existing.isEmpty else {
+                            print("✅ Core Data already has reports, skipping import")
+                            return
+                        }
+                        
+                        print("📥 Importing \(logs.count) logs into Core Data...")
+                        
+                        for log in logs {
+                            guard let dateKey = parseDateKey(log.date),
+                                  let (sh, sm) = parseTime(log.sleepTime),
+                                  let (eh, em) = parseTime(log.wakeTime)
+                            else { continue }
+                            
+                            _ = try await service.createSleepSession(
+                                dateKey: dateKey,
+                                startTime: Time(hour: sh, minute: sm),
+                                endTime: Time(hour: eh, minute: em)
+                            )
+                        }
+                    } catch {
+                        print("⚠️ Import failed: \(error)")
+                    }
+                }
             }
     }
     
@@ -261,71 +298,67 @@ class SleepLogViewModel: ObservableObject {
     }
     
     func todaysResultText() -> String? {
-        guard let log = logs.value?.first(where: { $0.date == todayDateString() }) else {
-            return nil
-        }
-        let motivation: String
-        if log.wakeTime <= log.expectedWakeTime {
-            motivation = "\n👏 Сіз бүгін уақытылы ояндыңыз!"
-        } else {
-            let earlierTime = subtract30Minutes(from: log.sleepTime)
-            motivation = """
-            \n\n
-    😌 Бір күн қателесу айып емес
-    Бүгін түнде 30 минут бұрын (\(earlierTime)) ұйықтап көріңіз.
-    """
-        }
-        let resultText = """
-        🛌 Ұйықтаған уақыты: \(log.sleepTime)
-        🌅 Оянған уақыты: \(log.wakeTime)
-        😴 Ұйқы ұзақтығы: \(duration(for: log))
-        """
-
-        return resultText + motivation
+        return nil
+//        guard let log = logs.value?.first(where: { $0.date == todayDateString() }) else {
+//            return nil
+//        }
+//        let motivation: String
+//        if log.wakeTime <= log.expectedWakeTime {
+//            motivation = "\n👏 Сіз бүгін уақытылы ояндыңыз!"
+//        } else {
+//            let earlierTime = subtract30Minutes(from: log.sleepTime)
+//            motivation = """
+//            \n\n
+//    😌 Бір күн қателесу айып емес
+//    Бүгін түнде 30 минут бұрын (\(earlierTime)) ұйықтап көріңіз.
+//    """
+//        }
+//        let resultText = """
+//        🛌 Ұйықтаған уақыты: \(log.sleepTime)
+//        🌅 Оянған уақыты: \(log.wakeTime)
+//        😴 Ұйқы ұзақтығы: \(duration(for: log))
+//        """
+//
+//        return resultText + motivation
     }
     
-    func duration(for log: SleepLog) -> String {
-        let (hour, minute) = calculateDuration(for: log)
+    func duration(for session: SleepSession) -> String {
+        let (hour, minute) = calculateDuration(for: session)
         return "\(hour) сағат \(minute) минут"
     }
 
-    func calculateDuration(for log: SleepLog) -> (hour: Int, minute: Int) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
+    func calculateDuration(for session: SleepSession) -> (hour: Int, minute: Int) {
+        let startMinutes = Int(session.startHour) * 60 + Int(session.startMinute)
+        let endMinutes   = Int(session.endHour) * 60 + Int(session.endMinute)
 
-        guard let sleep = formatter.date(from: log.sleepTime),
-              let wake = formatter.date(from: log.wakeTime) else {
-            return (0,0)
+        // Handle overnight sleep (e.g. 22:00 → 07:00 next day)
+        let durationMinutes: Int
+        if endMinutes >= startMinutes {
+            durationMinutes = endMinutes - startMinutes
+        } else {
+            durationMinutes = (24 * 60 - startMinutes) + endMinutes
         }
 
-        let calendar = Calendar.current
-        let sleepTime = sleep
-        var wakeTime = wake
-
-        if wake <= sleep {
-            // Means wake time is next day
-            wakeTime = calendar.date(byAdding: .day, value: 1, to: wakeTime)!
-        }
-
-        let components = calendar.dateComponents([.hour, .minute], from: sleepTime, to: wakeTime)
-
-        let hour = components.hour ?? 0
-        let minute = components.minute ?? 0
-
+        let hour = durationMinutes / 60
+        let minute = durationMinutes % 60
         return (hour, minute)
     }
-    
-    func calculateTotalDuration(for logs: [SleepLog]) -> (hour: Int, minute: Int) {
-        let totalSeconds = logs.reduce(0.0) { sum, log in
-            let duration = calculateDuration(for: log)
-            return sum + Double(duration.hour * 3600 + duration.minute * 60)
+
+    func calculateTotalDuration(for reports: [SleepReport]) -> (hour: Int, minute: Int) {
+        let totalSeconds = reports.reduce(0.0) { sum, report in
+            guard let sessions = report.sessions as? Set<SleepSession> else { return sum }
+            let reportSeconds = sessions.reduce(0.0) { sSum, session in
+                let (h, m) = calculateDuration(for: session)
+                return sSum + Double(h * 3600 + m * 60)
+            }
+            return sum + reportSeconds
         }
 
         let hours = Int(totalSeconds) / 3600
         let minutes = (Int(totalSeconds) % 3600) / 60
         return (hours, minutes)
     }
-    
+
     private func subtract30Minutes(from timeString: String) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
@@ -394,4 +427,47 @@ class SleepLogViewModel: ObservableObject {
         
         return csv
     }
+    
+    func date(from dateKey: Int32) -> Date? {
+        let key = Int(dateKey)
+        let year = key / 10000
+        let month = (key % 10000) / 100
+        let day = key % 100
+        
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        components.hour = 0
+        components.minute = 0
+        components.second = 0
+        
+        let calendar = Calendar(identifier: .gregorian)
+        return calendar.date(from: components)
+    }
+}
+
+
+private func parseDateKey(_ str: String) -> Int32? {
+    // str = "yyyy-MM-dd" → Int32(yyyyMMdd)
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd"
+    guard let date = formatter.date(from: str) else { return nil }
+    
+    let calendar = Calendar(identifier: .gregorian)
+    let y = calendar.component(.year, from: date)
+    let m = calendar.component(.month, from: date)
+    let d = calendar.component(.day, from: date)
+    return Int32(y * 10000 + m * 100 + d)
+}
+
+private func parseTime(_ str: String) -> (Int, Int)? {
+    // str = "HH:mm"
+    let parts = str.split(separator: ":")
+    guard parts.count == 2,
+          let h = Int(parts[0]),
+          let m = Int(parts[1]) else {
+        return nil
+    }
+    return (h, m)
 }
