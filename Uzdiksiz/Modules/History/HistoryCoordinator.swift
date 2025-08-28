@@ -22,7 +22,7 @@ final class HistoryCoordinator: Coordinator {
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: SleepStatsPage())
+        let viewController = UIHostingController(rootView: SleepStatsPage(viewModel: sleepLogViewModel))
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }

@@ -8,8 +8,21 @@
 import SwiftUI
 
 struct SleepStatsPage: View {
-    @State var currentDate: Date = Date()
+    @State private var currentDate: Date
+    @ObservedObject var viewModel: SleepLogViewModel
     
+    private var currentReport: SleepReport? {
+        let currentKey = currentDate.dateKey
+        return viewModel.sleepReports.value?.first { report in
+            report.dateKey == currentKey
+        }
+    }
+
+    init(viewModel: SleepLogViewModel) {
+        self.viewModel = viewModel
+        self._currentDate = .init(initialValue: Date())
+    }
+
     let formatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "kk_KZ")
@@ -49,10 +62,11 @@ struct SleepStatsPage: View {
     
     func pageContent(for date: Date) -> some View {
         ScrollView(.vertical, showsIndicators: false) {
+            let report = report(for: date)
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 10) {
-                    qualityBar(for: date)
-                    sleepInfo(for: date)
+                    qualityBar(for: report)
+                    sleepInfo(for: report)
                 }
                 .padding(.vertical, 16)
                 CardRow(systemIcon: "text.bubble.fill", title: "Ұйқы жазбасы", content: {
@@ -74,6 +88,7 @@ struct SleepStatsPage: View {
                 }
             }
             .padding(.horizontal, 24)
+            .opacity(report == nil ? 0.5 : 1)
         }
     }
     
@@ -94,11 +109,20 @@ struct SleepStatsPage: View {
             }
     }
     
-    func qualityBar(for date: Date) -> some View {
+    @ViewBuilder
+    func qualityBar(for report: SleepReport?) -> some View {
+        let quality = report?.quality(targetStart: AppState.shared.sleepTime, targetEnd: AppState.shared.wakeTime)
+        
         VStack(spacing: 0) {
-            Text("\(quality(for: date))")
-                .font(.largeTitle.weight(.semibold))
-                .foregroundColor(.textSoftWhite)
+            if let quality {
+                Text("\(quality)")
+                    .font(.largeTitle.weight(.semibold))
+                    .foregroundColor(.textSoftWhite)
+            } else {
+                Text("?")
+                    .font(.largeTitle.weight(.semibold))
+                    .foregroundColor(.textSoftWhite)
+            }
             Text("Cапа")
                 .font(.caption)
                 .foregroundColor(.textLightGray)
@@ -108,7 +132,7 @@ struct SleepStatsPage: View {
             Circle()
                 .stroke(Color.white.opacity(0.1), lineWidth: 8)
             Circle()
-                .trim(from: 0, to: CGFloat(quality(for: date)))
+                .trim(from: 0, to: CGFloat(quality ?? 0)/100)
                 .stroke(
                     LinearGradient(
                         colors: [.accentSkyIceBlue, .primaryOceanBlue],
@@ -118,7 +142,6 @@ struct SleepStatsPage: View {
                     style: StrokeStyle(lineWidth: 8, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90)) // start from top
-                .animation(.easeInOut, value: date)
         }
         .padding(10)
         .background {
@@ -127,15 +150,20 @@ struct SleepStatsPage: View {
         }
     }
     
-    func sleepInfo(for date: Date) -> some View {
+    func sleepInfo(for report: SleepReport?) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Ұйқы ұзақтығы")
                     .font(.caption.weight(.medium))
                     .foregroundColor(.textLightGray)
                 Group {
-                    Text("6").font(.title3.weight(.bold)) + Text("сағ").font(.caption.weight(.bold)) +
-                    Text("33").font(.title3.weight(.bold)) + Text("мин").font(.caption.weight(.bold))
+                    if let totalSleep = report?.totalSleepHM {
+                        let (hours, minutes) = totalSleep
+                        Text("\(hours)").font(.title3.weight(.bold)) + Text("сағ").font(.caption.weight(.bold)) +
+                        Text("\(minutes)").font(.title3.weight(.bold)) + Text("мин").font(.caption.weight(.bold))
+                    } else {
+                        Text("Тіркелмеген").font(.title3.weight(.bold))
+                    }
                 }
                 .foregroundColor(.textSoftWhite)
             }
@@ -143,22 +171,26 @@ struct SleepStatsPage: View {
                 Text("Ұйқы уақыты")
                     .font(.caption.weight(.medium))
                     .foregroundColor(.textLightGray)
-                Text("22:00-05:39")
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(.textSoftWhite)
-                Text("+ 07:00-07:12")
-                    .font(.caption.weight(.bold))
-                    .foregroundColor(.textLightGray)
-                Text("+ 10:00-11:00")
-                    .font(.caption.weight(.bold))
-                    .foregroundColor(.textLightGray)
+                if let intervalStrings = report?.intervalStrings {
+                    ForEach(Array(intervalStrings.enumerated()), id: \.offset) { index, text in
+                        Text(text)
+                            .font(index == 0 ? .title3.weight(.bold) : .caption.weight(.bold))
+                            .foregroundColor(index == 0 ? .textSoftWhite : .textLightGray)
+                    }
+                } else {
+                    Text("Тіркелмеген").font(.title3.weight(.bold))
+                        .foregroundColor(.textSoftWhite)
+                }
             }
         }
         .padding(.vertical, 8)
     }
     
-    func quality(for date: Date) -> Int {
-        67
-    }
 
+    private func report(for date: Date) -> SleepReport? {
+        let currentKey = date.dateKey
+        return viewModel.sleepReports.value?.first { report in
+            report.dateKey == currentKey
+        }
+    }
 }
