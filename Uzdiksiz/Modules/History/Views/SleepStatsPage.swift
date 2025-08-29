@@ -46,7 +46,9 @@ struct SleepStatsPage: View {
             .font(.title3.weight(.bold))
             .foregroundColor(.textLightGray)
             .padding(.horizontal, 24)
-            WeekdayPicker(selectedDate: $currentDate)
+            WeekdayPicker(selectedDate: $currentDate, progressForDate: { date in
+                report(for: date)?.quality(targetStart: AppState.shared.sleepTime, targetEnd: AppState.shared.wakeTime) ?? 0
+            })
             InfinitePageView(
                 selection: $currentDate,
                 before: { date in

@@ -8,7 +8,8 @@ import SwiftUI
 
 struct WeekdayPicker: View {
     @Binding var selectedDate: Date
-    
+    var progressForDate: (Date) -> Int
+
     private let calendar = Calendar.current
     private var today: Date { Date() }
 
@@ -82,7 +83,14 @@ struct WeekdayPicker: View {
                         .foregroundColor(isSelected ? Color.textSoftWhite : .textLightGray)
                     ZStack {
                         Circle()
-                            .stroke(isSelected ? Color.accentMediumSkyBlue : Color.primaryOceanBlue, lineWidth: 3)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 3)
+                        Circle()
+                            .trim(from: 0, to: CGFloat(progressForDate(date))/100)
+                            .stroke(
+                                isSelected ? Color.accentMediumSkyBlue : Color.primaryOceanBlue,
+                                style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                            )
+                            .rotationEffect(.degrees(-90)) // start from top
                         Text("\(calendar.component(.day, from: date))")
                             .foregroundColor(isSelected ? .accentMediumSkyBlue : .textLightGray)
                             .font(.caption.weight(.medium))
