@@ -138,14 +138,8 @@ class SleepSessionDbService {
             guard let session = try? context.existingObject(with: sessionID) as? SleepSession else {
                 throw SleepSessionError.sessionNotFound
             }
-            
-            // Get parent report before deletion
             let report = session.report
-            
-            // Delete the session
             context.delete(session)
-            
-            // If the report is now empty, delete it too
             if let report,
                let sessions = report.sessions as? Set<SleepSession>,
                sessions.isEmpty {
@@ -153,6 +147,22 @@ class SleepSessionDbService {
             }
             
             try context.save(with: "deleteSleepSession")
+        }
+    }
+    
+    func deleteSleepReport(reportID: NSManagedObjectID) async throws {
+        try await context.perform { context in
+            guard let report = try? context.existingObject(with: reportID) as? SleepReport else {
+                throw SleepSessionError.sessionNotFound
+            }
+            if let sessions = report.sessions as? Set<SleepSession> {
+                for session in sessions {
+                    context.delete(session)
+                }
+            }
+            context.delete(report)
+            
+            try context.save(with: "deleteSleepReport")
         }
     }
     
@@ -190,6 +200,15 @@ class SleepSessionDbService {
         return CoreDataPublisher(request: request, context: context)
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
+    }
+    
+    func deleteAllReports() async throws {
+        let fetchRequest: NSFetchRequest<SleepReport> = SleepReport.fetchRequest()
+        let reports = try context.fetch(fetchRequest)
+
+        for report in reports {
+            try await deleteSleepReport(reportID: report.objectID)
+        }
     }
 }
 

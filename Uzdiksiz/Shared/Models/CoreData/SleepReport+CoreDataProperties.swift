@@ -41,60 +41,6 @@ extension SleepReport: Identifiable {
 }
 
 extension SleepReport {
-    /// Sleep quality score for the day (0–100)
-    func quality(targetStart: Time, targetEnd: Time) -> Int {
-        guard let sessions = sessions as? Set<SleepSession>, !sessions.isEmpty else {
-            return 0
-        }
-        
-        // Convert sessions into intervals in minutes
-        let intervals: [(start: Int, end: Int)] = sessions.compactMap { s in
-            let start = Int(s.startHour * 60 + s.startMinute)
-            let end   = Int(s.endHour * 60 + s.endMinute)
-            
-            if start < end {
-                // same-day sleep
-                return (start, end)
-            } else if start > end {
-                // crossed midnight → normalize by adding 24h to end
-                return (start, end + 24 * 60)
-            } else {
-                return nil
-            }
-        }
-
-        let totalSleep = intervals.reduce(0) { $0 + ($1.end - $1.start) }
-        
-        let targetStartMinutes = targetStart.totalMinutes
-        let targetEndMinutes   = targetEnd.totalMinutes
-        let targetDuration     = targetEndMinutes - targetStartMinutes
-        
-        // --- 1. Duration score ---
-        let durationScore: Double
-        if totalSleep >= targetDuration {
-            durationScore = 1.0
-        } else {
-            durationScore = Double(totalSleep) / Double(targetDuration)
-        }
-        
-        // --- 2. Alignment score ---
-        // Check midpoint of actual sleep vs midpoint of target window
-        let actualMid = intervals.reduce(0) { $0 + ($1.start + $1.end) / 2 } / intervals.count
-        let targetMid = (targetStartMinutes + targetEndMinutes) / 2
-        
-        let diff = abs(actualMid - targetMid)
-        // If midpoint is within 30 min → full score, degrade linearly until 3h
-        let alignmentScore = max(0, 1.0 - Double(diff) / (180.0))
-        
-        // --- 3. Fragmentation penalty ---
-        // Each extra session reduces score a bit
-        let fragmentationPenalty = max(0.7, 1.0 - Double(intervals.count - 1) * 0.15)
-        
-        // Final score
-        let rawScore = (0.6 * durationScore + 0.3 * alignmentScore) * fragmentationPenalty
-        return Int((rawScore * 100).rounded())
-    }
-    
     var date: Date {
         let key = Int(dateKey)
         let year  = key / 10_000
@@ -112,17 +58,24 @@ extension SleepReport {
     /// Sessions as sorted intervals of Time
     var intervals: [(start: Time, end: Time)] {
         guard let sessions = sessions as? Set<SleepSession> else { return [] }
-        return sessions.compactMap { s in
+        return sessions.map { s in
             let start = Time(hour: Int(s.startHour), minute: Int(s.startMinute))
             let end   = Time(hour: Int(s.endHour), minute: Int(s.endMinute))
-            return start.totalMinutes < end.totalMinutes ? (start, end) : nil
+            return (start, end)
         }
-        .sorted { $0.start.totalMinutes < $1.start.totalMinutes }
+        .sorted { $0.end.totalMinutes < $1.end.totalMinutes }
     }
 
     /// Total sleep duration (minutes)
     var totalSleepMinutes: Int {
-        intervals.reduce(0) { $0 + ($1.end.totalMinutes - $1.start.totalMinutes) }
+        intervals.reduce(0) { total, interval in
+            let start = interval.start.totalMinutes
+            let end   = interval.end.totalMinutes
+            let duration = end >= start
+                ? (end - start)
+                : (end + 24 * 60 - start) // crossed midnight
+            return total + duration
+        }
     }
 
     /// Total sleep hours + minutes tuple
@@ -132,11 +85,143 @@ extension SleepReport {
         return (h, m)
     }
 
-    /// Formatted string for intervals (first main session, others as "+ ...")
-    var intervalStrings: [String] {
-        intervals.enumerated().map { index, interval in
-            let text = "\(interval.start.toString())-\(interval.end.toString())"
-            return index == 0 ? text : "+ " + text
+    public override var debugDescription: String {
+        var result = "📊 SleepReport for \(date.formatted(date: .abbreviated, time: .omitted))\n"
+        
+        if let sessions = sessions as? Set<SleepSession>, !sessions.isEmpty {
+            for (i, s) in sessions.sorted(by: {
+                ($0.startHour, $0.startMinute) < ($1.startHour, $1.startMinute)
+            }).enumerated() {
+                let start = String(format: "%02d:%02d", s.startHour, s.startMinute)
+                let end   = String(format: "%02d:%02d", s.endHour, s.endMinute)
+                result += "   #\(i+1) 🛌 \(start) – \(end)\n"
+            }
+        } else {
+            result += "   ⛔️ No sessions\n"
         }
+        return result
+    }
+
+}
+
+extension SleepReport {
+    
+    func quality(targetStart: Time, targetEnd: Time) -> Int {
+        let durationScore = scoreDuration(targetStart: targetStart, targetEnd: targetEnd)
+        let sleepTimeScore = scoreSleepTime(targetStart: targetStart, targetEnd: targetEnd)
+        let wakeTimeScore = scoreWakeTime(targetStart: targetStart, targetEnd: targetEnd)
+        let fragmentationScore = scoreFragmentation()
+        
+        // Weights
+        let totalScore =
+            0.4 * Double(durationScore) +
+            0.25 * Double(sleepTimeScore) +
+            0.25 * Double(wakeTimeScore) +
+            0.1 * Double(fragmentationScore)
+        
+        return Int(totalScore.rounded())
+    }
+    
+    // MARK: - Duration
+    private func scoreDuration(targetStart: Time, targetEnd: Time) -> Int {
+        let targetDuration = minutesBetween(start: targetStart, end: targetEnd)
+        let minDuration = Double(targetDuration) * 0.9
+        let maxDuration = Double(targetDuration) * 1.1
+        let actual = Double(totalSleepMinutes)
+        
+        if actual >= minDuration && actual <= maxDuration {
+            return 100
+        }
+        
+        // Penalty grows the further from range
+        if actual < minDuration {
+            return Int(max(0, 100 * (actual / minDuration)))
+        } else {
+            return Int(max(0, 100 * ((2 * maxDuration - actual) / maxDuration)))
+        }
+    }
+    
+    // MARK: - Sleep Time
+    private func scoreSleepTime(targetStart: Time, targetEnd: Time) -> Int {
+        guard let first = intervals.min(by: { $0.start.totalMinutes < $1.start.totalMinutes }) else {
+            return 0
+        }
+        let bedtime = first.start.totalMinutes
+        let targetStartMinutes = targetStart.totalMinutes
+        let targetDuration = minutesBetween(start: targetStart, end: targetEnd)
+        
+        let latestAllowed = targetStartMinutes + Int(Double(targetDuration) * 0.05) // +5%
+        
+        if bedtime <= latestAllowed {
+            return 100
+        }
+        
+        // Deduct 1 point per minute late (can tune)
+        let penalty = bedtime - latestAllowed
+        return max(0, 100 - penalty)
+    }
+    
+    // MARK: - Wake Time
+    private func scoreWakeTime(targetStart: Time, targetEnd: Time) -> Int {
+        let mainSessions = intervals.filter { minutesBetween(start: $0.start, end: $0.end) >= 30 }
+        guard let main = mainSessions.max(by: { $0.end.totalMinutes < $1.end.totalMinutes }) else {
+            return 0
+        }
+        
+        // Wake time = end of main sleep
+        var wake = main.end.totalMinutes
+        let targetEndMinutes = targetEnd.totalMinutes
+        let targetDuration = minutesBetween(start: targetStart, end: targetEnd)
+        
+        let earliestAllowed = targetEndMinutes - Int(Double(targetDuration) * 0.10) // -10%
+        let latestAllowed   = targetEndMinutes + Int(Double(targetDuration) * 0.05) // +5%
+        
+        if wake >= earliestAllowed && wake <= latestAllowed {
+            return 100
+        }
+        
+        if wake < earliestAllowed {
+            // Too early: proportional penalty
+            let diff = earliestAllowed - wake
+            return max(0, 100 - diff)
+        } else {
+            // Too late: proportional penalty
+            let diff = wake - latestAllowed
+            return max(0, 100 - diff)
+        }
+    }
+    
+    // MARK: - Fragmentation
+    private func scoreFragmentation() -> Int {
+        let sessions = intervals
+        guard !sessions.isEmpty else { return 0 }
+        
+        var mainBlocks = 0
+        var naps = 0
+        
+        for s in sessions {
+            let duration = minutesBetween(start: s.start, end: s.end)
+            if duration >= 30 {
+                mainBlocks += 1
+            } else {
+                naps += 1
+            }
+        }
+        
+        if mainBlocks == 1 && naps <= 1 {
+            return 100
+        }
+        
+        // Penalty: -20 points for each extra block beyond allowed
+        let extra = max(0, (mainBlocks - 1) + max(0, naps - 1))
+        return max(0, 100 - extra * 20)
+    }
+    
+    // MARK: - Helpers
+    private func minutesBetween(start: Time, end: Time) -> Int {
+        let s = start.totalMinutes
+        var e = end.totalMinutes
+        if e < s { e += 24 * 60 }
+        return e - s
     }
 }

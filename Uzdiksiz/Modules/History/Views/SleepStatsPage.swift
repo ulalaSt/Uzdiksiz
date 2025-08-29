@@ -10,6 +10,7 @@ import SwiftUI
 struct SleepStatsPage: View {
     @State private var currentDate: Date
     @ObservedObject var viewModel: SleepLogViewModel
+    var onShowGraph: () -> Void
     
     private var currentReport: SleepReport? {
         let currentKey = currentDate.dateKey
@@ -18,9 +19,10 @@ struct SleepStatsPage: View {
         }
     }
 
-    init(viewModel: SleepLogViewModel) {
+    init(viewModel: SleepLogViewModel, onShowGraph: @escaping () -> Void) {
         self.viewModel = viewModel
         self._currentDate = .init(initialValue: Date())
+        self.onShowGraph = onShowGraph
     }
 
     let formatter: DateFormatter = {
@@ -35,7 +37,11 @@ struct SleepStatsPage: View {
             HStack(alignment: .center, spacing: 0) {
                 Text(formatter.string(from: currentDate).capitalized)
                 Spacer()
-                Image(systemName: "chart.bar.xaxis")
+                Button {
+                    onShowGraph()
+                } label: {
+                    Image(systemName: "chart.bar.xaxis")
+                }
             }
             .font(.title3.weight(.bold))
             .foregroundColor(.textLightGray)
@@ -44,10 +50,10 @@ struct SleepStatsPage: View {
             InfinitePageView(
                 selection: $currentDate,
                 before: { date in
-                    Calendar.current.date(byAdding: .weekOfYear, value: -1, to: date) ?? date
+                    Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date
                 },
                 after: { date in
-                    Calendar.current.date(byAdding: .weekOfYear, value: 1, to: date) ?? date
+                    Calendar.current.date(byAdding: .day, value: 1, to: date) ?? date
                 },
                 view: { date in
                     pageContent(for: date)
@@ -171,22 +177,26 @@ struct SleepStatsPage: View {
                 Text("Ұйқы уақыты")
                     .font(.caption.weight(.medium))
                     .foregroundColor(.textLightGray)
-                if let intervalStrings = report?.intervalStrings {
-                    ForEach(Array(intervalStrings.enumerated()), id: \.offset) { index, text in
-                        Text(text)
-                            .font(index == 0 ? .title3.weight(.bold) : .caption.weight(.bold))
-                            .foregroundColor(index == 0 ? .textSoftWhite : .textLightGray)
-                    }
-                } else {
-                    Text("Тіркелмеген").font(.title3.weight(.bold))
-                        .foregroundColor(.textSoftWhite)
-                }
+                sleepIntervals(for: report)
             }
         }
         .padding(.vertical, 8)
     }
     
-
+    @ViewBuilder
+    private func sleepIntervals(for report: SleepReport?) -> some View {
+        if let sessions = report?.sessions as? Set<SleepSession> {
+            ForEach(Array(sessions)) { session in
+                Text(session.intervalString)
+                    .font(.title3.weight(.bold))
+                    .foregroundColor(.textSoftWhite)
+            }
+        } else {
+            Text("Тіркелмеген").font(.title3.weight(.bold))
+                .foregroundColor(.textSoftWhite)
+        }
+    }
+    
     private func report(for date: Date) -> SleepReport? {
         let currentKey = date.dateKey
         return viewModel.sleepReports.value?.first { report in

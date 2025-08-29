@@ -9,7 +9,7 @@ import SwiftUI
 struct SleepHistoryView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: SleepLogViewModel
-    @State var sessionToDelete: SleepSession? = nil
+    @State var logToDelete: SleepLog? = nil
     @State private var showAddLogSheet = false
 
     let formatter: DateFormatter = {
@@ -29,7 +29,7 @@ struct SleepHistoryView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
                 }
-                if let logs = viewModel.sleepReports.value, !logs.isEmpty {
+                if let logs = viewModel.logs.value, !logs.isEmpty {
                     let avg = averageDuration(for: logs)
                     Text("📊 Орташа ұйқы ұзақтығы: \(avg.hour) сағ \(avg.minute) мин")
                         .font(.system(size: 18, weight: .medium))
@@ -38,8 +38,8 @@ struct SleepHistoryView: View {
                         .multilineTextAlignment(.leading)
                 }
                 
-                if case let .loaded(reports) = viewModel.sleepReports {
-                    if reports.isEmpty {
+                if let logs = viewModel.logs.value {
+                    if logs.isEmpty {
                         Text("💤 ӘЗІРГЕ ДЕРЕКТЕР ЖОҚ")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.white)
@@ -47,33 +47,26 @@ struct SleepHistoryView: View {
                             .multilineTextAlignment(.leading)
                         Spacer()
                     } else {
-                        // Sort reports by dateKey descending
-                        let sortedReports = reports.sorted { $0.dateKey > $1.dateKey }
+                        let grouped = Dictionary(grouping: logs) { log -> Date in
+                            return formatter.date(from: log.date) ?? Date.distantPast
+                        }
+                        let sortedGroups = grouped.sorted { $0.key > $1.key }
 
-                        ForEach(sortedReports, id: \.id) { report in
+                        ForEach(sortedGroups, id: \.key) { date, logsForDate in
                             VStack(alignment: .leading, spacing: 16) {
-                                // Convert dateKey back to Date for display
-                                if let date = viewModel.date(from: report.dateKey) {
-                                    Text("📅 \(formatter.string(from: date)) — \(formatDuration([report]))")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundColor(.white)
-                                        .padding(.leading, 8)
-                                }
-
-                                if let sessions = report.sessions as? Set<SleepSession> {
-                                    ForEach(Array(sessions).sorted { lhs, rhs in
-                                        lhs.startHour * 60 + lhs.startMinute < rhs.startHour * 60 + rhs.startMinute
-                                    }, id: \.id) { session in
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            cell(for: session) // 🔹 Adapt your cell function to handle SleepSession
-                                        }
+                                Text("📅 \(formatter.string(from: date)) — \(formatDuration(logsForDate))")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 8)
+                                ForEach(logsForDate) { log in
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        cell(for: log)
                                     }
                                 }
                             }
                         }
-
                         Button("CSV ретінде экспорттау") {
-//                            viewModel.exportSleepReportsCSV(reports: reports)
+                            viewModel.exportSleepLogsCSV(logs: logs)
                         }
                         .padding()
                         .background(Color.blue)
@@ -143,95 +136,67 @@ struct SleepHistoryView: View {
             .ignoresSafeArea()
     }
     
-    func formatDuration(_ reportsForDate: [SleepReport]) -> String {
-        var totalMinutes = 0
-        
-        for report in reportsForDate {
-            if let sessions = report.sessions as? Set<SleepSession> {
-                for session in sessions {
-                    let start = Int(session.startHour) * 60 + Int(session.startMinute)
-                    let end   = Int(session.endHour) * 60 + Int(session.endMinute)
-                    
-                    // Handle overnight sleep (e.g. 22:00 → 07:00)
-                    let duration = end >= start ? (end - start) : ((24 * 60 - start) + end)
-                    totalMinutes += duration
-                }
-            }
-        }
-        
-        let hour = totalMinutes / 60
-        let minute = totalMinutes % 60
+    func formatDuration(_ logsForDate: [SleepLog]) -> String {
+        let (hour, minute) = viewModel.calculateTotalDuration(for: logsForDate)
         return "\(hour) сағ \(minute) мин"
     }
-    
-    func averageDuration(for reports: [SleepReport]) -> (hour: Int, minute: Int) {
-        guard !reports.isEmpty else { return (0, 0) }
-        
-        var totalMinutesAll = 0
-        
-        for report in reports {
-            if let sessions = report.sessions as? Set<SleepSession> {
-                for session in sessions {
-                    let start = Int(session.startHour) * 60 + Int(session.startMinute)
-                    let end   = Int(session.endHour) * 60 + Int(session.endMinute)
-                    
-                    // handle overnight sleep (e.g. 22:00 → 07:00)
-                    let duration = end >= start ? (end - start) : ((24 * 60 - start) + end)
-                    
-                    totalMinutesAll += duration
-                }
-            }
-        }
-        
-        let uniqueDates = Set(reports.map { $0.dateKey })
+
+    func averageDuration(for logs: [SleepLog]) -> (hour: Int, minute: Int) {
+        guard !logs.isEmpty else { return (0, 0) }
+
+        let (totalHours, totalMinutes) = viewModel.calculateTotalDuration(for: logs)
+        let totalMinutesAll = totalHours * 60 + totalMinutes
+
+        // Вычисляем уникальные даты
+        let uniqueDates = Set(logs.map { $0.date })
         guard !uniqueDates.isEmpty else { return (0, 0) }
-        
+
         let averageMinutes = totalMinutesAll / uniqueDates.count
         return (averageMinutes / 60, averageMinutes % 60)
     }
 
-    func cell(for session: SleepSession) -> some View {
+    func cell(for log: SleepLog) -> some View {
         VStack(alignment: .leading) {
             HStack {
-                Text("😴 Ұйқы ұзақтығы: \(viewModel.duration(for: session))")
+                Text("😴 Ұйқы ұзақтығы: \(log.durationString)")
                     .font(.system(size: 18, weight: .medium))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .multilineTextAlignment(.leading)
                 Spacer()
                 Button {
-                    sessionToDelete = session
+                    logToDelete = log
                 } label: {
                     Image(systemName: "trash")
                         .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.5))
                 }
-                .alert(item: $sessionToDelete) { session in
+                .alert(item: $logToDelete) { log in
                     Alert(
                         title: Text("Күндік ояну мақсатын қайта орнатқыңыз келе ме?"),
                         primaryButton: .destructive(Text("Иә")) {
-//                            viewModel.deleteSleepLog(log)
+                            viewModel.deleteSleepLog(log)
                         },
                         secondaryButton: .cancel(Text("Болдырмау"))
                     )
                 }
             }
-//            let resultText = """
-//            🛌 Ұйықтаған уақыты: \(log.sleepTime)
-//            🌅 Оянған уақыты: \(log.wakeTime)
-//            """
+            let resultText = """
+            🛌 Ұйықтаған уақыты: \(log.sleepTime)
+            🌅 Оянған уақыты: \(log.wakeTime)
+            """
 
-//            Text(resultText)
-//                .font(.system(size: 14, weight: .regular))
-//                .foregroundColor(.white)
-//                .multilineTextAlignment(.leading)
-//            if let reason = log.customReason, !reason.isEmpty {
-//                Text("📝 Себеп: \(reason)")
-//                    .italic()
-//                    .font(.system(size: 14, weight: .regular))
-//                    .foregroundColor(.white)
-//                    .multilineTextAlignment(.leading)
-//            }
+            Text(resultText)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.leading)
+            if let reason = log.customReason, !reason.isEmpty {
+                Text("📝 Себеп: \(reason)")
+                    .italic()
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+            }
         }
         .padding(16)
         .background(BlurredBackgroundView())

@@ -22,11 +22,18 @@ final class HistoryCoordinator: Coordinator {
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: SleepStatsPage(viewModel: sleepLogViewModel))
+        let viewController = UIHostingController(rootView: SleepStatsPage(viewModel: sleepLogViewModel, onShowGraph: { [weak self] in
+            self?.showOldSleepHistory()
+        }))
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }
     
+    func showOldSleepHistory() {
+        let viewController = UIHostingController(rootView: SleepHistoryView(viewModel: sleepLogViewModel))
+        viewController.view.backgroundColor = .clear
+        navigationController.pushViewController(viewController, animated: true)
+    }
     func navigateToGraph() {
         
     }

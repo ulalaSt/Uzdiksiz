@@ -165,10 +165,11 @@ class SleepLogViewModel: ObservableObject {
                     do {
                         let service = SleepSessionDbService.shared
                         let existing = try await service.fetchReports()
-
-                        guard existing.isEmpty else {
-                            print("✅ Core Data already has reports, skipping import")
-                            return
+                        if !existing.isEmpty {
+                            for each in existing {
+                                print(each.debugDescription)
+                            }
+                            try await service.deleteAllReports()
                         }
                         
                         print("📥 Importing \(logs.count) logs into Core Data...")
@@ -342,6 +343,18 @@ class SleepLogViewModel: ObservableObject {
         let hour = durationMinutes / 60
         let minute = durationMinutes % 60
         return (hour, minute)
+    }
+    
+    func calculateTotalDuration(for logs: [SleepLog]) -> (hour: Int, minute: Int) {
+        var totalMinutes = 0
+        
+        for log in logs {
+            if let (h, m) = log.durationHM {
+                totalMinutes += h * 60 + m
+            }
+        }
+        
+        return (totalMinutes / 60, totalMinutes % 60)
     }
 
     func calculateTotalDuration(for reports: [SleepReport]) -> (hour: Int, minute: Int) {

@@ -10,8 +10,8 @@ struct WeekdayPicker: View {
     @Binding var selectedDate: Date
     
     private let calendar = Calendar.current
-    private let today = Date()
-    
+    private var today: Date { Date() }
+
     // Dynamic offsets
     @State private var currentOffset: Int = 0
 
@@ -36,19 +36,34 @@ struct WeekdayPicker: View {
                     }
                 )
             }
+            .onChange(of: selectedDate) { newDate in
+                let newOffset = weeksBetween(startOfCurrentWeek, and: newDate)
+                if newOffset != currentOffset {   // ✅ prevents infinite loop
+                    currentOffset = newOffset
+                }
+            }
             .onChange(of: currentOffset) { newOffset in
                 guard let startOfWeek = calendar.date(byAdding: .weekOfYear, value: newOffset, to: startOfCurrentWeek),
                       let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) else { return }
-                
-                if calendar.isDate(today, inSameDayAs: startOfWeek) || (today > startOfWeek && today < endOfWeek) || calendar.isDate(today, inSameDayAs: endOfWeek) {
-                    selectedDate = today
-                } else {
-                    selectedDate = endOfWeek
+
+                // If selectedDate is outside the new week, adjust
+                if !(selectedDate >= startOfWeek && selectedDate <= endOfWeek) {
+                    if newOffset > 0 {
+                        // Scrolled forward → snap to start of week
+                        selectedDate = startOfWeek
+                    } else if newOffset < 0 {
+                        // Scrolled backward → snap to end of week
+                        selectedDate = endOfWeek
+                    } else {
+                        // We’re at the current week → prefer today
+                        if selectedDate < startOfWeek || selectedDate > endOfWeek {
+                            selectedDate = today
+                        }
+                    }
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             .onAppear {
-                // Initialize currentOffset based on selectedDate
                 currentOffset = weeksBetween(startOfCurrentWeek, and: selectedDate)
             }
     }
@@ -112,7 +127,9 @@ struct WeekdayPicker: View {
     }
     
     private func weeksBetween(_ from: Date, and to: Date) -> Int {
-        calendar.dateComponents([.weekOfYear], from: from, to: to).weekOfYear ?? 0
+        let startFrom = calendar.dateInterval(of: .weekOfYear, for: from)!.start
+        let startTo   = calendar.dateInterval(of: .weekOfYear, for: to)!.start
+        return calendar.dateComponents([.weekOfYear], from: startFrom, to: startTo).weekOfYear ?? 0
     }
 }
 
