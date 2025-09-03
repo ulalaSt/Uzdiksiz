@@ -15,12 +15,12 @@ final class HistoryCoordinator: Coordinator {
     private let sleepLogViewModel: SleepLogViewModel
     private let sleepReportViewModel: SleepReportViewModel
 
-    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, sleepLogViewModel: SleepLogViewModel) {
+    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel) {
         self.navigationController = navigationController
         self.appState = appState
         self.environment = environment
         self.sleepLogViewModel = sleepLogViewModel
-        self.sleepReportViewModel = SleepReportViewModel()
+        self.sleepReportViewModel = sleepReportViewModel
     }
 
     func start() {

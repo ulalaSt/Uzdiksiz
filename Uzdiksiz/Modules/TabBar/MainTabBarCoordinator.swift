@@ -15,10 +15,11 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
     private let tabBarController: MainTabBarController
     private(set) var childCoordinators: [Coordinator] = []
     private let sleepLogViewModel: SleepLogViewModel
+    private let sleepReportViewModel: SleepReportViewModel
     private let locationManager: LocationManager
     private let authViewModel: AuthViewModel
     
-    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, authViewModel: AuthViewModel, sleepLogViewModel: SleepLogViewModel) {
+    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, authViewModel: AuthViewModel, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel) {
         self.navigationController = navigationController
         self.appState = appState
         self.environment = environment
@@ -26,6 +27,7 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
         self.sleepLogViewModel = sleepLogViewModel
         self.locationManager = LocationManager()
         self.authViewModel = authViewModel
+        self.sleepReportViewModel = sleepReportViewModel
     }
 
     func start() {
@@ -40,7 +42,7 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
             case .home:
                 coordinator = HomeCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel)
             case .history:
-                coordinator = HistoryCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel)
+                coordinator = HistoryCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel)
             case .goal:
                 coordinator = GoalCoordinator(navigationController: nav)
             case .profile:

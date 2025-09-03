@@ -57,4 +57,32 @@ class SleepReportViewModel: ObservableObject {
             state.wrappedValue = .failed(.unexpectedError(error.localizedDescription))
         }
     }
+    
+    func wakeUp() async throws {
+        if let sleepDate = AppState.shared.todaySleptDate {
+            let wakeDate = Date()
+            let calendar = Calendar.current
+            
+            // Формируем ключ даты (например: 20250902)
+            let components = calendar.dateComponents([.year, .month, .day], from: wakeDate)
+            let dateKey = Int32(components.year! * 10000 + components.month! * 100 + components.day!)
+            
+            // Преобразуем sleepDate и wakeDate в Time
+            let sleepHour = calendar.component(.hour, from: sleepDate)
+            let sleepMinute = calendar.component(.minute, from: sleepDate)
+            let startTime = Time(hour: sleepHour, minute: sleepMinute)
+            
+            let wakeHour = calendar.component(.hour, from: wakeDate)
+            let wakeMinute = calendar.component(.minute, from: wakeDate)
+            let endTime = Time(hour: wakeHour, minute: wakeMinute)
+            
+            // Сохраняем сессию сна (асинхронно)
+            try await SleepSessionDbService.shared.createSleepSession(
+                dateKey: dateKey,
+                startTime: startTime,
+                endTime: endTime
+            )
+        }
+        AppState.shared.todaySleptDate = nil
+    }
 }
