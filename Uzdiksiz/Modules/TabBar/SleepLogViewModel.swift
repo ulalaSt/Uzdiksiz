@@ -161,35 +161,35 @@ class SleepLogViewModel: ObservableObject {
                 }
                 self?.logs = .loaded(logs)
                 
-                Task {
-                    do {
-                        let service = SleepSessionDbService.shared
-                        let existing = try await service.fetchReports()
-                        if !existing.isEmpty {
-                            for each in existing {
-                                print(each.debugDescription)
-                            }
-                            try await service.deleteAllReports()
-                        }
-                        
-                        print("📥 Importing \(logs.count) logs into Core Data...")
-                        
-                        for log in logs {
-                            guard let dateKey = parseDateKey(log.date),
-                                  let (sh, sm) = parseTime(log.sleepTime),
-                                  let (eh, em) = parseTime(log.wakeTime)
-                            else { continue }
-                            
-                            _ = try await service.createSleepSession(
-                                dateKey: dateKey,
-                                startTime: Time(hour: sh, minute: sm),
-                                endTime: Time(hour: eh, minute: em)
-                            )
-                        }
-                    } catch {
-                        print("⚠️ Import failed: \(error)")
-                    }
-                }
+//                Task {
+//                    do {
+//                        let service = SleepSessionDbService.shared
+//                        let existing = try await service.fetchReports()
+//                        if !existing.isEmpty {
+//                            for each in existing {
+//                                print(each.debugDescription)
+//                            }
+//                            try await service.deleteAllReports()
+//                        }
+//                        
+//                        print("📥 Importing \(logs.count) logs into Core Data...")
+//                        
+//                        for log in logs {
+//                            guard let dateKey = parseDateKey(log.date),
+//                                  let (sh, sm) = parseTime(log.sleepTime),
+//                                  let (eh, em) = parseTime(log.wakeTime)
+//                            else { continue }
+//                            
+//                            _ = try await service.createSleepSession(
+//                                dateKey: dateKey,
+//                                startTime: Time(hour: sh, minute: sm),
+//                                endTime: Time(hour: eh, minute: em)
+//                            )
+//                        }
+//                    } catch {
+//                        print("⚠️ Import failed: \(error)")
+//                    }
+//                }
             }
     }
     

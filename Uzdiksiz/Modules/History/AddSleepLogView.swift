@@ -8,11 +8,11 @@ import SwiftUI
 
 struct AddSleepLogView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var date = Date()
+    @State var date: Date
     @State private var sleepTime = Date()
     @State private var wakeTime = Date()
     
-    let onSave: (String, String, String) -> Void // date, sleepTime, wakeTime
+    let onSave: (Date, Time, Time) -> Void // date, sleepTime, wakeTime
     
     var body: some View {
         NavigationView {
@@ -20,29 +20,34 @@ struct AddSleepLogView: View {
                 DatePicker("Күні", selection: $date, displayedComponents: .date)
                 DatePicker("Ұйықтау уақыты", selection: $sleepTime, displayedComponents: .hourAndMinute)
                 DatePicker("Ояну уақыты", selection: $wakeTime, displayedComponents: .hourAndMinute)
+                Spacer()
+                Button {
+                    let sleep = Time(
+                        hour: Calendar.current.component(.hour, from: sleepTime),
+                        minute: Calendar.current.component(.minute, from: sleepTime)
+                    )
+                    let wake = Time(
+                        hour: Calendar.current.component(.hour, from: wakeTime),
+                        minute: Calendar.current.component(.minute, from: wakeTime)
+                    )
+                    onSave(date, sleep, wake)
+                    dismiss()
+                } label: {
+                    DefaultButtonView(title: "Сақтау")
+                }
+
             }
-            .navigationTitle("Жаңа жазба")
+            .scrollContentBackground(.hidden)
+            .background(Color.backgroundDeepNavy
+                .ignoresSafeArea())
+            .navigationTitle("Жаңа ұйқы")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Болдырмау") {
                         dismiss()
                     }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Сақтау") {
-                        let formatter = DateFormatter()
-                        formatter.dateFormat = "yyyy-MM-dd"
-                        let dateStr = formatter.string(from: date)
-                        
-                        let timeFormatter = DateFormatter()
-                        timeFormatter.dateFormat = "HH:mm"
-                        let sleepStr = timeFormatter.string(from: sleepTime)
-                        let wakeStr = timeFormatter.string(from: wakeTime)
-                        
-                        onSave(dateStr, sleepStr, wakeStr)
-                        dismiss()
-                    }
+                    .foregroundColor(.textLightGray)
                 }
             }
         }

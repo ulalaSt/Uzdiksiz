@@ -122,8 +122,11 @@ struct SleepHistoryView: View {
             }
         }
         .sheet(isPresented: $showAddLogSheet) {
-            AddSleepLogView { date, sleep, wake in
-                viewModel.createSleepLog(date: date, sleepTime: sleep, wakeTime: wake)
+            AddSleepLogView(date: Date()) { date, sleep, wake in
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                let dateStr = formatter.string(from: date)
+                viewModel.createSleepLog(date: dateStr, sleepTime: sleep.toString(), wakeTime: wake.toString())
                 showAddLogSheet = false
             }
         }

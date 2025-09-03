@@ -9,9 +9,11 @@ import SwiftUI
 
 struct SleepStatsPage: View {
     @State private var currentDate: Date
-    @ObservedObject var viewModel: SleepLogViewModel
+    @State private var deletionState: Loadable<Void> = .notRequested
+    @ObservedObject var viewModel: SleepReportViewModel
     var onShowGraph: () -> Void
-    
+    var onAddSleep: (Date) -> Void
+
     private var currentReport: SleepReport? {
         let currentKey = currentDate.dateKey
         return viewModel.sleepReports.value?.first { report in
@@ -19,10 +21,11 @@ struct SleepStatsPage: View {
         }
     }
 
-    init(viewModel: SleepLogViewModel, onShowGraph: @escaping () -> Void) {
+    init(viewModel: SleepReportViewModel, onShowGraph: @escaping () -> Void, onAddSleep: @escaping (Date) -> Void) {
         self.viewModel = viewModel
         self._currentDate = .init(initialValue: Date())
         self.onShowGraph = onShowGraph
+        self.onAddSleep = onAddSleep
     }
 
     let formatter: DateFormatter = {
@@ -77,6 +80,90 @@ struct SleepStatsPage: View {
                     sleepInfo(for: report)
                 }
                 .padding(.vertical, 16)
+                if let sessions = report?.sessions as? Set<SleepSession> {
+                    HStack(alignment: .center, spacing: 0) {
+                        Text("Ұйқы тізбегі")
+                            .font(.title3.weight(.bold))
+                            .foregroundColor(.textLightGray)
+                        Spacer()
+                        Button {
+                            onAddSleep(date)
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3.weight(.bold))
+                                .foregroundColor(Color.textSoftWhite)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    VStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            SleepTimelineView(sessions: Array(sessions))
+                            HStack(spacing: 10) {
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(Color.primaryOceanBlue)
+                                        .frame(width: 10, height: 10)
+                                    Text("Негізгі ұйқы")
+                                        .font(.caption)
+                                        .foregroundColor(Color.textSoftWhite)
+                                }
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(Color.accentSkyIceBlue)
+                                        .frame(width: 10, height: 10)
+                                    Text("Қысқа ұйқы")
+                                        .font(.caption)
+                                        .foregroundColor(Color.textSoftWhite)
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.backgroundDeepNavy)
+                        )
+                        ForEach(Array(sessions)) { session in
+                            let isNap = session.minutesDuration < 30
+                            HStack(spacing: 8) {
+                                Circle().fill(isNap ? Color.accentSkyIceBlue : .primaryOceanBlue)
+                                    .frame(width: 10, height: 10)
+                                Text(session.intervalString)
+                                    .font(.title3.weight(.bold))
+                                    .foregroundColor(Color.textSoftWhite)
+                                Spacer()
+                                Menu {
+                                    Button {
+                                        // edit action
+                                    } label: {
+                                        Label("Өңдеу", systemImage: "square.and.pencil")
+                                    }
+
+                                    Button(role: .destructive) {
+                                        Task {
+                                            await viewModel.deleteSession(sessionID: session.id, state: $deletionState)
+                                        }
+                                    } label: {
+                                        Label("Жою", systemImage: "trash")
+                                    }
+                                } label: {
+                                    Image(systemName: "ellipsis")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                        .foregroundColor(.textLightGray)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.backgroundDeepNavy)
+                            )
+
+                        }
+                    }
+                }
                 CardRow(systemIcon: "text.bubble.fill", title: "Ұйқы жазбасы", content: {
                     Text("Бүгін той болып қалды, содан кеш ұйықтап қалдым")
                         .font(.caption)
@@ -176,27 +263,25 @@ struct SleepStatsPage: View {
                 .foregroundColor(.textSoftWhite)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("Ұйқы уақыты")
+                Text("Негізгі ұйқы")
                     .font(.caption.weight(.medium))
                     .foregroundColor(.textLightGray)
-                sleepIntervals(for: report)
+                
+                if let sessions = report?.sessions as? Set<SleepSession>,
+                   let main = sessions.max(by: {
+                       $0.minutesDuration < $1.minutesDuration
+                   }) {
+                    Text(main.intervalString)
+                        .font(.title3.weight(.bold))
+                        .foregroundColor(.textSoftWhite)
+                } else {
+                    Text("Тіркелмеген")
+                        .font(.title3.weight(.bold))
+                        .foregroundColor(.textSoftWhite)
+                }
             }
         }
         .padding(.vertical, 8)
-    }
-    
-    @ViewBuilder
-    private func sleepIntervals(for report: SleepReport?) -> some View {
-        if let sessions = report?.sessions as? Set<SleepSession> {
-            ForEach(Array(sessions)) { session in
-                Text(session.intervalString)
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(.textSoftWhite)
-            }
-        } else {
-            Text("Тіркелмеген").font(.title3.weight(.bold))
-                .foregroundColor(.textSoftWhite)
-        }
     }
     
     private func report(for date: Date) -> SleepReport? {

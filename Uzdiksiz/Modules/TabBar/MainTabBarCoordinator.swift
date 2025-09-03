@@ -58,6 +58,7 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
             childCoordinators.append(coordinator)
         }
         tabBarController.viewControllers = navControllers
+        tabBarController.selectedIndex = 1
         navigationController.isNavigationBarHidden = true
         navigationController.setViewControllers([tabBarController], animated: false)
         navigationController.topViewController?.dismiss(animated: true, completion: nil)
