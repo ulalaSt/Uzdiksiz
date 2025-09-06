@@ -30,10 +30,25 @@ struct NotificationAdvanceSheet: View {
     }
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Алдын ала ескерту")
-                .font(.title3.weight(.bold))
-                .padding(.top, 16)
+        VStack(spacing: 10) {
+            HStack {
+                Text("Алдын ала ескерту")
+                    .font(.headline.weight(.semibold))
+                    .padding(.vertical, 11)
+                    .padding(.horizontal, 10)
+                    .foregroundColor(.textSoftWhite)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Бас тарту")
+                        .font(.headline.weight(.medium))
+                        .padding(.vertical, 11)
+                        .padding(.horizontal, 10)
+                        .contentShape(Rectangle())
+                        .foregroundColor(.textLightGray)
+                }
+            }
             HStack {
                 Picker("Сағат", selection: $tempHour) {
                     ForEach(hours, id: \.self) { h in
@@ -52,32 +67,19 @@ struct NotificationAdvanceSheet: View {
                 .frame(maxWidth: .infinity)
             }
             .frame(height: 150)
-            
-            Divider()
-            
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    DefaultButtonView(title: "Бас тарту", state: .secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                Button {
-                    remindInAdvance = Time(hour: tempHour, minute: tempMinute)
-                    dismiss()
-                } label: {
-                    DefaultButtonView(title: "Сақтау", state: .primary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .opacity(hasChanged ? 1 : 0.7)
-                .disabled(!hasChanged)
+            .padding(.vertical, 16)
+            Button {
+                remindInAdvance = Time(hour: tempHour, minute: tempMinute)
+                dismiss()
+            } label: {
+                DefaultButtonView(title: "Сақтау", state: .primary)
             }
-            .padding(.horizontal)
-            
+            .frame(maxWidth: .infinity)
             Spacer()
         }
-        .presentationDetents([.height(340)])
+        .padding(16)
+        .background(Color.backgroundDeepNavy.ignoresSafeArea())
+        .presentationDetents([.height(330)])
+        .presentationCornerRadius(40)
     }
 }
