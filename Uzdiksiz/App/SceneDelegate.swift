@@ -30,4 +30,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         appCoordinator = coordinator
         coordinator.start()
     }
+    
+    func sceneWillEnterForeground(_ scene: UIScene) {
+        checkPermission()
+    }
+    
+    private func checkPermission() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                AppState.shared.notificationIsPermitted = (
+                    settings.authorizationStatus == .authorized ||
+                    settings.authorizationStatus == .provisional ||
+                    settings.authorizationStatus == .ephemeral
+                )
+            }
+        }
+    }
+
 }

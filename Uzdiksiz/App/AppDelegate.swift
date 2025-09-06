@@ -23,10 +23,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return GIDSignIn.sharedInstance.handle(url)
     }
     
-    func applicationWillEnterForeground(_ application: UIApplication) {
-        checkPermission()
-    }
-    
     private func requestPermission() {
         UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
@@ -34,17 +30,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     AppState.shared.notificationIsPermitted = granted
                 }
             }
-    }
-    
-    private func checkPermission() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                AppState.shared.notificationIsPermitted = (
-                    settings.authorizationStatus == .authorized ||
-                    settings.authorizationStatus == .provisional ||
-                    settings.authorizationStatus == .ephemeral
-                )
-            }
-        }
     }
 }

@@ -74,11 +74,7 @@ struct SleepSettingsPage: View {
                     .onChange(of: sleepTimeDate) { newValue in
                         viewModel.sleepTimeBinding.wrappedValue = sleepTime
                     }
-                if viewModel.notificationPermissionGranted == true {
-                    notificationSection
-                } else {
-                    
-                }
+                notificationSection
             }
         }
     }
@@ -96,7 +92,7 @@ struct SleepSettingsPage: View {
         
     var notificationSection: some View {
         VStack(spacing: 11) {
-            if viewModel.notificationPermissionGranted == true {
+            if viewModel.notificationPermissionGranted != true {
                 Button {
                     viewModel.openAppSettings()
                 } label: {
@@ -104,9 +100,12 @@ struct SleepSettingsPage: View {
                         HStack {
                             HStack(spacing: 8) {
                                 Image(systemName: "bell.slash.fill")
-                                    .font(.body.weight(.semibold))
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
                                 Text("Хабарламалар өшірілген")
                                     .font(.footnote.weight(.semibold))
+                                    .multilineTextAlignment(.leading)
                             }
                             .foregroundColor(.textSoftWhite)
                             Spacer()
@@ -122,6 +121,7 @@ struct SleepSettingsPage: View {
                             .font(.caption)
                             .foregroundColor(.textLightGray)
                             .multilineTextAlignment(.leading)
+                            .padding(.leading, 30)
                     }
                     .contentShape(Rectangle())
                 }
@@ -130,7 +130,9 @@ struct SleepSettingsPage: View {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "bell")
-                        .font(.body.weight(.semibold))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                     Text("Ескертпе")
                         .font(.footnote.weight(.semibold))
                 }
@@ -141,7 +143,7 @@ struct SleepSettingsPage: View {
                     .frame(height: 20)
             }
             .contentShape(Rectangle())
-            .opacity(0.5)
+            .opacity(viewModel.notificationPermissionGranted == true ? 1 : 0.2)
             .disabled(viewModel.notificationPermissionGranted != true)
             Color.white.opacity(0.1).frame(height: 0.5)
             Button {
@@ -150,7 +152,9 @@ struct SleepSettingsPage: View {
                 HStack {
                     HStack(spacing: 8) {
                         Image(systemName: "timer")
-                            .font(.body.weight(.semibold))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
                         Text("Алдын ала ескерту")
                             .font(.footnote.weight(.semibold))
                     }
@@ -165,7 +169,7 @@ struct SleepSettingsPage: View {
                     .foregroundColor(Color.textLightGray)
                 }.contentShape(Rectangle())
             }
-            .opacity(0.5)
+            .opacity(viewModel.notificationPermissionGranted == true ? 1 : 0.2)
             .disabled(viewModel.notificationPermissionGranted != true)
             .sheet(isPresented: $showAdvanceSheet) {
                 NotificationAdvanceSheet(remindInAdvance: viewModel.remindInAdvanceBinding)
@@ -173,6 +177,10 @@ struct SleepSettingsPage: View {
         }
         .padding(.vertical, 11)
         .padding(.horizontal, 16)
+        .background {
+            Color.backgroundDeepNavy
+        }
+        .cornerRadius(16)
     }
     
     var selector: some View {

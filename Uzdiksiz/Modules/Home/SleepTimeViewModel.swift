@@ -111,12 +111,7 @@ class SleepTimeViewModel: ObservableObject {
     
     func updateIsNotificationOn(_ isOn: Bool) {
         AppState.shared.isNotificationOn = isOn
-        if isOn {
-            scheduleDailyNotification(time: sleepTime)
-        } else {
-            UNUserNotificationCenter.current()
-                .removePendingNotificationRequests(withIdentifiers: [Self.sleepNotificationID])
-        }
+        scheduleDailyNotification(time: sleepTime)
     }
 
     func updateRemindInAdvance(_ time: Time) {
@@ -176,18 +171,14 @@ class SleepTimeViewModel: ObservableObject {
     }
     
     func scheduleDailyNotification(time: Time) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.sleepNotificationID])
         guard isNotificationOn, notificationPermissionGranted == true else {
             return
         }
-        let center = UNUserNotificationCenter.current()
-        
-        // Remove old scheduled notifications if needed
-        center.removePendingNotificationRequests(withIdentifiers: [Self.sleepNotificationID])
-
-        // Adjust for 30 minutes before
         var totalMinutes = time.totalMinutes - remindInAdvance.totalMinutes
         if totalMinutes < 0 {
-            totalMinutes += 24 * 60 // күн ауысқан жағдайда
+            totalMinutes += 24 * 60
         }
         
         let adjustedHour = totalMinutes / 60
