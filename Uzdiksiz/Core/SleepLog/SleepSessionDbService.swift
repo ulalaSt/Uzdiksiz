@@ -16,17 +16,27 @@ enum SleepSessionError: Error {
 
 class SleepSessionDbService {
     static private let dbName = "SleepDataStore"
-    private let persistentContainer: NSPersistentContainer
+    private let persistentContainer: NSPersistentCloudKitContainer
     private let context: NSManagedObjectContext
     static public let shared = SleepSessionDbService()
     
     public init() {
         let modelURL = Bundle.main.url(forResource: SleepSessionDbService.dbName, withExtension: "momd")!
-        persistentContainer = NSPersistentContainer(
+        persistentContainer = NSPersistentCloudKitContainer(
             name: SleepSessionDbService.dbName,
-            managedObjectModel: NSManagedObjectModel(
-                contentsOf: modelURL)!)
-        persistentContainer.loadPersistentStores { (storeDescription, error) in
+            managedObjectModel: NSManagedObjectModel(contentsOf: modelURL)!
+        )
+        let description = persistentContainer.persistentStoreDescriptions.first!
+        description.cloudKitContainerOptions =
+            NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.kz.uzdiksiz.Uzdiksiz")
+
+        // Enable history & notifications for sync
+        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        persistentContainer.persistentStoreDescriptions = [description]
+
+        persistentContainer.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }

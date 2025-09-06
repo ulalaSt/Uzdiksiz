@@ -15,6 +15,18 @@ class SleepTimeViewModel: ObservableObject {
     @Published private(set) var isNotificationOn: Bool
     @Published private(set) var remindInAdvance: Time
     @Published private(set) var notificationPermissionGranted: Bool? = nil
+    
+    var notificationTime: Time {
+        var totalMinutes = sleepTime.totalMinutes - remindInAdvance.totalMinutes
+        if totalMinutes < 0 {
+            totalMinutes += 24 * 60
+        }
+        
+        let adjustedHour = totalMinutes / 60
+        let adjustedMinute = totalMinutes % 60
+        return Time(hour: adjustedHour, minute: adjustedMinute)
+    }
+    
     static let sleepNotificationID = "dailySleepNotification"
     static let quotes: [String] = [
         "Ерте жатып, ерте тұру адамды сау, бай және ақылды етеді (Бенджамин Франклин)",
@@ -89,7 +101,7 @@ class SleepTimeViewModel: ObservableObject {
     func updatePermission(_ granted: Bool) {
         self.notificationPermissionGranted = granted
         if granted, self.isNotificationOn {
-            self.scheduleDailyNotification(time: self.sleepTime)
+            self.updateDailyNotification()
         }
     }
     
@@ -102,7 +114,7 @@ class SleepTimeViewModel: ObservableObject {
     
     func updateSleepTime(_ time: Time) {
         AppState.shared.sleepTime = time
-        scheduleDailyNotification(time: time)
+        updateDailyNotification()
     }
     
     func updateWakeTime(_ time: Time) {
@@ -111,12 +123,12 @@ class SleepTimeViewModel: ObservableObject {
     
     func updateIsNotificationOn(_ isOn: Bool) {
         AppState.shared.isNotificationOn = isOn
-        scheduleDailyNotification(time: sleepTime)
+        updateDailyNotification()
     }
 
     func updateRemindInAdvance(_ time: Time) {
         AppState.shared.remindInAdvance = time
-        scheduleDailyNotification(time: sleepTime)
+        updateDailyNotification()
     }
 
     func openSettings(state: SleepSettingsState) {
@@ -170,19 +182,12 @@ class SleepTimeViewModel: ObservableObject {
         }
     }
     
-    func scheduleDailyNotification(time: Time) {
+    func updateDailyNotification() {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [Self.sleepNotificationID])
         guard isNotificationOn, notificationPermissionGranted == true else {
             return
         }
-        var totalMinutes = time.totalMinutes - remindInAdvance.totalMinutes
-        if totalMinutes < 0 {
-            totalMinutes += 24 * 60
-        }
-        
-        let adjustedHour = totalMinutes / 60
-        let adjustedMinute = totalMinutes % 60
 
         let content = UNMutableNotificationContent()
         let advText = remindInAdvance.string
@@ -191,8 +196,8 @@ class SleepTimeViewModel: ObservableObject {
         content.sound = .default
         
         var dateComponents = DateComponents()
-        dateComponents.hour = adjustedHour
-        dateComponents.minute = adjustedMinute
+        dateComponents.hour = notificationTime.hour
+        dateComponents.minute = notificationTime.minute
         
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         

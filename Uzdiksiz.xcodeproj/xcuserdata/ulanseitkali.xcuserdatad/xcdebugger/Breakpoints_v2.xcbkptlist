@@ -126,8 +126,8 @@
             filePath = "Uzdiksiz/Modules/Home/SleepTimeViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
+            startingLineNumber = "102"
+            endingLineNumber = "102"
             landmarkName = "updatePermission(_:)"
             landmarkType = "7">
          </BreakpointContent>

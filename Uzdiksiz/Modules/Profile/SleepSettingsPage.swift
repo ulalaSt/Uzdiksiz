@@ -96,7 +96,7 @@ struct SleepSettingsPage: View {
                 Button {
                     viewModel.openAppSettings()
                 } label: {
-                    VStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             HStack(spacing: 8) {
                                 Image(systemName: "bell.slash.fill")
@@ -149,25 +149,33 @@ struct SleepSettingsPage: View {
             Button {
                 showAdvanceSheet = true
             } label: {
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "timer")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                        Text("Алдын ала ескерту")
-                            .font(.footnote.weight(.semibold))
-                    }
-                    .foregroundColor(.textSoftWhite)
-                    Spacer()
-                    HStack(spacing: 8) {
-                        Text(viewModel.remindInAdvance.string)
-                            .font(.caption)
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .foregroundColor(Color.textLightGray)
-                }.contentShape(Rectangle())
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        HStack(spacing: 8) {
+                            Image(systemName: "timer")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                            Text("Алдын ала ескерту")
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .foregroundColor(.textSoftWhite)
+                        Spacer()
+                        HStack(spacing: 8) {
+                            Text(viewModel.remindInAdvance.string)
+                                .font(.caption)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundColor(Color.textLightGray)
+                    }.contentShape(Rectangle())
+                    Text("Келесі ескертпе уақыты: \(viewModel.notificationTime.toString())")
+                        .font(.caption)
+                        .foregroundColor(.textLightGray)
+                        .multilineTextAlignment(.leading)
+                        .padding(.leading, 30)
+                }
+                .contentShape(Rectangle())
             }
             .opacity(viewModel.notificationPermissionGranted == true ? 1 : 0.2)
             .disabled(viewModel.notificationPermissionGranted != true)
