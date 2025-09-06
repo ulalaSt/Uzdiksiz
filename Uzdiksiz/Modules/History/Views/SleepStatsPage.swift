@@ -50,7 +50,7 @@ struct SleepStatsPage: View {
             .foregroundColor(.textLightGray)
             .padding(.horizontal, 24)
             WeekdayPicker(selectedDate: $currentDate, progressForDate: { date in
-                report(for: date)?.quality(targetStart: AppState.shared.sleepTime, targetEnd: AppState.shared.wakeTime) ?? 0
+                report(for: date)?.quality() ?? 0
             })
             InfinitePageView(
                 selection: $currentDate,
@@ -206,7 +206,7 @@ struct SleepStatsPage: View {
     
     @ViewBuilder
     func qualityBar(for report: SleepReport?) -> some View {
-        let quality = report?.quality(targetStart: AppState.shared.sleepTime, targetEnd: AppState.shared.wakeTime)
+        let quality = report?.quality()
         
         VStack(spacing: 0) {
             if let quality {

@@ -17,6 +17,12 @@ extension SleepReport {
 
     @NSManaged public var dateKey: Int32
     @NSManaged public var sessions: NSSet?
+    
+    
+    @NSManaged public var targetStartHour: Int32
+    @NSManaged public var targetStartMinute: Int32
+    @NSManaged public var targetEndHour: Int32
+    @NSManaged public var targetEndMinute: Int32
 }
 
 // MARK: Generated accessors for sessions
@@ -41,6 +47,14 @@ extension SleepReport: Identifiable {
 }
 
 extension SleepReport {
+    var targetStart: Time {
+        Time(hour: Int(targetStartHour), minute: Int(targetStartMinute))
+    }
+    
+    var targetEnd: Time {
+        Time(hour: Int(targetEndHour), minute: Int(targetEndMinute))
+    }
+    
     var date: Date {
         let key = Int(dateKey)
         let year  = key / 10_000
@@ -106,10 +120,10 @@ extension SleepReport {
 
 extension SleepReport {
     
-    func quality(targetStart: Time, targetEnd: Time) -> Int {
-        let durationScore = scoreDuration(targetStart: targetStart, targetEnd: targetEnd)
-        let sleepTimeScore = scoreSleepTime(targetStart: targetStart, targetEnd: targetEnd)
-        let wakeTimeScore = scoreWakeTime(targetStart: targetStart, targetEnd: targetEnd)
+    func quality() -> Int {
+        let durationScore = scoreDuration()
+        let sleepTimeScore = scoreSleepTime()
+        let wakeTimeScore = scoreWakeTime()
         let fragmentationScore = scoreFragmentation()
         
         // Weights
@@ -123,7 +137,7 @@ extension SleepReport {
     }
     
     // MARK: - Duration
-    private func scoreDuration(targetStart: Time, targetEnd: Time) -> Int {
+    private func scoreDuration() -> Int {
         let targetDuration = minutesBetween(start: targetStart, end: targetEnd)
         let minDuration = Double(targetDuration) * 0.9
         let maxDuration = Double(targetDuration) * 1.1
@@ -142,7 +156,7 @@ extension SleepReport {
     }
     
     // MARK: - Sleep Time
-    private func scoreSleepTime(targetStart: Time, targetEnd: Time) -> Int {
+    private func scoreSleepTime() -> Int {
         guard let first = intervals.min(by: { $0.start.totalMinutes < $1.start.totalMinutes }) else {
             return 0
         }
@@ -162,7 +176,7 @@ extension SleepReport {
     }
     
     // MARK: - Wake Time
-    private func scoreWakeTime(targetStart: Time, targetEnd: Time) -> Int {
+    private func scoreWakeTime() -> Int {
         let mainSessions = intervals.filter { minutesBetween(start: $0.start, end: $0.end) >= 30 }
         guard let main = mainSessions.max(by: { $0.end.totalMinutes < $1.end.totalMinutes }) else {
             return 0

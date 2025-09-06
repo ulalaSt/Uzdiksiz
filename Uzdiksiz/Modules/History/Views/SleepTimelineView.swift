@@ -16,7 +16,7 @@ struct SleepTimelineView: View {
             let start = session.startTime.totalMinutes
             return start >= base ? start : start + 24 * 60
         }
-        return min(base, startCandidates.min()!)
+        return min(base, startCandidates.min() ?? 0)
     }
 
     private var maxMinutes: Int {
@@ -25,7 +25,7 @@ struct SleepTimelineView: View {
             let end = session.endTime.totalMinutes
             return end < minMinutes ? end + 24 * 60 : end
         }
-        return max(base, endCandidates.max()!)
+        return max(base, endCandidates.max() ?? 0)
     }
 
     private var totalMinutes: Int {

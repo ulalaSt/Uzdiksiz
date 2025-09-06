@@ -29,6 +29,8 @@ class SleepSessionDbService {
         let description = persistentContainer.persistentStoreDescriptions.first!
         description.cloudKitContainerOptions =
             NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.kz.uzdiksiz.Uzdiksiz")
+        description.shouldMigrateStoreAutomatically = true
+        description.shouldInferMappingModelAutomatically = true
 
         // Enable history & notifications for sync
         description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
@@ -65,6 +67,10 @@ class SleepSessionDbService {
             } else {
                 report = SleepReport(context: context)
                 report.dateKey = dateKey
+                report.targetStartHour = Int32(AppState.shared.sleepTime.hour)
+                report.targetStartMinute = Int32(AppState.shared.sleepTime.minute)
+                report.targetEndHour = Int32(AppState.shared.wakeTime.hour)
+                report.targetEndMinute = Int32(AppState.shared.wakeTime.minute)
             }
             
             // Convert Time to "minutes since midnight"

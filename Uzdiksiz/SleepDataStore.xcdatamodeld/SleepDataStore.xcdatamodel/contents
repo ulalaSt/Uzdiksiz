@@ -2,6 +2,10 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="24A335" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="SleepReport" representedClassName="SleepReport" syncable="YES">
         <attribute name="dateKey" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="targetEndHour" attributeType="Integer 32" defaultValueString="5" usesScalarValueType="YES"/>
+        <attribute name="targetEndMinute" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="targetStartHour" attributeType="Integer 32" defaultValueString="22" usesScalarValueType="YES"/>
+        <attribute name="targetStartMinute" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="sessions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SleepSession" inverseName="report" inverseEntity="SleepSession"/>
     </entity>
     <entity name="SleepSession" representedClassName="SleepSession" syncable="YES">
