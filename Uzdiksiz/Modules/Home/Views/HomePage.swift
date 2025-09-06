@@ -15,7 +15,6 @@ struct HomePage: View {
             Text(viewModel.todayString())
                 .font(.title3.weight(.bold))
                 .foregroundColor(.textLightGray)
-            SleepCircleView(sleepTime: viewModel.sleepTimeBinding, wakeTime: viewModel.wakeTimeBinding)
             HStack(spacing: 16) {
                 Button {
                     viewModel.openSettings(state: .sleep)
@@ -28,6 +27,7 @@ struct HomePage: View {
                     button(title: "Оятқыш", titleIcon: "alarm.fill", titleIconColor: .colorsYellow, mainInfo: viewModel.wakeTime.toString(), description: viewModel.timeLeft(for: .wake).toString(isDiff: true))
                 }
             }
+            SleepCircleView(sleepTime: viewModel.sleepTimeBinding, wakeTime: viewModel.wakeTimeBinding)
             Spacer()
             Button {
                 viewModel.startSleep()

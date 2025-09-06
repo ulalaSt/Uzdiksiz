@@ -64,6 +64,24 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
         }
     }
     
+    var string: String {
+        var parts: [String] = []
+        
+        if hour > 0 {
+            parts.append("\(hour)сағ")
+        }
+        if minute > 0 {
+            parts.append("\(minute)мин")
+        }
+        
+        // Егер екеуі де 0 болса → 0мин деп шығару
+        if parts.isEmpty {
+            return "0мин"
+        }
+        
+        return parts.joined(separator: " ")
+    }
+    
     var date: Date {
         Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? Date()
     }
