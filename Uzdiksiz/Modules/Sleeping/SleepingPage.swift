@@ -12,10 +12,24 @@ struct SleepingPage: View {
     @ObservedObject var reportsViewModel: SleepReportViewModel
     @State private var currentTime: Date = Date()
     
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: currentTime)
+        switch hour {
+        case 5..<12:
+            return "Қайырлы таң!"
+        case 12..<17:
+            return "Қайырлы түс!"
+        case 17..<22:
+            return "Қайырлы кеш!"
+        default:
+            return "Қайырлы түн!"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 16) {
-                Text("Қайырлы түн!")
+                Text(greeting)
                     .font(.title3.weight(.semibold))
                     .foregroundColor(.textSoftWhite)
                 Text(currentTime, style: .time)
