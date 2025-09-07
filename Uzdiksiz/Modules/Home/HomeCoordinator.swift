@@ -10,22 +10,15 @@ import SwiftUI
 
 final class HomeCoordinator: Coordinator {
     let navigationController: UINavigationController
-    private let appState: AppState
-    private let environment: AppEnvironment
-    private let sleepLogViewModel: SleepLogViewModel
-    let viewModel: SleepTimeViewModel
+    let timeViewModel: SleepTimeViewModel
 
-    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, sleepLogViewModel: SleepLogViewModel) {
+    init(navigationController: UINavigationController, sleepLogViewModel: SleepLogViewModel, timeViewModel: SleepTimeViewModel) {
         self.navigationController = navigationController
-        self.appState = appState
-        self.environment = environment
-        self.sleepLogViewModel = sleepLogViewModel
-        self.viewModel = SleepTimeViewModel(environment: environment)
-        viewModel.coordinator = self
+        self.timeViewModel = timeViewModel
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: HomePage(viewModel: viewModel))
+        let viewController = UIHostingController(rootView: HomePage(viewModel: timeViewModel))
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }
@@ -35,7 +28,7 @@ final class HomeCoordinator: Coordinator {
     }
     
     func openSettings(state: SleepSettingsState) {
-        let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: viewModel))
+        let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: timeViewModel))
         navigationController.pushViewController(viewController, animated: true)
     }
 }

@@ -80,13 +80,15 @@ struct SleepSettingsPage: View {
     }
     
     var alarmSettings: some View {
-        VStack(spacing: 16) {
-            MinuteIntervalDatePicker(date: $wakeTimeDate)
-                .colorScheme(.dark)
-                .onChange(of: wakeTimeDate) { newValue in
-                    viewModel.wakeTimeBinding.wrappedValue = wakeTime
-                }
-            Spacer()
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 16) {
+                MinuteIntervalDatePicker(date: $wakeTimeDate)
+                    .colorScheme(.dark)
+                    .onChange(of: wakeTimeDate) { newValue in
+                        viewModel.wakeTimeBinding.wrappedValue = wakeTime
+                    }
+                alarmSection
+            }
         }
     }
         
@@ -182,6 +184,70 @@ struct SleepSettingsPage: View {
             .sheet(isPresented: $showAdvanceSheet) {
                 NotificationAdvanceSheet(remindInAdvance: viewModel.remindInAdvanceBinding)
             }
+        }
+        .padding(.vertical, 11)
+        .padding(.horizontal, 16)
+        .background {
+            Color.backgroundDeepNavy
+        }
+        .cornerRadius(16)
+    }
+    
+    var alarmSection: some View {
+        VStack(spacing: 11) {
+            if viewModel.notificationPermissionGranted != true {
+                Button {
+                    viewModel.openAppSettings()
+                } label: {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            HStack(spacing: 8) {
+                                Image(systemName: "bell.slash.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
+                                Text("Хабарламалар өшірілген")
+                                    .font(.footnote.weight(.semibold))
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .foregroundColor(.textSoftWhite)
+                            Spacer()
+                            HStack(spacing: 8) {
+                                Text("Параметрлерге өту")
+                                    .font(.caption)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .foregroundColor(Color.textLightGray)
+                        }
+                        Text("Ұйқы уақытын еске салу үшін хабарламаларды қосыңыз. Бұл сізге уақытылы ұйықтауға көмектеседі.")
+                            .font(.caption)
+                            .foregroundColor(.textLightGray)
+                            .multilineTextAlignment(.leading)
+                            .padding(.leading, 30)
+                    }
+                    .contentShape(Rectangle())
+                }
+                Color.white.opacity(0.1).frame(height: 0.5)
+            }
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "alarm")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                    Text("Оятқыш")
+                        .font(.footnote.weight(.semibold))
+                }
+                .foregroundColor(.textSoftWhite)
+                Spacer()
+                Toggle("", isOn: viewModel.isNotificationOnBinding)
+                    .tint(Color.accentMediumSkyBlue)
+                    .frame(height: 20)
+            }
+            .contentShape(Rectangle())
+            .opacity(viewModel.notificationPermissionGranted == true ? 1 : 0.2)
+            .disabled(viewModel.notificationPermissionGranted != true)
         }
         .padding(.vertical, 11)
         .padding(.horizontal, 16)

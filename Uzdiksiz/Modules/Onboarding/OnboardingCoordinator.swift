@@ -12,16 +12,13 @@ import UIKit
 
 final class OnboardingCoordinator: Coordinator {
     private let navigationController: UINavigationController
-    private let appState: AppState
     private let hasCompletedInfoSections: Bool
     
     init(
         navigationController: UINavigationController,
-        appState: AppState,
         hasCompletedInfoSections: Bool
     ) {
         self.navigationController = navigationController
-        self.appState = appState
         self.hasCompletedInfoSections = hasCompletedInfoSections
     }
     
@@ -35,7 +32,7 @@ final class OnboardingCoordinator: Coordinator {
     
     func showOnboardingPage() {
         let onboardingView = OnboardingPage(onFinish: { [weak self] in
-            self?.appState.hasCompletedInfoSections = true
+            AppState.shared.hasCompletedInfoSections = true
             self?.showTimeSelectorPage()
         })
         
@@ -44,10 +41,10 @@ final class OnboardingCoordinator: Coordinator {
     }
     
     func showTimeSelectorPage() {
-        let targetTimeSelectorView = TargetTimeSelectionPage { [weak self] sleepTime, wakeTime in
-            self?.appState.sleepTime = sleepTime
-            self?.appState.wakeTime = wakeTime
-            self?.appState.hasCompletedOnboarding = true
+        let targetTimeSelectorView = TargetTimeSelectionPage { sleepTime, wakeTime in
+            AppState.shared.sleepTime = sleepTime
+            AppState.shared.wakeTime = wakeTime
+            AppState.shared.hasCompletedOnboarding = true
         }
         
         let vc = UIHostingController(rootView: targetTimeSelectorView)

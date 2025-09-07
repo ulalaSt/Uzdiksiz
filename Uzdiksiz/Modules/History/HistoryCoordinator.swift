@@ -10,15 +10,11 @@ import SwiftUI
 
 final class HistoryCoordinator: Coordinator {
     let navigationController: UINavigationController
-    private let appState: AppState
-    private let environment: AppEnvironment
     private let sleepLogViewModel: SleepLogViewModel
     private let sleepReportViewModel: SleepReportViewModel
 
-    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel) {
+    init(navigationController: UINavigationController, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel) {
         self.navigationController = navigationController
-        self.appState = appState
-        self.environment = environment
         self.sleepLogViewModel = sleepLogViewModel
         self.sleepReportViewModel = sleepReportViewModel
     }

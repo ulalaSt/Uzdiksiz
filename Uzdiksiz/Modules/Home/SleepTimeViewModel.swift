@@ -13,6 +13,7 @@ class SleepTimeViewModel: ObservableObject {
     @Published private(set) var sleepTime: Time
     @Published private(set) var wakeTime: Time
     @Published private(set) var isNotificationOn: Bool
+    @Published private(set) var isAlarmOn: Bool
     @Published private(set) var remindInAdvance: Time
     @Published private(set) var notificationPermissionGranted: Bool? = nil
     
@@ -28,6 +29,7 @@ class SleepTimeViewModel: ObservableObject {
     }
     
     static let sleepNotificationID = "dailySleepNotification"
+    static let alarmID = "dailyAlarm"
     static let quotes: [String] = [
         "Ерте жатып, ерте тұру адамды сау, бай және ақылды етеді (Бенджамин Франклин)",
         "Ұйықтап алатын уақытты ешқашан зая кетірме (Фрэнк Х. Найт)",
@@ -57,6 +59,13 @@ class SleepTimeViewModel: ObservableObject {
         )
     }
 
+    var isAlarmOnBinding: Binding<Bool> {
+        Binding(
+            get: { self.isAlarmOn },
+            set: { self.updateIsNotificationOn($0) }
+        )
+    }
+
     var remindInAdvanceBinding: Binding<Time> {
         Binding(
             get: { self.remindInAdvance },
@@ -64,17 +73,14 @@ class SleepTimeViewModel: ObservableObject {
         )
     }
 
-    private let environment: AppEnvironment
     private var cancellables = Set<AnyCancellable>()
     weak var coordinator: HomeCoordinator?
 
-    init(environment: AppEnvironment) {
-        self.environment = environment
-        
-        // initialize from AppState
+    init() {
         self.sleepTime = AppState.shared.sleepTime
         self.wakeTime = AppState.shared.wakeTime
         self.isNotificationOn = AppState.shared.isNotificationOn
+        self.isAlarmOn = AppState.shared.isAlarmOn
         self.remindInAdvance = AppState.shared.remindInAdvance
 
         // subscribe to future changes
@@ -90,6 +96,10 @@ class SleepTimeViewModel: ObservableObject {
             .removeDuplicates()
             .assign(to: &$isNotificationOn)
         
+        AppState.shared.$isAlarmOn
+            .removeDuplicates()
+            .assign(to: &$isAlarmOn)
+        
         AppState.shared.$remindInAdvance
             .removeDuplicates()
             .assign(to: &$remindInAdvance)
@@ -102,6 +112,9 @@ class SleepTimeViewModel: ObservableObject {
         self.notificationPermissionGranted = granted
         if granted, self.isNotificationOn {
             self.updateDailyNotification()
+        }
+        if granted, self.isAlarmOn {
+            self.updateAlarm()
         }
     }
     
@@ -119,11 +132,17 @@ class SleepTimeViewModel: ObservableObject {
     
     func updateWakeTime(_ time: Time) {
         AppState.shared.wakeTime = time
+        updateAlarm()
     }
     
     func updateIsNotificationOn(_ isOn: Bool) {
         AppState.shared.isNotificationOn = isOn
         updateDailyNotification()
+    }
+
+    func updateIsAlarmOn(_ isOn: Bool) {
+        AppState.shared.isAlarmOn = isOn
+        updateAlarm()
     }
 
     func updateRemindInAdvance(_ time: Time) {
@@ -144,6 +163,12 @@ class SleepTimeViewModel: ObservableObject {
     
     func startSleep() {
         AppState.shared.todaySleptDate = Date()
+    }
+    
+    func turnOffAlarm() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: (0..<5).map { "\(Self.alarmID)\($0)" })
+        print("🔕 Alarm stopped by user")
     }
     
     func timeLeft(for timeType: SleepSettingsState) -> Time {
@@ -210,6 +235,48 @@ class SleepTimeViewModel: ObservableObject {
         center.add(request) { error in
             if let error = error {
                 print("Error scheduling notification: \(error)")
+            }
+        }
+    }
+    
+    func updateAlarm() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: (0..<5).map { "\(Self.alarmID)\($0)" })
+        
+        guard isAlarmOn, notificationPermissionGranted == true else {
+            return
+        }
+
+        for i in 0..<5 {
+            let content = UNMutableNotificationContent()
+            content.title = "⏰ Оянатын уақыт!"
+            content.body = Self.quotes.randomElement() ?? ""
+            content.interruptionLevel = .critical
+            content.sound = UNNotificationSound(named: UNNotificationSoundName("bell.mp3")) // use .wav/.caf instead of .mp3
+
+            // Schedule at wakeTime + i minutes
+            var dateComponents = DateComponents()
+            dateComponents.hour = wakeTime.hour
+            dateComponents.minute = (wakeTime.minute + i) % 60
+            // Handle hour rollover
+            if wakeTime.minute + i >= 60 {
+                dateComponents.hour = (wakeTime.hour + 1) % 24
+            }
+
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+
+            let request = UNNotificationRequest(
+                identifier: "\(Self.alarmID)\(i)",
+                content: content,
+                trigger: trigger
+            )
+
+            center.add(request) { error in
+                if let error = error {
+                    print("Error scheduling alarm \(i): \(error)")
+                } else {
+                    print("Scheduled alarm for \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
+                }
             }
         }
     }

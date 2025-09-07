@@ -10,24 +10,21 @@ import SwiftUICore
 
 final class MainTabBarCoordinator: NSObject, Coordinator {
     let navigationController: UINavigationController
-    private let appState: AppState
-    private let environment: AppEnvironment
     private let tabBarController: MainTabBarController
     private(set) var childCoordinators: [Coordinator] = []
     private let sleepLogViewModel: SleepLogViewModel
     private let sleepReportViewModel: SleepReportViewModel
     private let locationManager: LocationManager
     private let authViewModel: AuthViewModel
-    
-    init(navigationController: UINavigationController, appState: AppState, environment: AppEnvironment, authViewModel: AuthViewModel, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel) {
+    private let timeViewModel: SleepTimeViewModel
+    init(navigationController: UINavigationController, authViewModel: AuthViewModel, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel, timeViewModel: SleepTimeViewModel) {
         self.navigationController = navigationController
-        self.appState = appState
-        self.environment = environment
         self.tabBarController = MainTabBarController()
         self.sleepLogViewModel = sleepLogViewModel
         self.locationManager = LocationManager()
         self.authViewModel = authViewModel
         self.sleepReportViewModel = sleepReportViewModel
+        self.timeViewModel = timeViewModel
     }
 
     func start() {
@@ -40,13 +37,15 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
             let coordinator: Coordinator
             switch tab {
             case .home:
-                coordinator = HomeCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel)
+                let homeCoordinator = HomeCoordinator(navigationController: nav, sleepLogViewModel: sleepLogViewModel, timeViewModel: timeViewModel)
+                timeViewModel.coordinator = homeCoordinator
+                coordinator = homeCoordinator
             case .history:
-                coordinator = HistoryCoordinator(navigationController: nav, appState: appState, environment: environment, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel)
+                coordinator = HistoryCoordinator(navigationController: nav, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel)
             case .goal:
                 coordinator = GoalCoordinator(navigationController: nav)
             case .profile:
-                coordinator = ProfileCoordinator(navigationController: nav, appState: appState, environment: environment, authViewModel: authViewModel, locationManager: locationManager)
+                coordinator = ProfileCoordinator(navigationController: nav, authViewModel: authViewModel, locationManager: locationManager)
             }
             
             let tabBarItem = UITabBarItem(

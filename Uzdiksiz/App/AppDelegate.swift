@@ -25,7 +25,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     private func requestPermission() {
         UNUserNotificationCenter.current()
-            .requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+            .requestAuthorization(options: [.alert, .sound, .badge, .criticalAlert]) { granted, _ in
                 DispatchQueue.main.async {
                     AppState.shared.notificationIsPermitted = granted
                 }

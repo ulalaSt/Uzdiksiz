@@ -28,6 +28,12 @@ final class AppState: ObservableObject {
     var isNotificationOn: Bool
 
     @Published
+    var isAlarmOn: Bool
+
+    @Published
+    var lastAlarmOff: Date?
+
+    @Published
     var remindInAdvance: Time
     
     @Published
@@ -46,6 +52,8 @@ final class AppState: ObservableObject {
         self.wakeTime = storage.wakeTime
         self.todaySleptDate = storage.todaySleptDate
         self.isNotificationOn = storage.isNotificationOn
+        self.isAlarmOn = storage.isAlarmOn
+        self.lastAlarmOff = storage.lastAlarmOff
         self.remindInAdvance = storage.remindInAdvance
         self.notificationIsPermitted = false
         $hasCompletedOnboarding.sink {
@@ -66,6 +74,14 @@ final class AppState: ObservableObject {
         
         $isNotificationOn.sink {
             storage.isNotificationOn = $0
+        }.store(in: &cancellables)
+        
+        $isAlarmOn.sink {
+            storage.isAlarmOn = $0
+        }.store(in: &cancellables)
+        
+        $lastAlarmOff.sink {
+            storage.lastAlarmOff = $0
         }.store(in: &cancellables)
         
         $remindInAdvance.sink {

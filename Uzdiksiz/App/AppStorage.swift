@@ -23,6 +23,12 @@ class AppStorage {
     @Defaults(AppStorageKeys.isNotificationOn, defaultValue: true)
     var isNotificationOn: Bool
     
+    @Defaults(AppStorageKeys.isAlarmOn, defaultValue: true)
+    var isAlarmOn: Bool
+    
+    @DefaultsOptional(AppStorageKeys.lastAlarmOff)
+    var lastAlarmOff: Date?
+    
     @Defaults(AppStorageKeys.remindInAdvance, defaultValue: Time(hour: 0, minute: 30))
     var remindInAdvance: Time
 
@@ -36,6 +42,8 @@ enum AppStorageKeys {
     static let sleepTime = "sleepTime"
     static let wakeTime = "wakeTime"
     static let isNotificationOn = "isNotificationOn"
+    static let isAlarmOn = "isAlarmOn"
+    static let lastAlarmOff = "lastAlarmOff"
     static let remindInAdvance = "remindInAdvance"
     static let todaySleptDate = "todaySleptDate"
 }

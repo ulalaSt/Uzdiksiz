@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct SleepingPage: View {
-    @ObservedObject var viewModel: SleepReportViewModel
+    @ObservedObject var timeViewModel: SleepTimeViewModel
+    @ObservedObject var reportsViewModel: SleepReportViewModel
     @State private var currentTime: Date = Date()
     private let alarmTime: Date = Calendar.current.date(bySettingHour: 5, minute: 0, second: 0, of: Date())!
     
@@ -56,7 +57,12 @@ struct SleepingPage: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             LongPressButton(title: "Ояну") {
                 Task {
-                    try await viewModel.wakeUp()
+                    do {
+                        try await reportsViewModel.wakeUp()
+                        timeViewModel.wakeTime
+                    } catch {
+                        print("Error waking up\(error)")
+                    }
                 }
             }
         }
