@@ -16,7 +16,7 @@ class SleepTimeViewModel: ObservableObject {
     @Published private(set) var isAlarmOn: Bool
     @Published private(set) var remindInAdvance: Time
     @Published private(set) var notificationPermissionGranted: Bool? = nil
-    
+
     var notificationTime: Time {
         var totalMinutes = sleepTime.totalMinutes - remindInAdvance.totalMinutes
         if totalMinutes < 0 {
@@ -30,6 +30,12 @@ class SleepTimeViewModel: ObservableObject {
     
     static let sleepNotificationID = "dailySleepNotification"
     static let alarmID = "dailyAlarm"
+    private let alarmDurationSeconds = 300
+    private let alarmIntervalSeconds = 5
+    var alarmIDs: [String] {
+        (0..<(alarmDurationSeconds/alarmIntervalSeconds)).map { "\(Self.alarmID)\($0)" }
+    }
+
     static let quotes: [String] = [
         "Ерте жатып, ерте тұру адамды сау, бай және ақылды етеді (Бенджамин Франклин)",
         "Ұйықтап алатын уақытты ешқашан зая кетірме (Фрэнк Х. Найт)",
@@ -166,8 +172,9 @@ class SleepTimeViewModel: ObservableObject {
     }
     
     func turnOffAlarm() {
+        AppState.shared.lastAlarmOff = Date()
         let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: (0..<5).map { "\(Self.alarmID)\($0)" })
+        center.removePendingNotificationRequests(withIdentifiers: alarmIDs)
         print("🔕 Alarm stopped by user")
     }
     
@@ -241,43 +248,48 @@ class SleepTimeViewModel: ObservableObject {
     
     func updateAlarm() {
         let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: (0..<5).map { "\(Self.alarmID)\($0)" })
+        center.removePendingNotificationRequests(withIdentifiers: alarmIDs)
         
         guard isAlarmOn, notificationPermissionGranted == true else {
             return
         }
-
-        for i in 0..<5 {
-            let content = UNMutableNotificationContent()
-            content.title = "⏰ Оянатын уақыт!"
-            content.body = Self.quotes.randomElement() ?? ""
-            content.interruptionLevel = .critical
-            content.sound = UNNotificationSound(named: UNNotificationSoundName("bell.mp3")) // use .wav/.caf instead of .mp3
-
-            // Schedule at wakeTime + i minutes
-            var dateComponents = DateComponents()
-            dateComponents.hour = wakeTime.hour
-            dateComponents.minute = (wakeTime.minute + i) % 60
-            // Handle hour rollover
-            if wakeTime.minute + i >= 60 {
-                dateComponents.hour = (wakeTime.hour + 1) % 24
-            }
-
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-
-            let request = UNNotificationRequest(
-                identifier: "\(Self.alarmID)\(i)",
-                content: content,
-                trigger: trigger
-            )
-
-            center.add(request) { error in
-                if let error = error {
-                    print("Error scheduling alarm \(i): \(error)")
-                } else {
-                    print("Scheduled alarm for \(dateComponents.hour!):\(String(format: "%02d", dateComponents.minute!))")
-                }
-            }
+        var referenceDate = wakeTime.date
+        if referenceDate <= Date() {
+            referenceDate = Calendar.current.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
         }
+
+        for (i, id) in alarmIDs.enumerated() {
+            let content = UNMutableNotificationContent()
+            content.title = "Оятқышты өшіру үшін басыңыз"
+            content.body = "Ояну уақыты"
+            content.interruptionLevel = .critical
+            content.sound = UNNotificationSound(named: UNNotificationSoundName("radar.mp3"))
+            var dateComponents = DateComponents(calendar: Calendar.current)
+            dateComponents.second = alarmIntervalSeconds
+            guard let nextTriggerDate = dateComponents.calendar?.date(byAdding: dateComponents, to: referenceDate),
+                  let nextTriggerDateCompnents = dateComponents.calendar?.dateComponents([.second, .hour, .minute], from: nextTriggerDate) else {
+                return
+            }
+            referenceDate = nextTriggerDate
+
+            print("Alarm set:", nextTriggerDate)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: nextTriggerDateCompnents, repeats: true)
+            let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+            UNUserNotificationCenter.current().add(request)
+        }
+    }
+    
+    func hasToTurnOffAlarm() -> Bool {
+        let wakeStart = AppState.shared.wakeTime.date
+        let wakeEnd = Calendar.current.date(byAdding: .second, value: alarmDurationSeconds, to: AppState.shared.wakeTime.date)!
+        let lastAlarmOff = AppState.shared.lastAlarmOff
+        
+        let isWithinWindow = (wakeStart ... wakeEnd).contains(Date())
+        let hasNotTurnedOffAlarmToday: Bool = {
+            guard let off = lastAlarmOff else { return true }
+            return off < wakeStart || off > wakeEnd
+        }()
+        
+        return isWithinWindow && hasNotTurnedOffAlarmToday
     }
 }

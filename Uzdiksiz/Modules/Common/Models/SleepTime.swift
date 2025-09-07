@@ -83,7 +83,13 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
     }
     
     var date: Date {
-        Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? Date()
+        let calendar = Calendar.current
+        let now = Date()
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = hour
+        components.minute = minute
+        components.second = 0
+        return calendar.date(from: components) ?? now
     }
     
     var isPositive: Bool {
@@ -96,5 +102,15 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
         let hour = calendar.component(.hour, from: now)
         let minute = calendar.component(.minute, from: now)
         return Time(hour: hour, minute: minute)
+    }
+    
+    var timeRemaining: Time {
+        let now = Date()
+        var target = AppState.shared.wakeTime.date
+        if now > target { // if already past 5 AM, calculate for next day
+            target = Calendar.current.date(byAdding: .day, value: 1, to: target)!
+        }
+        let diff = Calendar.current.dateComponents([.hour, .minute], from: now, to: target)
+        return Time(hour: diff.hour ?? 0, minute: diff.minute ?? 0)
     }
 }

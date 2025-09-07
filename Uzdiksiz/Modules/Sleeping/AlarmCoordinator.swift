@@ -1,5 +1,5 @@
 //
-//  SleepingCoordinator.swift
+//  AlarmCoordinator.swift
 //  Uzdiksiz
 //
 //  Created by Ulan Seitkali on 22.08.2025.
@@ -8,7 +8,7 @@
 import UIKit
 import SwiftUI
 
-final class SleepingCoordinator: Coordinator {
+final class AlarmCoordinator: Coordinator {
     let navigationController: UINavigationController
     let sleepLogViewModel: SleepLogViewModel
     let sleepReportViewModel: SleepReportViewModel
@@ -21,8 +21,8 @@ final class SleepingCoordinator: Coordinator {
     }
 
     func start() {
-        let sleepingView = SleepingPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel)
-        let viewController = UIHostingController(rootView: sleepingView)
+        let alarmPage = AlarmPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel)
+        let viewController = UIHostingController(rootView: alarmPage)
         viewController.modalPresentationStyle = .fullScreen
         navigationController.present(viewController, animated: false, completion: nil)
     }
