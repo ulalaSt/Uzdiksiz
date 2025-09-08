@@ -155,10 +155,12 @@ class SleepSessionDbService {
                 throw SleepSessionError.sessionNotFound
             }
             let report = session.report
+            var isLastSession: Bool = false
+            if let count = report?.sessions?.count, count == 1 {
+                isLastSession = true
+            }
             context.delete(session)
-            if let report,
-               let sessions = report.sessions as? Set<SleepSession>,
-               sessions.isEmpty {
+            if let report, isLastSession {
                 context.delete(report)
             }
             

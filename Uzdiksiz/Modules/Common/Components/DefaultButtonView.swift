@@ -18,9 +18,9 @@ struct DefaultButtonView: View {
             }
             Text(title)
         }
-        .foregroundColor(state == .primary ? .white : .backgroundMidnightBlue)
-        .font(.system(size: 14, weight: .medium))
-        .padding(.vertical, 13)
+        .foregroundColor(state == .primary || state == .tertiary ? .textSoftWhite : .backgroundMidnightBlue)
+        .font(.headline.weight(.semibold))
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
         .background {
             switch state {
@@ -29,6 +29,9 @@ struct DefaultButtonView: View {
             case .secondary:
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.textSoftWhite)
+            case .tertiary:
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white.opacity(0.1))
             }
         }
     }
@@ -68,4 +71,5 @@ struct DefaultButtonView: View {
 enum DefaultButtonType {
     case primary
     case secondary
+    case tertiary
 }

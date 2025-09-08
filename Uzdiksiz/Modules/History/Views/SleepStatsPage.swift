@@ -72,118 +72,128 @@ struct SleepStatsPage: View {
     }
     
     func pageContent(for date: Date) -> some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            let report = report(for: date)
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .top, spacing: 10) {
-                    qualityBar(for: report)
-                    sleepInfo(for: report)
-                }
-                .padding(.vertical, 16)
-                if let sessions = report?.sessions as? Set<SleepSession> {
-                    HStack(alignment: .center, spacing: 0) {
-                        Text("Ұйқы тізбегі")
-                            .font(.title3.weight(.bold))
-                            .foregroundColor(.textLightGray)
-                        Spacer()
-                        Button {
-                            onAddSleep(date)
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title3.weight(.bold))
-                                .foregroundColor(Color.textSoftWhite)
-                        }
+        VStack(spacing: 10) {
+            ScrollView(.vertical, showsIndicators: false) {
+                let report = report(for: date)
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .top, spacing: 10) {
+                        qualityBar(for: report)
+                        sleepInfo(for: report, date: date)
                     }
-                    .padding(.horizontal, 8)
-                    VStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            SleepTimelineView(sessions: Array(sessions))
-                            HStack(spacing: 10) {
-                                HStack(spacing: 4) {
-                                    Circle()
-                                        .fill(Color.primaryOceanBlue)
-                                        .frame(width: 10, height: 10)
-                                    Text("Негізгі ұйқы")
-                                        .font(.caption)
-                                        .foregroundColor(Color.textSoftWhite)
-                                }
-                                HStack(spacing: 4) {
-                                    Circle()
-                                        .fill(Color.accentSkyIceBlue)
-                                        .frame(width: 10, height: 10)
-                                    Text("Қысқа ұйқы")
-                                        .font(.caption)
-                                        .foregroundColor(Color.textSoftWhite)
-                                }
-                            }
-                        }
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.backgroundDeepNavy)
-                        )
-                        ForEach(Array(sessions)) { session in
-                            let isNap = session.minutesDuration < 30
-                            HStack(spacing: 8) {
-                                Circle().fill(isNap ? Color.accentSkyIceBlue : .primaryOceanBlue)
-                                    .frame(width: 10, height: 10)
-                                Text(session.intervalString)
+                    .padding(.vertical, 16)
+                    if let sessions = report?.sessions as? Set<SleepSession> {
+                        HStack(alignment: .center, spacing: 0) {
+                            Text("Ұйқы тізбегі")
+                                .font(.title3.weight(.bold))
+                                .foregroundColor(.textLightGray)
+                            Spacer()
+                            Button {
+                                onAddSleep(date)
+                            } label: {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title3.weight(.bold))
                                     .foregroundColor(Color.textSoftWhite)
-                                Spacer()
-                                Menu {
-                                    Button {
-                                        // edit action
-                                    } label: {
-                                        Label("Өңдеу", systemImage: "square.and.pencil")
-                                    }
-
-                                    Button(role: .destructive) {
-                                        Task {
-                                            await viewModel.deleteSession(sessionID: session.id, state: $deletionState)
-                                        }
-                                    } label: {
-                                        Label("Жою", systemImage: "trash")
-                                    }
-                                } label: {
-                                    Image(systemName: "ellipsis")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 20, height: 20)
-                                        .foregroundColor(.textLightGray)
-                                }
-                                .buttonStyle(.plain)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
+                        }
+                        .padding(.horizontal, 8)
+                        VStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                SleepTimelineView(sessions: Array(sessions))
+                                HStack(spacing: 10) {
+                                    HStack(spacing: 4) {
+                                        Circle()
+                                            .fill(Color.primaryOceanBlue)
+                                            .frame(width: 10, height: 10)
+                                        Text("Негізгі ұйқы")
+                                            .font(.caption)
+                                            .foregroundColor(Color.textSoftWhite)
+                                    }
+                                    HStack(spacing: 4) {
+                                        Circle()
+                                            .fill(Color.accentSkyIceBlue)
+                                            .frame(width: 10, height: 10)
+                                        Text("Қысқа ұйқы")
+                                            .font(.caption)
+                                            .foregroundColor(Color.textSoftWhite)
+                                    }
+                                }
+                            }
+                            .padding(16)
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
                                     .fill(Color.backgroundDeepNavy)
                             )
+                            ForEach(Array(sessions)) { session in
+                                let isNap = session.minutesDuration < 30
+                                HStack(spacing: 8) {
+                                    Circle().fill(isNap ? Color.accentSkyIceBlue : .primaryOceanBlue)
+                                        .frame(width: 10, height: 10)
+                                    Text(session.intervalString)
+                                        .font(.title3.weight(.bold))
+                                        .foregroundColor(Color.textSoftWhite)
+                                    Spacer()
+                                    Menu {
+                                        Button {
+                                            // edit action
+                                        } label: {
+                                            Label("Өңдеу", systemImage: "square.and.pencil")
+                                        }
 
+                                        Button(role: .destructive) {
+                                            Task {
+                                                await viewModel.deleteSession(sessionID: session.id, state: $deletionState)
+                                            }
+                                        } label: {
+                                            Label("Жою", systemImage: "trash")
+                                        }
+                                    } label: {
+                                        Image(systemName: "ellipsis")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 20, height: 20)
+                                            .foregroundColor(.textLightGray)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.backgroundDeepNavy)
+                                )
+
+                            }
                         }
                     }
-                }
-                CardRow(systemIcon: "text.bubble.fill", title: "Ұйқы жазбасы", content: {
-                    Text("Бүгін той болып қалды, содан кеш ұйықтап қалдым")
-                        .font(.caption)
-                        .foregroundColor(.textSoftWhite)
-                        .multilineTextAlignment(.leading)
-                }) {
-                    print("Tapped")
-                }
-                CardRow(systemIcon: "face.smiling", title: "Оянған күй", content: {
-                    HStack(spacing: 16) {
-                        moodButton(imageName: "happy_mood")
-                        moodButton(imageName: "neutral_mood")
-                        moodButton(imageName: "sad_mood")
+                    CardRow(systemIcon: "text.bubble.fill", title: "Ұйқы жазбасы", content: {
+                        Text("Бүгін той болып қалды, содан кеш ұйықтап қалдым")
+                            .font(.caption)
+                            .foregroundColor(.textSoftWhite)
+                            .multilineTextAlignment(.leading)
+                    }) {
+                        print("Tapped")
                     }
-                }) {
-                    print("Tapped")
+                    CardRow(systemIcon: "face.smiling", title: "Оянған күй", content: {
+                        HStack(spacing: 16) {
+                            moodButton(imageName: "happy_mood")
+                            moodButton(imageName: "neutral_mood")
+                            moodButton(imageName: "sad_mood")
+                        }
+                    }) {
+                        print("Tapped")
+                    }
                 }
+                .padding(.horizontal, 24)
+                .opacity(report == nil ? 0.5 : 1)
             }
-            .padding(.horizontal, 24)
-            .opacity(report == nil ? 0.5 : 1)
+            if date <= Date(), report(for: date) == nil {
+                Button {
+                    onAddSleep(date)
+                } label: {
+                    DefaultButtonView(title: "+ Ұйқы қосу", state: .tertiary)
+                }
+                .padding(.horizontal, 24)
+            }
         }
     }
     
@@ -245,7 +255,7 @@ struct SleepStatsPage: View {
         }
     }
     
-    func sleepInfo(for report: SleepReport?) -> some View {
+    func sleepInfo(for report: SleepReport?, date: Date) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Ұйқы ұзақтығы")
