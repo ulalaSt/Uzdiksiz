@@ -42,7 +42,6 @@ struct SleepSettingsPage: View {
         .padding(.horizontal, 24)
         .padding(.top, 12)
         .padding(.bottom, 32)
-        .navigationTitle("Ұйқы баптаулары")
         .navigationBarHidden(false)
         .colorScheme(.dark)
         .navigationBarBackButtonHidden()

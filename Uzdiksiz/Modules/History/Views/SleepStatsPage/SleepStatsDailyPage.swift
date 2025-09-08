@@ -1,5 +1,5 @@
 //
-//  SleepStatsPage.swift
+//  SleepStatsDailyPage.swift
 //  Uzdiksiz
 //
 //  Created by Ulan Seitkali on 27.08.2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SleepStatsPage: View {
+struct SleepStatsDailyPage: View {
     @State private var currentDate: Date
     @State private var deletionState: Loadable<Void> = .notRequested
     @ObservedObject var viewModel: SleepReportViewModel

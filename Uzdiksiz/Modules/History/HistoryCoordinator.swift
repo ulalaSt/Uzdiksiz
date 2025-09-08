@@ -20,7 +20,8 @@ final class HistoryCoordinator: Coordinator {
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: SleepStatsPage(viewModel: sleepReportViewModel, onShowGraph: { [weak self] in
+        let viewController = UIHostingController(rootView: SleepStatsDailyPage(viewModel: sleepReportViewModel, onShowGraph: { [weak self] in
+            self?.navigateToTrends()
         }, onAddSleep: {[weak self] date in
             self?.showAddSleep(date: date)
         }))
@@ -38,8 +39,10 @@ final class HistoryCoordinator: Coordinator {
         navigationController.present(viewController, animated: true)
     }
         
-    func navigateToGraph() {
-        
+    func navigateToTrends() {
+        let viewController = UIHostingController(rootView: SleepStatsTrendsPage(viewModel: sleepReportViewModel))
+        viewController.view.backgroundColor = .clear
+        navigationController.pushViewController(viewController, animated: true)
     }
     
     func stop() {
