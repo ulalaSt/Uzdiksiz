@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MinuteIntervalDatePicker: UIViewRepresentable {
     @Binding var date: Date
-    var minuteInterval: Int = 1
+    var minuteInterval: Int = 5
     
     func makeUIView(context: Context) -> UIDatePicker {
         let picker = UIDatePicker()
