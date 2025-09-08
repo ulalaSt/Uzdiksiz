@@ -83,6 +83,8 @@ class SleepReportViewModel: ObservableObject {
                 endTime: endTime
             )
         }
-        AppState.shared.todaySleptDate = nil
+        DispatchQueue.main.async {
+            AppState.shared.todaySleptDate = nil
+        }
     }
 }
