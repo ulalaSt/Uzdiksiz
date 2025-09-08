@@ -26,9 +26,4 @@ final class HomeCoordinator: Coordinator {
     func stop() {
         // Handle clean up if needed
     }
-    
-    func openSettings(state: SleepSettingsState) {
-        let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: timeViewModel))
-        navigationController.pushViewController(viewController, animated: true)
-    }
 }

@@ -9,6 +9,10 @@ import Combine
 import Foundation
 import SwiftUI
 
+protocol SettingsNavigator: NSObjectProtocol {
+    func openSettings(state: SleepSettingsState)
+}
+
 class SleepTimeViewModel: ObservableObject {
     @Published private(set) var sleepTime: Time
     @Published private(set) var wakeTime: Time
@@ -80,7 +84,7 @@ class SleepTimeViewModel: ObservableObject {
     }
 
     private var cancellables = Set<AnyCancellable>()
-    weak var coordinator: HomeCoordinator?
+    weak var coordinator: SettingsNavigator?
 
     init() {
         self.sleepTime = AppState.shared.sleepTime

@@ -68,6 +68,8 @@ struct NotificationAdvanceSheet: View {
             }
             .frame(height: 150)
             .padding(.vertical, 16)
+            .colorScheme(.dark)
+            .environment(\.colorScheme, .dark)
             Button {
                 remindInAdvance = Time(hour: tempHour, minute: tempMinute)
                 dismiss()

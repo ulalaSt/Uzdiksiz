@@ -63,17 +63,19 @@ struct SleepSettingsPage: View {
                 }
             }
         })
-        .backgroundGradient(ignoring: [.horizontal, .top])
+        .backgroundGradient(ignoring: .all)
     }
     
     var sleepSettings: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
-                MinuteIntervalDatePicker(date: $sleepTimeDate)
-                    .colorScheme(.dark)
-                    .onChange(of: sleepTimeDate) { newValue in
-                        viewModel.sleepTimeBinding.wrappedValue = sleepTime
+                MinuteIntervalDatePicker(
+                    date: $sleepTimeDate,
+                    minuteInterval: 5,
+                    snap: { selected in
+                        snapTime(selected, outsideCenter: wakeTimeDate, beforeRange: 1, afterRange: 4)
                     }
+                )
                 notificationSection
             }
         }
@@ -82,11 +84,17 @@ struct SleepSettingsPage: View {
     var alarmSettings: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
-                MinuteIntervalDatePicker(date: $wakeTimeDate)
-                    .colorScheme(.dark)
-                    .onChange(of: wakeTimeDate) { newValue in
-                        viewModel.wakeTimeBinding.wrappedValue = wakeTime
+                MinuteIntervalDatePicker(
+                    date: $wakeTimeDate,
+                    minuteInterval: 5,
+                    snap: { selected in
+                        snapTime(selected, outsideCenter: sleepTimeDate, beforeRange: 4, afterRange: 1)
                     }
+                )
+                .colorScheme(.dark)
+                .onChange(of: wakeTimeDate) { newValue in
+                    viewModel.wakeTimeBinding.wrappedValue = wakeTime
+                }
                 alarmSection
             }
         }

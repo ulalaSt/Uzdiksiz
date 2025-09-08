@@ -9,111 +9,143 @@ import SwiftUI
 import FirebaseAuth
 
 struct ProfileView: View {
-    @ObservedObject var authViewModel: AuthViewModel
-    @ObservedObject var locationManager: LocationManager
-    @State private var showConfirmDelete = false
-    @State private var sunrise: String = "—"
-    @State private var sunset: String = "—"
-
+    @ObservedObject var sleepReportViewModel: SleepReportViewModel
+    @ObservedObject var sleepTimeViewModel: SleepTimeViewModel
+    
     var body: some View {
-        VStack(spacing: 32) {
-            Image("profile_placeholder")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-            VStack(alignment: .leading, spacing: 16) {
-                if let email = authViewModel.user.value?.email {
-                    infoView("Email", desc: "📧 \(email)")
+        ScrollView {
+            VStack(spacing: 32) {
+                VStack(spacing: 32) {
+                    VStack(spacing: 16) {
+                        Image("profile_placeholder")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                        Button {
+                            
+                        } label: {
+                            DefaultButtonView(title: "Аккаунт ашу")
+                        }
+                    }
+                    HStack(spacing: 0) {
+                        info(title: "\(totalSleepReports)", subtitle: "Ұйқы саны")
+                        Spacer()
+                        info(title: "\(averageSleepQuality)", subtitle: "Орт. сапа")
+                        Spacer()
+                        info(title: "\(averageSleepDurationString)", subtitle: "Орт. ұйқы")
+                    }
+                }.padding(.vertical, 32)
+                if sleepTimeViewModel.notificationPermissionGranted != true {
+                    Button {
+                        sleepTimeViewModel.openAppSettings()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "bell.slash.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                    Text("Хабарламалар өшірілген")
+                                        .font(.footnote.weight(.semibold))
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .foregroundColor(.textSoftWhite)
+                                Spacer()
+                                HStack(spacing: 8) {
+                                    Text("Параметрлерге өту")
+                                        .font(.caption)
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .foregroundColor(Color.textLightGray)
+                            }
+                            Text("Ұйқы уақытын еске салу үшін хабарламаларды қосыңыз. Бұл сізге уақытылы ұйықтауға көмектеседі.")
+                                .font(.caption)
+                                .foregroundColor(.textLightGray)
+                                .multilineTextAlignment(.leading)
+                                .padding(.leading, 30)
+                        }
+                        .padding(.vertical, 11)
+                        .padding(.horizontal, 16)
+                        .background {
+                            Color.backgroundDeepNavy
+                        }
+                        .cornerRadius(16)
+                        .contentShape(Rectangle())
+                    }
                 }
-                infoView("Күннің шығуы", desc: "🌅 \(sunrise)")
-                infoView("Күннің батуы", desc: "🌇 \(sunset)")
-            }
-            
-//            if let location = locationManager.location {
-//                Text("Lat: \(location.coordinate.latitude), Lon: \(location.coordinate.longitude)")
-//            } else {
-//                Text("Getting location...")
-//            }
-            
-            if let error = authViewModel.user.error?.errorDescription {
-                Text(error)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-            }
-            
-            Button {
-                authViewModel.signOut()
-            } label: {
-                HStack {
-                    Text("Шығу")
-                        .foregroundColor(.white)
-                        .font(.system(size: 18, weight: .medium))
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(.white.opacity(0.3))
+                Button {
+                    sleepTimeViewModel.openSettings(state: .sleep)
+                } label: {
+                    HStack {
+                        HStack(spacing: 8) {
+                            Image(systemName: "gear")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                            Text("Ұйқы баптаулары")
+                                .font(.footnote.weight(.semibold))
+                        }
+                        .foregroundColor(.textSoftWhite)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundColor(.textSoftWhite)
+                    .padding(.vertical, 11)
+                    .padding(.horizontal, 16)
+                    .background {
+                        Color.backgroundDeepNavy
+                    }
+                    .cornerRadius(16)
+                    .contentShape(Rectangle())
                 }
-                .padding(16)
-                .background(BlurredBackgroundView())
             }
-
-            Button {
-                showConfirmDelete = true
-            } label: {
-                Text("Аккаунтты жою")
-                    .foregroundColor(Color(red: 255 / 255, green: 78 / 255, blue: 78 / 255))
-                    .font(.system(size: 18, weight: .medium))
-                    .frame(maxWidth: .infinity)
-                    .padding(16)
-                    .background(BlurredBackgroundView())
-            }
-            
-            Spacer()
+            .padding(.top, 16)
+            .padding(.bottom, 16)
+            .padding(.horizontal, 24)
         }
-        .padding(16)
-        .alert("Аккаунтыңызды жойғыңыз келетініне сенімдісіз бе?", isPresented: $showConfirmDelete) {
-            Button("Жою", role: .destructive) {
-                authViewModel.deleteAccount()
-            }
-            Button("Болдырмау", role: .cancel) { }
-        }
-        .disabled(authViewModel.user.isLoading)
-        .opacity((authViewModel.user.isLoading) ? 0.5 : 1)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Профиль")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
-            }
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .onReceive(locationManager.$location.compactMap { $0 }) { location in
-            let (rise, set) = locationManager.getSunriseSunsetStrings(for: location)
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            formatter.dateStyle = .none
-            formatter.timeZone = TimeZone.current
-
-            let riseString = rise.map { formatter.string(from: $0) } ?? "?"
-            let setString = set.map { formatter.string(from: $0) } ?? "?"
-
-            sunrise = riseString
-            sunset = setString
+        .backgroundGradient(ignoring: [.top, .horizontal])
+        .navigationBarHidden(true)
+    }
+    
+    private var totalSleepReports: Int {
+        switch sleepReportViewModel.sleepReports {
+        case .loaded(let reports):
+            return reports.count
+        default:
+            return 0
         }
     }
     
-    func infoView(_ title: String, desc: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color(red: 205 / 255, green: 230 / 255, blue: 245 / 255))
-            Text(desc)
-                .font(.system(size: 16, weight: .regular))
-                .foregroundColor(.white)
+    private var averageSleepQuality: Int {
+        switch sleepReportViewModel.sleepReports {
+        case .loaded(let reports) where !reports.isEmpty:
+            let total = reports.reduce(0) { $0 + $1.quality() }
+            return total / reports.count
+        default:
+            return 0
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(BlurredBackgroundView())
+    }
+    
+    private var averageSleepDurationString: String {
+        switch sleepReportViewModel.sleepReports {
+        case .loaded(let reports) where !reports.isEmpty:
+            let totalMinutes = reports.reduce(0) { $0 + Int($1.totalSleepMinutes) }
+            let averageMinutes = totalMinutes / reports.count
+            let hours = averageMinutes / 60
+            let minutes = averageMinutes % 60
+            return "\(hours)сғ \(minutes)м"
+        default:
+            return "0сғ 0м"
+        }
+    }
+    
+    func info(title: String, subtitle: String) -> some View {
+        VStack(spacing: 8) {
+            Text(title).font(.title3.weight(.bold)).foregroundColor(Color.textSoftWhite)
+            Text(subtitle).font(.caption.weight(.medium)).foregroundColor(Color.textLightGray)
+        }
     }
 }

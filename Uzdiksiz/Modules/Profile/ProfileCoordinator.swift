@@ -10,17 +10,17 @@ import SwiftUI
 
 final class ProfileCoordinator: Coordinator {
     let navigationController: UINavigationController
-    private let authViewModel: AuthViewModel
-    private let locationManager: LocationManager
+    private let sleepReportViewModel: SleepReportViewModel
+    private let sleepTimeViewModel: SleepTimeViewModel
 
-    init(navigationController: UINavigationController, authViewModel: AuthViewModel, locationManager: LocationManager) {
+    init(navigationController: UINavigationController, sleepReportViewModel: SleepReportViewModel, sleepTimeViewModel: SleepTimeViewModel) {
         self.navigationController = navigationController
-        self.authViewModel = authViewModel
-        self.locationManager = locationManager
+        self.sleepReportViewModel = sleepReportViewModel
+        self.sleepTimeViewModel = sleepTimeViewModel
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: ProfileView(authViewModel: authViewModel, locationManager: locationManager))
+        let viewController = UIHostingController(rootView: ProfileView(sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: sleepTimeViewModel))
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }

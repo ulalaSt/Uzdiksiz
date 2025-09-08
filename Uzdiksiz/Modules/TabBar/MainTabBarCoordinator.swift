@@ -38,14 +38,13 @@ final class MainTabBarCoordinator: NSObject, Coordinator {
             switch tab {
             case .home:
                 let homeCoordinator = HomeCoordinator(navigationController: nav, sleepLogViewModel: sleepLogViewModel, timeViewModel: timeViewModel)
-                timeViewModel.coordinator = homeCoordinator
                 coordinator = homeCoordinator
             case .history:
                 coordinator = HistoryCoordinator(navigationController: nav, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel)
             case .goal:
                 coordinator = GoalCoordinator(navigationController: nav)
             case .profile:
-                coordinator = ProfileCoordinator(navigationController: nav, authViewModel: authViewModel, locationManager: locationManager)
+                coordinator = ProfileCoordinator(navigationController: nav, sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: timeViewModel)
             }
             
             let tabBarItem = UITabBarItem(

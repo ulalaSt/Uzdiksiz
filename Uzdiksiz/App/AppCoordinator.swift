@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 import FirebaseAuth
 
-final class AppCoordinator {
+final class AppCoordinator: NSObject, SettingsNavigator {
     private let environment: AppEnvironment
     private let navigationController: UINavigationController
 
@@ -31,6 +31,8 @@ final class AppCoordinator {
             user = .failed(.notRegistered)
         }
         self.authViewModel = AuthViewModel(service: environment.authService)
+        super.init()
+        sleepTimeViewModel.coordinator = self
     }
 
     func start() {
@@ -83,5 +85,12 @@ final class AppCoordinator {
         }
         currentCoordinator = coordinator
         coordinator.start()
+    }
+    
+    func openSettings(state: SleepSettingsState) {
+        let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: sleepTimeViewModel))
+        navigationController.pushViewController(viewController, animated: true)
+        navigationController.setNavigationBarHidden(true, animated: false)
+        navigationController.setNavigationBarHidden(false, animated: false)
     }
 }
