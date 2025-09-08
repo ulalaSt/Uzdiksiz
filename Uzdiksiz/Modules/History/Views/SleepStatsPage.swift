@@ -38,7 +38,9 @@ struct SleepStatsPage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .center, spacing: 0) {
-                Text(formatter.string(from: currentDate).capitalized)
+                CalendarPopoverButton(selectedDate: $currentDate) { date in
+                    report(for: date)?.quality() ?? 0
+                }
                 Spacer()
                 Button {
                     onShowGraph()
