@@ -1,12 +1,12 @@
 //
-//  AddSleepLogView.swift
+//  AddSleepLogPage.swift
 //  Uzdiksiz
 //
 //  Created by Ulan Seitkali on 01.08.2025.
 //
 import SwiftUI
 
-struct AddSleepLogView: View {
+struct AddSleepLogPage: View {
     @Environment(\.dismiss) var dismiss
     @State var date: Date
     @State private var sleepTime = Date()

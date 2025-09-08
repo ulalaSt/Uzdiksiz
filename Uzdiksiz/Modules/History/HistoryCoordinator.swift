@@ -21,7 +21,6 @@ final class HistoryCoordinator: Coordinator {
 
     func start() {
         let viewController = UIHostingController(rootView: SleepStatsPage(viewModel: sleepReportViewModel, onShowGraph: { [weak self] in
-            self?.showOldSleepHistory()
         }, onAddSleep: {[weak self] date in
             self?.showAddSleep(date: date)
         }))
@@ -30,7 +29,7 @@ final class HistoryCoordinator: Coordinator {
     }
     
     func showAddSleep(date: Date) {
-        let viewController = UIHostingController(rootView: AddSleepLogView(date: date, onSave: { [weak self] date, sleepTime, wakeTime in
+        let viewController = UIHostingController(rootView: AddSleepLogPage(date: date, onSave: { [weak self] date, sleepTime, wakeTime in
             Task {
                 await self?.sleepReportViewModel.createSleepSession(dateKey: date.dateKey, startTime: sleepTime, endTime: wakeTime, state: .constant(.notRequested))
             }
@@ -38,13 +37,7 @@ final class HistoryCoordinator: Coordinator {
         viewController.view.backgroundColor = .clear
         navigationController.present(viewController, animated: true)
     }
-    
-    func showOldSleepHistory() {
-        let viewController = UIHostingController(rootView: SleepHistoryView(viewModel: sleepLogViewModel))
-        viewController.view.backgroundColor = .clear
-        navigationController.pushViewController(viewController, animated: true)
-    }
-    
+        
     func navigateToGraph() {
         
     }
