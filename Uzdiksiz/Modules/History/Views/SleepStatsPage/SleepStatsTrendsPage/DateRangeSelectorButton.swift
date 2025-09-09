@@ -18,31 +18,35 @@ struct DateRangeSelectorButton: View {
         self._dates = State(initialValue: filledRange(selectedDates: [
             Calendar.current.dateComponents([
                 .calendar, .era, .year, .month, .day
-            ], from: currentDateRange.wrappedValue.start),
+            ], from: currentDateRange.wrappedValue.startDay),
             Calendar.current.dateComponents([
                 .calendar, .era, .year, .month, .day
-            ], from: currentDateRange.wrappedValue.end)
+            ], from: currentDateRange.wrappedValue.endDay)
         ]))
     }
     
     var body: some View {
         Button {
-            preloadDates()
+            preloadDates(with: currentDateRange.startDay, end: currentDateRange.endDay)
             showDateRangePicker = true
         } label: {
             HStack(spacing: 10) {
-                Text(currentDateRange.start.formattedRange(to: currentDateRange.end))
+                Text(currentDateRange.startDay.formattedRange(to: currentDateRange.endDay))
                     .font(.callout.weight(.semibold))
                 Image(systemName: "chevron.down")
                     .font(.caption2.weight(.semibold))
                     .frame(width: 22, height: 22)
             }
+            .foregroundColor(.textSoftWhite)
             .padding(8)
             .padding(.leading, 8)
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.white.opacity(0.1))
             )
+        }
+        .onChange(of: currentDateRange) { newValue in
+            preloadDates(with: newValue.startDay, end: newValue.endDay)
         }
         .popover(isPresented: $showDateRangePicker) {
             ZStack {
@@ -101,10 +105,10 @@ struct DateRangeSelectorButton: View {
         }
     }
     
-    private func preloadDates() {
+    private func preloadDates(with start: Date, end: Date) {
         let baseSet: Set<DateComponents> = [
-            Calendar.current.dateComponents(datePickerComponents, from: currentDateRange.start),
-            Calendar.current.dateComponents(datePickerComponents, from: currentDateRange.end)
+            Calendar.current.dateComponents(datePickerComponents, from: start),
+            Calendar.current.dateComponents(datePickerComponents, from: end)
         ]
         dates = filledRange(selectedDates: baseSet)
     }

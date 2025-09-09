@@ -7,6 +7,11 @@
 import Foundation
 
 struct SleepStatsDateRange: Equatable, Hashable {
-    let start: Date
-    let end: Date
+    let startDay: Date
+    let endDay: Date
+    
+    init(start: Date, end: Date) {
+        self.startDay = Calendar.current.startOfDay(for: start)
+        self.endDay = Calendar.current.startOfDay(for: end)
+    }
 }

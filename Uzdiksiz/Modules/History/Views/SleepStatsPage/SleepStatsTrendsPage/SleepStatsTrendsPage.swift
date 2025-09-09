@@ -21,12 +21,8 @@ struct SleepStatsTrendsPage: View {
         VStack(spacing: 24) {
             selector
                 .padding(.top, 12)
-            TabView(selection: $currentRange) {
-                ForEach(SleepStatsRange.allCases) { range in
-                    SleepStatsTrendsListView(range: range)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+            SleepStatsTrendsListView(currentRange: currentRange, reportViewModel: viewModel)
+                .animation(nil, value: currentRange)
         }
         .padding(.horizontal, 24)
         .navigationBarHidden(false)
