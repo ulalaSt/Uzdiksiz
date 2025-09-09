@@ -95,10 +95,23 @@ struct SleepStatsChartSectionView: View {
             Text("\(value / 60)").font(font) + Text("сағ").font(unitFont ?? font) +
             Text(" \(value % 60)").font(font) + Text("мин").font(unitFont ?? font)
         case .startTime, .endTime:
-            Text("\(String(format: "%02d:%02d", value / 60, value % 60))")
+            Text(formatMinutesAsTime(value))
                 .font(font)
         case .startAndEnd:
             Text("")
         }
+    }
+    
+    private func normalizeMinutes(_ minutes: Int) -> Int {
+        var m = minutes % (24 * 60)
+        if m < 0 { m += 24 * 60 }
+        return m
+    }
+
+    private func formatMinutesAsTime(_ minutes: Int) -> String {
+        let m = normalizeMinutes(minutes)
+        let h = m / 60
+        let min = m % 60
+        return String(format: "%02d:%02d", h, min)
     }
 }

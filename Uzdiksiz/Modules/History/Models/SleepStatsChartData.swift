@@ -32,13 +32,35 @@ struct SleepStatsChartData {
                     case .duration:
                         return (day, report.totalSleepMinutes)
                     case .startTime:
-                        if let first = report.intervals.min(by: { $0.start < $1.start }) {
-                            return (day, first.start.totalMinutes)
+                        if let first = report.intervals.min(by: { $0.end.totalMinutes < $1.end.totalMinutes }) {
+                            var startMinutes = first.start.totalMinutes
+                            if let last = report.intervals.max(by: { $0.end.totalMinutes < $1.end.totalMinutes }) {
+                                let endMinutes = last.end.totalMinutes
+                                if startMinutes > endMinutes {
+                                    startMinutes -= 24 * 60
+                                }
+                            }
+                            return (day, startMinutes)
                         }
                         return (day, nil)
+
                     case .endTime:
-                        if let last = report.intervals.max(by: { $0.end < $1.end }) {
-                            return (day, last.end.totalMinutes)
+                        let minGap = 60
+                        let sorted = report.intervals.sorted(by: { $0.end.totalMinutes < $1.end.totalMinutes })
+                        for (i, interval) in sorted.enumerated() {
+                            if i < sorted.count - 1 {
+                                let currentEnd = interval.end.totalMinutes
+                                let nextStart = sorted[i + 1].start.totalMinutes
+                                let gap = nextStart >= currentEnd
+                                    ? (nextStart - currentEnd)
+                                    : (nextStart + 24 * 60 - currentEnd) // crossed midnight
+                                if gap >= minGap {
+                                    return (day, currentEnd)
+                                }
+                            } else {
+                                // If it's the last interval, take its end as the wake time
+                                return (day, interval.end.totalMinutes)
+                            }
                         }
                         return (day, nil)
                     case .startAndEnd:
