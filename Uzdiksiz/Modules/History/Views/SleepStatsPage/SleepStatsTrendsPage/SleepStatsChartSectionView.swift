@@ -36,7 +36,7 @@ struct SleepStatsChartSectionView: View {
                     .foregroundColor(Color.primaryOceanBlue)
                     .padding(8)
             }
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 32) {
                 legend
                 SleepStatsChartView(data: data)
             }
@@ -69,9 +69,9 @@ struct SleepStatsChartSectionView: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    scoreText(data.maxScore, font: .caption.weight(.bold))
+                    data.scoreText(data.maxScore, font: .caption.weight(.bold))
                         .foregroundColor(Color.textSoftWhite)
-                    scoreText(data.minScore, font: .caption.weight(.bold))
+                    data.scoreText(data.minScore, font: .caption.weight(.bold))
                         .foregroundColor(Color.textSoftWhite)
                 }
             }
@@ -80,38 +80,19 @@ struct SleepStatsChartSectionView: View {
                 Text("орт.")
                     .font(.caption)
                     .foregroundColor(Color.textLightGray)
-                scoreText(data.avgScore, font: .title.weight(.bold), unitFont: .caption.weight(.bold))
+                    .background(
+                        GeometryReader { geo in
+                            Path { path in
+                                path.move(to: .zero)
+                                path.addLine(to: CGPoint(x: geo.size.width, y: 0))
+                            }
+                            .stroke(style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                            .foregroundColor(.primaryOceanBlue)
+                        }
+                    )
+                data.scoreText(data.avgScore, font: .title.weight(.bold), unitFont: .caption.weight(.bold))
                     .foregroundColor(Color.textSoftWhite)
             }
         }
-    }
-    
-    private func scoreText(_ value: Int, font: Font, unitFont: Font? = nil) -> some View {
-        switch data.type {
-        case .quality:
-            Text("\(value)")
-                .font(font)
-        case .duration:
-            Text("\(value / 60)").font(font) + Text("сағ").font(unitFont ?? font) +
-            Text(" \(value % 60)").font(font) + Text("мин").font(unitFont ?? font)
-        case .startTime, .endTime:
-            Text(formatMinutesAsTime(value))
-                .font(font)
-        case .startAndEnd:
-            Text("")
-        }
-    }
-    
-    private func normalizeMinutes(_ minutes: Int) -> Int {
-        var m = minutes % (24 * 60)
-        if m < 0 { m += 24 * 60 }
-        return m
-    }
-
-    private func formatMinutesAsTime(_ minutes: Int) -> String {
-        let m = normalizeMinutes(minutes)
-        let h = m / 60
-        let min = m % 60
-        return String(format: "%02d:%02d", h, min)
     }
 }
