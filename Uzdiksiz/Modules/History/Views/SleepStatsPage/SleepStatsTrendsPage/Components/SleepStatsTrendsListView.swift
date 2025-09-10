@@ -42,7 +42,7 @@ struct SleepStatsTrendsListView: View {
     }
     
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
             rangeNavigator
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -112,6 +112,7 @@ struct SleepStatsTrendsListView: View {
                         .frame(width: 22, height: 22)
                 }
             }
+            .padding(.vertical, 8)
         }
     }
     

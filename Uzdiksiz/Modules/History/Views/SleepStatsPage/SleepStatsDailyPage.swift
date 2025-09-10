@@ -166,23 +166,7 @@ struct SleepStatsDailyPage: View {
 
                             }
                         }
-                    }
-                    CardRow(systemIcon: "text.bubble.fill", title: "Ұйқы жазбасы", content: {
-                        Text("Бүгін той болып қалды, содан кеш ұйықтап қалдым")
-                            .font(.caption)
-                            .foregroundColor(.textSoftWhite)
-                            .multilineTextAlignment(.leading)
-                    }) {
-                        print("Tapped")
-                    }
-                    CardRow(systemIcon: "face.smiling", title: "Оянған күй", content: {
-                        HStack(spacing: 16) {
-                            moodButton(imageName: "happy_mood")
-                            moodButton(imageName: "neutral_mood")
-                            moodButton(imageName: "sad_mood")
-                        }
-                    }) {
-                        print("Tapped")
+//                        journaling
                     }
                 }
                 .padding(.horizontal, 24)
@@ -196,6 +180,27 @@ struct SleepStatsDailyPage: View {
                 }
                 .padding(.horizontal, 24)
             }
+        }
+    }
+    
+    @ViewBuilder
+    var journaling: some View {
+        CardRow(systemIcon: "text.bubble.fill", title: "Ұйқы жазбасы", content: {
+            Text("Бүгін той болып қалды, содан кеш ұйықтап қалдым")
+                .font(.caption)
+                .foregroundColor(.textSoftWhite)
+                .multilineTextAlignment(.leading)
+        }) {
+            print("Tapped")
+        }
+        CardRow(systemIcon: "face.smiling", title: "Оянған күй", content: {
+            HStack(spacing: 16) {
+                moodButton(imageName: "happy_mood")
+                moodButton(imageName: "neutral_mood")
+                moodButton(imageName: "sad_mood")
+            }
+        }) {
+            print("Tapped")
         }
     }
     
