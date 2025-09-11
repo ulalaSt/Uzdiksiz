@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct SleepStatsDailyPage: View {
     @State private var currentDate: Date
@@ -77,13 +78,18 @@ struct SleepStatsDailyPage: View {
         VStack(spacing: 10) {
             ScrollView(.vertical, showsIndicators: false) {
                 let report = report(for: date)
+                let sessions = viewModel.sleepSessions.value?.filter({
+                    $0.report?.id == report?.id
+                })
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(alignment: .top, spacing: 10) {
                         qualityBar(for: report)
-                        sleepInfo(for: report, date: date)
+                        sleepInfo(for: report, sessions: sessions, date: date)
                     }
                     .padding(.vertical, 16)
-                    if let sessions = report?.sessions as? Set<SleepSession> {
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if let sessions {
                         HStack(alignment: .center, spacing: 0) {
                             Text("Ұйқы тізбегі")
                                 .font(.title3.weight(.bold))
@@ -136,7 +142,7 @@ struct SleepStatsDailyPage: View {
                                     Spacer()
                                     Menu {
                                         Button {
-                                            // edit action
+                                            viewModel.editSleepSessionTapped(session: session)
                                         } label: {
                                             Label("Өңдеу", systemImage: "square.and.pencil")
                                         }
@@ -262,7 +268,7 @@ struct SleepStatsDailyPage: View {
         }
     }
     
-    func sleepInfo(for report: SleepReport?, date: Date) -> some View {
+    func sleepInfo(for report: SleepReport?, sessions: [SleepSession]?, date: Date) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Ұйқы ұзақтығы")
@@ -284,8 +290,7 @@ struct SleepStatsDailyPage: View {
                     .font(.caption.weight(.medium))
                     .foregroundColor(.textLightGray)
                 
-                if let sessions = report?.sessions as? Set<SleepSession>,
-                   let main = sessions.max(by: {
+                if let sessions, let main = sessions.max(by: {
                        $0.minutesDuration < $1.minutesDuration
                    }) {
                     Text(main.intervalString)

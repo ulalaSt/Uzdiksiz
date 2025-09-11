@@ -46,10 +46,10 @@ struct SleepStatsChartSectionView: View {
                     .foregroundColor(.textSoftWhite)
                     .padding(8)
                 Spacer()
-                Text("Толығырақ")
-                    .font(.caption.weight(.semibold))
-                    .foregroundColor(Color.primaryOceanBlue)
-                    .padding(8)
+//                Text("Толығырақ")
+//                    .font(.caption.weight(.semibold))
+//                    .foregroundColor(Color.primaryOceanBlue)
+//                    .padding(8)
             }
             VStack(alignment: .leading, spacing: 32) {
                 legend
@@ -187,7 +187,7 @@ struct SleepStatsChartSectionView: View {
     }
     
     private func makeTimeAxisMarks(min minVal: Int, max maxVal: Int) -> [Int] {
-        let step = Int(ceil(Double(maxVal - minVal) / 90.0) * 30)
+        let step = max(5, Int(ceil(Double(maxVal - minVal) / 90.0) * 30))
         let mid = (minVal + maxVal) / 2
         let center = Int((Double(mid) / Double(step)).rounded()) * step
         return (-2...2).map { center + $0 * step }

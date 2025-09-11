@@ -50,6 +50,8 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
     }
     
     static let twentyFour: Time = .init(hour: 24, minute: 0)
+    static let twentyTwo: Time = .init(hour: 22, minute: 0)
+    static let five: Time = .init(hour: 5, minute: 0)
     static let zero: Time = .init(hour: 0, minute: 0)
     
     func toString(isDiff: Bool = false) -> String {

@@ -345,42 +345,6 @@ class SleepLogViewModel: ObservableObject {
         return (hour, minute)
     }
     
-    func calculateTotalDuration(for logs: [SleepLog]) -> (hour: Int, minute: Int) {
-        var totalMinutes = 0
-        
-        for log in logs {
-            if let (h, m) = log.durationHM {
-                totalMinutes += h * 60 + m
-            }
-        }
-        
-        return (totalMinutes / 60, totalMinutes % 60)
-    }
-
-    func calculateTotalDuration(for reports: [SleepReport]) -> (hour: Int, minute: Int) {
-        let totalSeconds = reports.reduce(0.0) { sum, report in
-            guard let sessions = report.sessions as? Set<SleepSession> else { return sum }
-            let reportSeconds = sessions.reduce(0.0) { sSum, session in
-                let (h, m) = calculateDuration(for: session)
-                return sSum + Double(h * 3600 + m * 60)
-            }
-            return sum + reportSeconds
-        }
-
-        let hours = Int(totalSeconds) / 3600
-        let minutes = (Int(totalSeconds) % 3600) / 60
-        return (hours, minutes)
-    }
-
-    private func subtract30Minutes(from timeString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-
-        guard let date = formatter.date(from: timeString) else { return timeString }
-
-        let newDate = Calendar.current.date(byAdding: .minute, value: -30, to: date)!
-        return formatter.string(from: newDate)
-    }
     
     func currentStrike() -> Int? {
         guard let expectedWakeTimeData = expectedWakeTime.value, let expectedWakeTime = expectedWakeTimeData else { return nil }

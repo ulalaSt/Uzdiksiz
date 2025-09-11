@@ -5,23 +5,60 @@
 //  Created by Ulan Seitkali on 01.08.2025.
 //
 import SwiftUI
+enum AddSleepLogPageState {
+    case edit(SleepSession)
+    case add(date: Date)
+    
+    var isEditing: Bool {
+        switch self {
+        case .edit(let sleepSession):
+            return true
+        case .add(let date):
+            return false
+        }
+    }
+}
 
 struct AddSleepLogPage: View {
     @Environment(\.dismiss) var dismiss
+    private let state: AddSleepLogPageState
     @State var date: Date
-    @State private var sleepTime = Date()
-    @State private var wakeTime = Date()
-    
+    @State private var sleepTime: Date
+    @State private var wakeTime: Date
+    @State private var errorMessage: String?
+
     @State private var showDatePicker = false
     @State private var showSleepPicker = false
     @State private var showWakePicker = false
+    init(state: AddSleepLogPageState, onSave: @escaping (Date, Time, Time) async throws -> Void) {
+        self.state = state
+        switch state {
+        case .edit(let sleepSession):
+            self._date = .init(initialValue: sleepSession.report?.date ?? Date())
+            self._sleepTime = .init(initialValue: sleepSession.startTime.date)
+            self._wakeTime = .init(initialValue: sleepSession.endTime.date)
+        case .add(let date):
+            self._date = .init(initialValue: date)
+            self._sleepTime = .init(initialValue: Time.twentyTwo.date)
+            self._wakeTime = .init(initialValue: Time.five.date)
+        }
+        self.onSave = onSave
+    }
+    let onSave: (Date, Time, Time) async throws -> Void
 
-    let onSave: (Date, Time, Time) -> Void // date, sleepTime, wakeTime
+    var title: String {
+        switch state {
+        case .edit(let sleepSession):
+            "Ұйқы өңдеу"
+        case .add(let date):
+            "Ұйқы қосу"
+        }
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(spacing: 16) {
             HStack {
-                Text("Ұйқы қосу")
+                Text(title)
                     .font(.headline.weight(.semibold))
                     .padding(.vertical, 11)
                     .padding(.horizontal, 10)
@@ -74,7 +111,8 @@ struct AddSleepLogPage: View {
                     .preferredColorScheme(.dark)
                 }
             }
-            
+            .disabled(state.isEditing)
+            .opacity(state.isEditing ? 0.4 : 1)
             // MARK: Sleep & Wake Times
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -144,6 +182,12 @@ struct AddSleepLogPage: View {
                     }
                 }
             }
+            if let errorMessage {
+                Text(errorMessage)
+                    .font(.callout.weight(.medium))
+                    .foregroundColor(.colorsRed)
+                    .multilineTextAlignment(.center)
+            }
             Spacer()
             Button {
                 let sleep = Time(
@@ -154,8 +198,25 @@ struct AddSleepLogPage: View {
                     hour: Calendar.current.component(.hour, from: wakeTime),
                     minute: Calendar.current.component(.minute, from: wakeTime)
                 )
-                onSave(date, sleep, wake)
-                dismiss()
+                
+                Task {
+                    do {
+                        try await onSave(date, sleep, wake)
+                        await MainActor.run {
+                            dismiss()
+                        }
+                    } catch SleepSessionError.overlappingSession(let conflictingSession) {
+                        let start = String(format: "%02d:%02d", conflictingSession.startHour, conflictingSession.startMinute)
+                        let end   = String(format: "%02d:%02d", conflictingSession.endHour, conflictingSession.endMinute)
+                        await MainActor.run {
+                            errorMessage = "Бұл уақыт басқа ұйқы жазбасымен қабаттасады: \(start) – \(end)."
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorMessage = "Қате: \(error.localizedDescription)"
+                        }
+                    }
+                }
             } label: {
                 DefaultButtonView(title: "Сақтау")
             }

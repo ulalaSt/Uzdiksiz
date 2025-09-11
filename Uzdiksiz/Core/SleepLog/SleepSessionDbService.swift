@@ -10,7 +10,7 @@ import CoreData
 import Combine
 
 enum SleepSessionError: Error {
-    case overlappingSession
+    case overlappingSession(withSession: SleepSession)
     case sessionNotFound
 }
 
@@ -46,6 +46,37 @@ class SleepSessionDbService {
         context = persistentContainer.newBackgroundContext()
     }
     
+    private func normalizeInterval(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int) -> (Int, Int) {
+        var start = startHour * 60 + startMinute
+        let end = endHour * 60 + endMinute
+
+        if end <= start {
+            start -= 24 * 60 // push start into "yesterday"
+        }
+
+        return (start, end)
+    }
+
+    private func checkForOverlap(in report: SleepReport, sessionID: NSManagedObjectID? = nil, newStart: Int, newEnd: Int, excluding session: SleepSession? = nil) throws {
+        if let existingSessions = report.sessions as? Set<SleepSession> {
+            for s in existingSessions where s != session {
+                if sessionID == s.id {
+                    continue
+                }
+                let (existingStart, existingEnd) = normalizeInterval(
+                    startHour: Int(s.startHour),
+                    startMinute: Int(s.startMinute),
+                    endHour: Int(s.endHour),
+                    endMinute: Int(s.endMinute)
+                )
+
+                if newStart < existingEnd && newEnd > existingStart {
+                    throw SleepSessionError.overlappingSession(withSession: s)
+                }
+            }
+        }
+    }
+
     // MARK: - Tag Management
     
     // Create Tag
@@ -73,22 +104,15 @@ class SleepSessionDbService {
                 report.targetEndMinute = Int32(AppState.shared.wakeTime.minute)
             }
             
-            // Convert Time to "minutes since midnight"
-            let newStart = startTime.hour * 60 + startTime.minute
-            let newEnd = endTime.hour * 60 + endTime.minute
-            
-            // Check for overlap
-            if let existingSessions = report.sessions as? Set<SleepSession> {
-                for s in existingSessions {
-                    let existingStart = Int(s.startHour) * 60 + Int(s.startMinute)
-                    let existingEnd = Int(s.endHour) * 60 + Int(s.endMinute)
-                    
-                    if newStart < existingEnd && newEnd > existingStart {
-                        throw SleepSessionError.overlappingSession
-                    }
-                }
-            }
-            
+            let (newStart, newEnd) = self.normalizeInterval(
+                startHour: startTime.hour,
+                startMinute: startTime.minute,
+                endHour: endTime.hour,
+                endMinute: endTime.minute
+            )
+
+            try self.checkForOverlap(in: report, newStart: newStart, newEnd: newEnd)
+
             // Create new SleepSession
             let session = SleepSession(context: context)
             session.startHour = Int32(startTime.hour)
@@ -120,22 +144,15 @@ class SleepSessionDbService {
                 throw SleepSessionError.sessionNotFound
             }
             
-            // Convert new times to minutes since midnight
-            let newStart = newStartTime.hour * 60 + newStartTime.minute
-            let newEnd   = newEndTime.hour * 60 + newEndTime.minute
-            
-            // Check overlap against other sessions in the same report
-            if let existingSessions = report.sessions as? Set<SleepSession> {
-                for s in existingSessions where s != session {
-                    let existingStart = Int(s.startHour) * 60 + Int(s.startMinute)
-                    let existingEnd   = Int(s.endHour) * 60 + Int(s.endMinute)
-                    
-                    if newStart < existingEnd && newEnd > existingStart {
-                        throw SleepSessionError.overlappingSession
-                    }
-                }
-            }
-            
+            let (newStart, newEnd) = self.normalizeInterval(
+                startHour: newStartTime.hour,
+                startMinute: newStartTime.minute,
+                endHour: newEndTime.hour,
+                endMinute: newEndTime.minute
+            )
+
+            try self.checkForOverlap(in: report, sessionID: sessionID, newStart: newStart, newEnd: newEnd)
+
             // Update session times
             session.startHour = Int32(newStartTime.hour)
             session.startMinute = Int32(newStartTime.minute)
@@ -230,3 +247,64 @@ class SleepSessionDbService {
     }
 }
 
+
+// MARK: - Publishers for SleepSession
+extension SleepSessionDbService {
+    
+    /// Publishes all sessions (use carefully, may be a lot of data)
+    public func sessions() -> AnyPublisher<[SleepSession], Never> {
+        let request = SleepSession.fetchRequest()
+        request.sortDescriptors = [
+            NSSortDescriptor(key: #keyPath(SleepSession.startHour), ascending: true),
+            NSSortDescriptor(key: #keyPath(SleepSession.startMinute), ascending: true)
+        ]
+        
+        return CoreDataPublisher(request: request, context: context)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+    
+    /// Publishes all sessions for a given report
+    public func sessions(for reportID: NSManagedObjectID) -> AnyPublisher<[SleepSession], Never> {
+        guard let report = try? context.existingObject(with: reportID) as? SleepReport else {
+            return Just([]).eraseToAnyPublisher()
+        }
+        
+        let request = SleepSession.fetchRequest()
+        request.predicate = NSPredicate(format: "report == %@", report)
+        request.sortDescriptors = [
+            NSSortDescriptor(key: #keyPath(SleepSession.startHour), ascending: true),
+            NSSortDescriptor(key: #keyPath(SleepSession.startMinute), ascending: true)
+        ]
+        
+        return CoreDataPublisher(request: request, context: context)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+    
+    /// Publishes sessions for a given dateKey
+    public func sessions(for dateKey: Int32) -> AnyPublisher<[SleepSession], Never> {
+        let request = SleepSession.fetchRequest()
+        request.predicate = NSPredicate(format: "report.dateKey == %d", dateKey)
+        request.sortDescriptors = [
+            NSSortDescriptor(key: #keyPath(SleepSession.startHour), ascending: true),
+            NSSortDescriptor(key: #keyPath(SleepSession.startMinute), ascending: true)
+        ]
+        
+        return CoreDataPublisher(request: request, context: context)
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+    
+    /// Publishes a single session
+    public func session(for id: NSManagedObjectID) -> AnyPublisher<SleepSession?, Never> {
+        let request = SleepSession.fetchRequest()
+        request.predicate = NSPredicate(format: "SELF == %@", id)
+        request.fetchLimit = 1
+        
+        return CoreDataPublisher(request: request, context: context)
+            .map { $0.first }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+}

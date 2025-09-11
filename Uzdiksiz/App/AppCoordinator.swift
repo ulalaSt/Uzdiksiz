@@ -8,8 +8,9 @@ import UIKit
 import Combine
 import SwiftUI
 import FirebaseAuth
+import CoreData
 
-final class AppCoordinator: NSObject, SettingsNavigator {
+final class AppCoordinator: NSObject, SettingsNavigator, SleepReportsNavigator {
     private let environment: AppEnvironment
     private let navigationController: UINavigationController
 
@@ -33,6 +34,7 @@ final class AppCoordinator: NSObject, SettingsNavigator {
         self.authViewModel = AuthViewModel(service: environment.authService)
         super.init()
         sleepTimeViewModel.coordinator = self
+        sleepReportViewModel.coordinator = self
     }
 
     func start() {
@@ -92,5 +94,18 @@ final class AppCoordinator: NSObject, SettingsNavigator {
         navigationController.pushViewController(viewController, animated: true)
         navigationController.setNavigationBarHidden(true, animated: false)
         navigationController.setNavigationBarHidden(false, animated: false)
+    }
+    
+    func showEditSleep(for session: SleepSession) {
+        let viewController = UIHostingController(
+            rootView: AddSleepLogPage(state: .edit(session), onSave: { [weak self] date, start, end in
+                try await self?.sleepReportViewModel.updateSleepSession(
+                    sessionID: session.id,
+                    startTime: start,
+                    endTime: end)
+            })
+        )
+        viewController.view.backgroundColor = .clear
+        navigationController.present(viewController, animated: true)
     }
 }

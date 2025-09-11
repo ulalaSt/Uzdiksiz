@@ -179,6 +179,7 @@ class SleepTimeViewModel: ObservableObject {
         AppState.shared.lastAlarmOff = Date()
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: alarmIDs)
+        center.removeDeliveredNotifications(withIdentifiers: alarmIDs)
         print("🔕 Alarm stopped by user")
     }
     

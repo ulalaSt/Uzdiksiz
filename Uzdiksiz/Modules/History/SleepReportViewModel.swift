@@ -10,17 +10,27 @@ import Foundation
 import SwiftUI
 import CoreData
 
+protocol SleepReportsNavigator: NSObjectProtocol {
+    func showEditSleep(for session: SleepSession)
+}
+
 class SleepReportViewModel: ObservableObject {
     @Published var sleepReports: Loadable<[SleepReport]> = .notRequested
+    @Published var sleepSessions: Loadable<[SleepSession]> = .notRequested
     let cancelBag = CancelBag()
-    
+    weak var coordinator: SleepReportsNavigator?
     init() {
         sleepReports = .isLoading(last: nil, cancelBag: CancelBag())
+        sleepSessions = .isLoading(last: nil, cancelBag: CancelBag())
         
         SleepSessionDbService.shared.reports()
             .map(Loadable.loaded)
             .receive(on: DispatchQueue.main)
             .assign(to: &$sleepReports)
+        SleepSessionDbService.shared.sessions()
+            .map(Loadable.loaded)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$sleepSessions)
     }
     
     // MARK: - Create
@@ -28,22 +38,26 @@ class SleepReportViewModel: ObservableObject {
     func createSleepSession(
         dateKey: Int32,
         startTime: Time,
-        endTime: Time,
-        state: Binding<Loadable<SleepSession>>
-    ) async {
-        state.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
-        do {
-            let session = try await SleepSessionDbService.shared.createSleepSession(
-                dateKey: dateKey,
-                startTime: startTime,
-                endTime: endTime
-            )
-            state.wrappedValue = .loaded(session)
-        } catch {
-            state.wrappedValue = .failed(.unexpectedError(error.localizedDescription))
-        }
+        endTime: Time
+    ) async throws {
+        let session = try await SleepSessionDbService.shared.createSleepSession(
+            dateKey: dateKey,
+            startTime: startTime,
+            endTime: endTime
+        )
     }
     
+    func updateSleepSession(
+        sessionID: NSManagedObjectID,
+        startTime: Time,
+        endTime: Time
+    ) async throws {
+        let session = try await SleepSessionDbService.shared.updateSleepSession(
+            sessionID: sessionID,
+            newStartTime: startTime,
+            newEndTime: endTime
+        )
+    }
     // MARK: - Delete
     func deleteSession(
         sessionID: NSManagedObjectID,
@@ -86,5 +100,9 @@ class SleepReportViewModel: ObservableObject {
         DispatchQueue.main.async {
             AppState.shared.todaySleptDate = nil
         }
+    }
+    
+    func editSleepSessionTapped(session: SleepSession) {
+        coordinator?.showEditSleep(for: session)
     }
 }

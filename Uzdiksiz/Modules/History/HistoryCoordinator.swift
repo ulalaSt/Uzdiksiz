@@ -30,15 +30,22 @@ final class HistoryCoordinator: Coordinator {
     }
     
     func showAddSleep(date: Date) {
-        let viewController = UIHostingController(rootView: AddSleepLogPage(date: date, onSave: { [weak self] date, sleepTime, wakeTime in
-            Task {
-                await self?.sleepReportViewModel.createSleepSession(dateKey: date.dateKey, startTime: sleepTime, endTime: wakeTime, state: .constant(.notRequested))
-            }
-        }))
+        let viewController = UIHostingController(
+            rootView: AddSleepLogPage(
+                state: .add(date: date),
+                onSave: { [weak self] date, sleepTime, wakeTime in
+                    try await self?.sleepReportViewModel.createSleepSession(
+                        dateKey: date.dateKey,
+                        startTime: sleepTime,
+                        endTime: wakeTime
+                    )
+                }
+            )
+        )
         viewController.view.backgroundColor = .clear
         navigationController.present(viewController, animated: true)
     }
-        
+
     func navigateToTrends() {
         let viewController = UIHostingController(rootView: SleepStatsTrendsPage(viewModel: sleepReportViewModel))
         viewController.view.backgroundColor = .clear
@@ -47,5 +54,12 @@ final class HistoryCoordinator: Coordinator {
     
     func stop() {
         // Optional cleanup
+    }
+    
+    @MainActor
+    func showErrorAlert(_ message: String) {
+        let alert = UIAlertController(title: "Қате", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        navigationController.present(alert, animated: true)
     }
 }
