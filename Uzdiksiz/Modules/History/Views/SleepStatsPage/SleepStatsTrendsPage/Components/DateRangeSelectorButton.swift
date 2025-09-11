@@ -8,30 +8,28 @@
 import SwiftUI
 
 struct DateRangeSelectorButton: View {
-    @Binding var currentDateRange: SleepStatsDateRange
-    
+    @Binding var dateInterval: DateInterval
     @State private var showDateRangePicker = false
     @State private var dates: Set<DateComponents>
     
-    init(currentDateRange: Binding<SleepStatsDateRange>) {
-        self._currentDateRange = currentDateRange
+    init(dateInterval: Binding<DateInterval>) {
+        self._dateInterval = dateInterval
+        let start = dateInterval.wrappedValue.start
+        let actualLastDay = Calendar.current.date(byAdding: .day, value: -1, to: dateInterval.wrappedValue.end) ?? dateInterval.wrappedValue.end
+        let components: Set<Calendar.Component> = [.calendar, .era, .year, .month, .day]
         self._dates = State(initialValue: filledRange(selectedDates: [
-            Calendar.current.dateComponents([
-                .calendar, .era, .year, .month, .day
-            ], from: currentDateRange.wrappedValue.startDay),
-            Calendar.current.dateComponents([
-                .calendar, .era, .year, .month, .day
-            ], from: currentDateRange.wrappedValue.endDay)
+            Calendar.current.dateComponents(components, from: start),
+            Calendar.current.dateComponents(components, from: actualLastDay)
         ]))
     }
     
     var body: some View {
         Button {
-            preloadDates(with: currentDateRange.startDay, end: currentDateRange.endDay)
+            preloadDates(with: dateInterval)
             showDateRangePicker = true
         } label: {
             HStack(spacing: 10) {
-                Text(currentDateRange.startDay.formattedRange(to: currentDateRange.endDay))
+                Text(dateInterval.start.formattedRange(to: dateInterval.end))
                     .font(.callout.weight(.semibold))
                 Image(systemName: "chevron.down")
                     .font(.caption2.weight(.semibold))
@@ -45,8 +43,10 @@ struct DateRangeSelectorButton: View {
                     .fill(Color.white.opacity(0.1))
             )
         }
-        .onChange(of: currentDateRange) { newValue in
-            preloadDates(with: newValue.startDay, end: newValue.endDay)
+        .onChange(of: dateInterval) { newValue in
+            DispatchQueue.main.async {
+                preloadDates(with: newValue)
+            }
         }
         .popover(isPresented: $showDateRangePicker) {
             ZStack {
@@ -105,10 +105,12 @@ struct DateRangeSelectorButton: View {
         }
     }
     
-    private func preloadDates(with start: Date, end: Date) {
+    private func preloadDates(with interval: DateInterval) {
+        let actualLastDay = Calendar.current.date(byAdding: .day, value: -1, to: dateInterval.end) ?? dateInterval.end
+
         let baseSet: Set<DateComponents> = [
-            Calendar.current.dateComponents(datePickerComponents, from: start),
-            Calendar.current.dateComponents(datePickerComponents, from: end)
+            Calendar.current.dateComponents(datePickerComponents, from: interval.start),
+            Calendar.current.dateComponents(datePickerComponents, from: actualLastDay)
         ]
         dates = filledRange(selectedDates: baseSet)
     }
@@ -116,7 +118,8 @@ struct DateRangeSelectorButton: View {
     private func saveSelection() {
         let sortedDates = dates.compactMap { Calendar.current.date(from: $0) }.sorted()
         if let start = sortedDates.first, let end = sortedDates.last {
-            currentDateRange = SleepStatsDateRange(start: start, end: end)
+            let inclusiveEnd = Calendar.current.date(byAdding: .day, value: 1, to: end) ?? end
+            dateInterval = .init(start: start, end: inclusiveEnd)
         }
         showDateRangePicker = false
     }

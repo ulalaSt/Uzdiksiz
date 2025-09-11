@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SleepStatsTrendsPage: View {
     @Environment(\.dismiss) var dismiss
-    @State var currentRange: SleepStatsRange = .weekly
+    @State var currentState: SleepStatsState = .weekly
     @Namespace var namespace
     let viewModel: SleepReportViewModel
     
@@ -21,8 +21,16 @@ struct SleepStatsTrendsPage: View {
         VStack(spacing: 24) {
             selector
                 .padding(.top, 12)
-            SleepStatsTrendsListView(currentRange: currentRange, reportViewModel: viewModel)
-                .animation(nil, value: currentRange)
+            TabView(selection: $currentState) {
+                SleepStatsTrendsListView(state: .weekly, reportViewModel: viewModel)
+                    .tag(SleepStatsState.weekly)
+                SleepStatsTrendsListView(state: .monthly, reportViewModel: viewModel)
+                    .tag(SleepStatsState.monthly)
+                SleepStatsTrendsListView(state: .custom, reportViewModel: viewModel)
+                    .tag(SleepStatsState.custom)
+            }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .toolbar(.hidden, for: .tabBar)
         }
         .padding(.horizontal, 24)
         .navigationBarHidden(false)
@@ -50,13 +58,13 @@ struct SleepStatsTrendsPage: View {
         
     var selector: some View {
         HStack(spacing: 0) {
-            let ranges = Array(SleepStatsRange.allCases.enumerated())
-            ForEach(ranges, id: \.offset) { (index, range) in
-                let isActive = currentRange == range
-                if !isActive, let prev = ranges.first(where: { $0.0 == index-1}), currentRange != prev.1 {
+            let states = Array(SleepStatsState.allCases.enumerated())
+            ForEach(states, id: \.offset) { (index, state) in
+                let isActive = currentState == state
+                if !isActive, let prev = states.first(where: { $0.0 == index-1}), currentState != prev.1 {
                     Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 16)
                 }
-                Text(range.title)
+                Text(state.title)
                     .font(isActive ? .caption2.weight(.semibold) : .caption2)
                     .foregroundColor(.textSoftWhite)
                     .padding(10)
@@ -71,7 +79,7 @@ struct SleepStatsTrendsPage: View {
                     }
                     .onTapGesture {
                         withAnimation {
-                            currentRange = range
+                            currentState = state
                         }
                     }
             }
@@ -80,11 +88,11 @@ struct SleepStatsTrendsPage: View {
     }
 }
 
-enum SleepStatsRange: Int, Equatable, CaseIterable, Identifiable {
+enum SleepStatsState: Int, Equatable, CaseIterable, Identifiable {
     var id: Self { self }
     case weekly
     case monthly
-    case other
+    case custom
     
     var title: String {
         switch self {
@@ -92,7 +100,7 @@ enum SleepStatsRange: Int, Equatable, CaseIterable, Identifiable {
             "Апта"
         case .monthly:
             "Ай"
-        case .other:
+        case .custom:
             "Басқа"
         }
     }

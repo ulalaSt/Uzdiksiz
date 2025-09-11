@@ -10,53 +10,74 @@ import SwiftUI
 extension Date {
     func formattedRange(to end: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "kk_KZ") // or current
+        formatter.locale = Locale(identifier: "kk_KZ") // or Locale.current
         formatter.setLocalizedDateFormatFromTemplate("MMM d")
+        formatter.timeZone = .current
+
+        let actualLastDay = Calendar.current.date(byAdding: .day, value: -1, to: end) ?? end
+
         let startString = formatter.string(from: self)
-        let endString = formatter.string(from: end)
+        let endString = formatter.string(from: actualLastDay)
+
         return "\(startString) - \(endString)"
     }
 }
 
 struct SleepStatsTrendsListView: View {
-    let currentRange: SleepStatsRange
-    @State var currentDateRange: SleepStatsDateRange
+    let state: SleepStatsState
+    @State var dateInterval: DateInterval
+    @State var shift: Int = 0
     @ObservedObject var reportViewModel: SleepReportViewModel
-    init(currentRange: SleepStatsRange, reportViewModel: SleepReportViewModel) {
-        self.currentRange = currentRange
+    init(state: SleepStatsState, reportViewModel: SleepReportViewModel) {
+        self.state = state
         self.reportViewModel = reportViewModel
-        let calendar = Calendar.current
-        let today = Date()
-        let interval: DateInterval
-        switch currentRange {
+        self._dateInterval = .init(initialValue: Calendar.current.dateInterval(of: .weekOfYear, for: Date()) ?? .init())
+    }
+    
+    var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
+        return calendar
+    }
+    
+    var currentInterval: DateInterval {
+        switch state {
         case .weekly:
-            interval = calendar.dateInterval(of: .weekOfYear, for: today)!
+            guard let shiftedDate = calendar.date(byAdding: .weekOfYear, value: shift, to: Date()),
+                  let week = calendar.dateInterval(of: .weekOfYear, for: shiftedDate) else {
+                return .init()
+            }
+            return week
         case .monthly:
-            interval = calendar.dateInterval(of: .month, for: today)!
-        case .other:
-            interval = calendar.dateInterval(of: .weekOfYear, for: today)!
+            guard let shiftedDate = calendar.date(byAdding: .month, value: shift, to: Date()),
+                  let month = calendar.dateInterval(of: .month, for: shiftedDate) else {
+                return .init()
+            }
+            return month
+        case .custom:
+            return dateInterval
         }
-        self._currentDateRange = .init(
-            initialValue: SleepStatsDateRange(start: interval.start, end: interval.end)
-        )
     }
     
     var body: some View {
         VStack(spacing: 16) {
             rangeNavigator
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     if case let .loaded(reports) = reportViewModel.sleepReports {
+                        let calendar = Calendar.current
+                        let actualLastDay = Calendar.current.date(byAdding: .day, value: -1, to: currentInterval.end) ?? currentInterval.end
+
                         let filtered = reports.filter { r in
-                            let d = r.date
-                            return d >= currentDateRange.startDay && d <= currentDateRange.endDay
+                            calendar.compare(r.date, to: currentInterval.start, toGranularity: .day) != .orderedAscending &&
+                            calendar.compare(r.date, to: actualLastDay, toGranularity: .day) != .orderedDescending
                         }
                         if !filtered.isEmpty {
-                            SleepStatsChartSectionView(start: currentDateRange.startDay, end: currentDateRange.endDay, reports: filtered, type: .quality)
-                            SleepStatsChartSectionView(start: currentDateRange.startDay, end: currentDateRange.endDay, reports: filtered, type: .duration)
-                            SleepStatsChartSectionView(start: currentDateRange.startDay, end: currentDateRange.endDay, reports: filtered, type: .startTime)
-                            SleepStatsChartSectionView(start: currentDateRange.startDay, end: currentDateRange.endDay, reports: filtered, type: .endTime)
-                            SleepStatsChartSectionView(start: currentDateRange.startDay, end: currentDateRange.endDay, reports: filtered, type: .startAndEnd)
+                            SleepStatsChartSectionView(start: currentInterval.start, end: actualLastDay, reports: filtered, type: .quality)
+                            SleepStatsChartSectionView(start: currentInterval.start, end: actualLastDay, reports: filtered, type: .duration)
+                            SleepStatsChartSectionView(start: currentInterval.start, end: actualLastDay, reports: filtered, type: .startTime)
+                            SleepStatsChartSectionView(start: currentInterval.start, end: actualLastDay, reports: filtered, type: .endTime)
+                            SleepStatsChartSectionView(start: currentInterval.start, end: actualLastDay, reports: filtered, type: .startAndEnd)
                         } else {
                             Text("Бұл кезеңге деректер жоқ")
                                 .foregroundStyle(.secondary)
@@ -71,41 +92,27 @@ struct SleepStatsTrendsListView: View {
                 .padding(.bottom, 32)
             }
         }
-        .onChange(of: currentRange) { newRange in
-            let calendar = Calendar.current
-            let today = Date()
-            let interval: DateInterval
-            switch newRange {
-            case .weekly:
-                interval = calendar.dateInterval(of: .weekOfYear, for: today)!
-            case .monthly:
-                interval = calendar.dateInterval(of: .month, for: today)!
-            case .other:
-                interval = calendar.dateInterval(of: .weekOfYear, for: today)!
-            }
-            currentDateRange = SleepStatsDateRange(start: interval.start, end: interval.end)
-        }
     }
     
     @ViewBuilder
     var rangeNavigator: some View {
-        if currentRange == .other {
-            DateRangeSelectorButton(currentDateRange: $currentDateRange)
+        if state == .custom {
+            DateRangeSelectorButton(dateInterval: $dateInterval)
         } else {
             HStack {
                 Button {
-                    shiftRange(by: -1)
+                    shift-=1
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.callout.weight(.semibold))
                         .frame(width: 22, height: 22)
                 }
                 Spacer()
-                Text(currentDateRange.startDay.formattedRange(to: currentDateRange.endDay))
+                Text(currentInterval.start.formattedRange(to: currentInterval.end))
                     .font(.callout.weight(.semibold))
                 Spacer()
                 Button {
-                    shiftRange(by: 1)
+                    shift+=1
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.callout.weight(.semibold))
@@ -113,24 +120,6 @@ struct SleepStatsTrendsListView: View {
                 }
             }
             .padding(.vertical, 8)
-        }
-    }
-    
-    private func shiftRange(by value: Int) {
-        let calendar = Calendar.current
-        switch currentRange {
-        case .weekly:
-            if let newStart = calendar.date(byAdding: .weekOfYear, value: value, to: currentDateRange.startDay),
-               let newEnd = calendar.date(byAdding: .weekOfYear, value: value, to: currentDateRange.endDay) {
-                currentDateRange = SleepStatsDateRange(start: newStart, end: newEnd)
-            }
-        case .monthly:
-            if let newStart = calendar.date(byAdding: .month, value: value, to: currentDateRange.startDay),
-               let newEnd = calendar.date(byAdding: .month, value: value, to: currentDateRange.endDay) {
-                currentDateRange = SleepStatsDateRange(start: newStart, end: newEnd)
-            }
-        case .other:
-            break
         }
     }
 }
