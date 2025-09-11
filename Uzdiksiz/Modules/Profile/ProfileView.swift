@@ -11,7 +11,8 @@ import FirebaseAuth
 struct ProfileView: View {
     @ObservedObject var sleepReportViewModel: SleepReportViewModel
     @ObservedObject var sleepTimeViewModel: SleepTimeViewModel
-    
+    @State private var showComingSoon = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -22,9 +23,17 @@ struct ProfileView: View {
                             .scaledToFit()
                             .frame(width: 100, height: 100)
                         Button {
-                            
+                            showComingSoon = true
                         } label: {
                             DefaultButtonView(title: "Аккаунт ашу")
+                                .opacity(0.5)
+                        }
+                        .alert("Функция әзірленуде", isPresented: $showComingSoon) {
+                            Button("Жақсы", role: .cancel) {}
+                        } message: {
+                            Text("""
+                            Жаңа функция жақында қолжетімді болады. Сізбен бірге боламыз!
+                            """)
                         }
                     }
                     HStack(spacing: 0) {
