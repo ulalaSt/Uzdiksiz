@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct SleepTimelineView: View {
+struct SleepTimelineView<S: ShapeStyle>: View {
     let sessions: [SleepSession]
+    let mainSleepColor: S
     
     private var minMinutes: Int {
         let base = Time(hour: 22, minute: 0).totalMinutes // yesterday 22:00
@@ -61,7 +62,13 @@ struct SleepTimelineView: View {
                             let barWidth = max(0, endX - startX)
                             let isNap = session.minutesDuration < 30
                             Rectangle()
-                                .fill(isNap ? Color.accentSkyIceBlue : Color.primaryOceanBlue)
+                                .modify { rect in
+                                    if isNap {
+                                        rect.fill(Color.accentSkyIceBlue)
+                                    } else {
+                                        rect.fill(mainSleepColor)
+                                    }
+                                }
                                 .frame(width: barWidth)
                                 .cornerRadius(3)
                                 .offset(x: startX)

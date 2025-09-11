@@ -77,6 +77,7 @@ struct WeekdayPicker: View {
         HStack(spacing: 10) {
             ForEach(dates, id: \.self) { date in
                 let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
+                let progress = progressForDate(date)
                 VStack(spacing: 4) {
                     Text(formatter.string(from: date).capitalized)
                         .font(.caption.weight(.medium))
@@ -85,11 +86,24 @@ struct WeekdayPicker: View {
                         Circle()
                             .stroke(Color.white.opacity(0.1), lineWidth: 3)
                         Circle()
-                            .trim(from: 0, to: CGFloat(progressForDate(date))/100)
-                            .stroke(
-                                isSelected ? Color.accentMediumSkyBlue : Color.primaryOceanBlue,
-                                style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                            )
+                            .trim(from: 0, to: CGFloat(progress)/100)
+                            .modify({ shape in
+                                if progress == 100 {
+                                    shape.stroke(
+                                        LinearGradient(
+                                            colors: [.softSkyBlue,.softPurple, .vividMagenta],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing).opacity(0.8),
+                                        style: StrokeStyle(
+                                            lineWidth: 3,
+                                            lineCap: .round)
+                                    )
+                                } else {
+                                    shape.stroke(isSelected ? Color.accentMediumSkyBlue : Color.primaryOceanBlue,
+                                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                                    )
+                                }
+                            })
                             .rotationEffect(.degrees(-90)) // start from top
                         Text("\(calendar.component(.day, from: date))")
                             .foregroundColor(isSelected ? .accentMediumSkyBlue : .textLightGray)
@@ -114,7 +128,20 @@ struct WeekdayPicker: View {
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.accentMediumSkyBlue, lineWidth: 0.5)
+                            .modify({ shape in
+                                if progress == 100 {
+                                    shape.stroke(
+                                        LinearGradient(
+                                            colors: [.softSkyBlue,.softPurple, .vividMagenta],
+                                            startPoint: .bottomLeading,
+                                            endPoint: .topTrailing),
+                                        style: StrokeStyle(lineWidth: 0.5)
+                                    )
+                                } else {
+                                    shape
+                                        .stroke(Color.accentMediumSkyBlue, lineWidth: 0.5)
+                                }
+                            })
                             .padding(0.25)
                         RoundedRectangle(cornerRadius: 8)
                             .fill(.white.opacity(0.1))

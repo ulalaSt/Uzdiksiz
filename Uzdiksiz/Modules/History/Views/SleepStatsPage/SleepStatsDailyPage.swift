@@ -82,6 +82,28 @@ struct SleepStatsDailyPage: View {
                     $0.report?.id == report?.id
                 })
                 VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .center, spacing: 0) {
+                        Text("Ұйқы сапасы")
+                            .font(.title3.weight(.bold))
+                            .foregroundColor(.textLightGray)
+                        Spacer()
+                        let streak = streakEndingOn(date: date)
+                        if streak > 1 {
+                            HStack(spacing: 3) {
+                                Text("\(streak) күн қатар")
+                                    .font(.footnote.weight(.medium))
+                                Image("lightning")
+                                    .resizable()
+                                    .renderingMode(.template)
+                                    .scaledToFit()
+                                    .frame(width: 12, height: 15)
+                            }
+                            .foregroundStyle(
+                                LinearGradient(colors: [.softSkyBlue,.softPurple, .vividMagenta], startPoint: .bottomLeading, endPoint: .topTrailing)
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 8)
                     HStack(alignment: .top, spacing: 10) {
                         qualityBar(for: report)
                         sleepInfo(for: report, sessions: sessions, date: date)
@@ -104,13 +126,24 @@ struct SleepStatsDailyPage: View {
                             }
                         }
                         .padding(.horizontal, 8)
+                        let isFullQuality = report?.quality() == 100
                         VStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 12) {
-                                SleepTimelineView(sessions: Array(sessions))
+                                if isFullQuality {
+                                    SleepTimelineView(sessions: Array(sessions), mainSleepColor: fullQualityGradient)
+                                } else {
+                                    SleepTimelineView(sessions: Array(sessions), mainSleepColor: Color.primaryOceanBlue)
+                                }
                                 HStack(spacing: 10) {
                                     HStack(spacing: 4) {
                                         Circle()
-                                            .fill(Color.primaryOceanBlue)
+                                            .modify { rect in
+                                                if isFullQuality {
+                                                    rect.fill(fullQualityGradient)
+                                                } else {
+                                                    rect.fill(Color.primaryOceanBlue)
+                                                }
+                                            }
                                             .frame(width: 10, height: 10)
                                         Text("Негізгі ұйқы")
                                             .font(.caption)
@@ -210,6 +243,9 @@ struct SleepStatsDailyPage: View {
         }
     }
     
+    var fullQualityGradient: LinearGradient {
+        LinearGradient(colors: [.softSkyBlue,.softPurple, .vividMagenta], startPoint: .bottomLeading, endPoint: .topTrailing)
+    }
     func moodButton(imageName: String) -> some View {
         Image(imageName)
             .resizable()
@@ -227,6 +263,37 @@ struct SleepStatsDailyPage: View {
             }
     }
     
+    private func streakEndingOn(date: Date) -> Int {
+        guard let reports = viewModel.sleepReports.value else { return 0 }
+
+        let calendar = Calendar.current
+
+        let perfectDates = reports
+            .filter { $0.quality() == 100 }
+            .map { calendar.startOfDay(for: $0.date) }
+            .sorted()
+
+        let target = calendar.startOfDay(for: date)
+        guard let endIndex = perfectDates.firstIndex(of: target) else { return 0 }
+
+        var streak = 1
+        if endIndex > 0 {
+            for idx in stride(from: endIndex, through: 1, by: -1) {
+                let current = perfectDates[idx]
+                let previous = perfectDates[idx - 1]
+
+                if let expectedPrev = calendar.date(byAdding: .day, value: -1, to: current),
+                   calendar.isDate(previous, inSameDayAs: expectedPrev) {
+                    streak += 1
+                } else {
+                    break
+                }
+            }
+        }
+
+        return streak
+    }
+
     @ViewBuilder
     func qualityBar(for report: SleepReport?) -> some View {
         let quality = report?.quality()
@@ -253,9 +320,9 @@ struct SleepStatsDailyPage: View {
                 .trim(from: 0, to: CGFloat(quality ?? 0)/100)
                 .stroke(
                     LinearGradient(
-                        colors: [.accentSkyIceBlue, .primaryOceanBlue],
-                        startPoint: .leading,
-                        endPoint: .trailing
+                        colors: quality == 100 ? [.softSkyBlue,.softPurple, .vividMagenta] : [.accentSkyIceBlue, .primaryOceanBlue],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     ),
                     style: StrokeStyle(lineWidth: 8, lineCap: .round)
                 )
