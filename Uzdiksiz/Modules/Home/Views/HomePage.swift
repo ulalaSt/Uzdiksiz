@@ -38,7 +38,7 @@ struct HomePage: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .backgroundGradient(ignoring: [.horizontal, .top])
+        .backgroundGradient(ignoring: .all)
         .navigationBarHidden(true)
     }
         

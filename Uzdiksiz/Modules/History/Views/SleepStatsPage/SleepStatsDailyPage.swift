@@ -70,7 +70,7 @@ struct SleepStatsDailyPage: View {
         }
         .padding(.top, 16)
         .padding(.bottom, 32)
-        .backgroundGradient(ignoring: [.top, .horizontal])
+        .backgroundGradient(ignoring: .all)
         .navigationBarHidden(true)
     }
     

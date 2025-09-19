@@ -25,8 +25,8 @@ final class MainTabBarController: UITabBarController {
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.textLightGray]
 
         // Selected item color
-        appearance.stackedLayoutAppearance.selected.iconColor = .primaryOceanBlue
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.primaryOceanBlue]
+        appearance.stackedLayoutAppearance.selected.iconColor = .accentMediumSkyBlue
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.accentMediumSkyBlue]
 
         // Apply to the tab bar
         tabBar.standardAppearance = appearance

@@ -155,7 +155,7 @@ struct ProfileView: View {
             .padding(.bottom, 16)
             .padding(.horizontal, 24)
         }
-        .backgroundGradient(ignoring: [.top, .horizontal])
+        .backgroundGradient(ignoring: .all)
         .navigationBarHidden(true)
     }
     
