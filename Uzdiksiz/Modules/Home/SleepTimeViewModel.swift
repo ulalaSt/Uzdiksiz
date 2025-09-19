@@ -72,7 +72,7 @@ class SleepTimeViewModel: ObservableObject {
     var isAlarmOnBinding: Binding<Bool> {
         Binding(
             get: { self.isAlarmOn },
-            set: { self.updateIsNotificationOn($0) }
+            set: { self.updateIsAlarmOn($0) }
         )
     }
 

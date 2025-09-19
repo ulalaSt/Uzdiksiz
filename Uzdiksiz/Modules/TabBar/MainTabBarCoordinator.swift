@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import SwiftUICore
+import SwiftUI
 
 final class MainTabBarCoordinator: NSObject, Coordinator {
     let navigationController: UINavigationController
