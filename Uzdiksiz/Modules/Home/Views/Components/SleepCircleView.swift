@@ -9,12 +9,22 @@
 import SwiftUI
 
 struct SleepCircleView: View {
-    @Binding var sleepTime: Time
-    @Binding var wakeTime: Time
+    @Binding var sleepTimeReal: Time
+    @Binding var wakeTimeReal: Time
     @State private var isDragging = false
+    @State private var sleepTime: Time
+    @State private var wakeTime: Time
 
     let minDurationMinutes = 60    // 1h
     let maxDurationMinutes = 20*60 // 20h
+    
+    init(sleepTime: Binding<Time>, wakeTime: Binding<Time>) {
+        self._sleepTimeReal = sleepTime
+        self._wakeTimeReal = wakeTime
+        self._sleepTime = .init(initialValue: sleepTime.wrappedValue)
+        self._wakeTime = .init(initialValue: wakeTime.wrappedValue)
+        self.isDragging = isDragging
+    }
     
     var body: some View {
         GeometryReader { geo in
@@ -61,6 +71,8 @@ struct SleepCircleView: View {
                             }
                             .onEnded { _ in
                                 isDragging = false
+                                wakeTimeReal = wakeTime
+                                sleepTimeReal = sleepTime
                             }
                     )
                 
@@ -76,6 +88,8 @@ struct SleepCircleView: View {
                             }
                             .onEnded { _ in
                                 isDragging = false
+                                wakeTimeReal = wakeTime
+                                sleepTimeReal = sleepTime
                             }
                     )
                 VStack(spacing: 0) {

@@ -30,6 +30,20 @@ struct SleepSettingsPage: View {
         self.viewModel = viewModel
     }
     
+    var isAlarmGranted: Bool {
+        if #available(iOS 26.0, *) {
+            return viewModel.alarmPermissionGranted ?? false
+        }
+        return viewModel.notificationPermissionGranted ?? false
+    }
+    
+    var isAlarmUsesNotification: Bool {
+        if #available(iOS 26.0, *) {
+            return false
+        }
+        return true
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             selector
@@ -202,7 +216,7 @@ struct SleepSettingsPage: View {
     
     var alarmSection: some View {
         VStack(spacing: 11) {
-            if viewModel.notificationPermissionGranted != true {
+            if !isAlarmGranted {
                 Button {
                     viewModel.openAppSettings()
                 } label: {
@@ -213,7 +227,7 @@ struct SleepSettingsPage: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 20, height: 20)
-                                Text("Хабарламалар өшірілген")
+                                Text("Оятқышқа рұқсат жоқ")
                                     .font(.footnote.weight(.semibold))
                                     .multilineTextAlignment(.leading)
                             }
@@ -227,15 +241,20 @@ struct SleepSettingsPage: View {
                             }
                             .foregroundColor(Color.textLightGray)
                         }
-                        Text("Ұйқы уақытын еске салу үшін хабарламаларды қосыңыз. Бұл сізге уақытылы ұйықтауға көмектеседі.")
+                        Text(isAlarmUsesNotification ? "Оятқыш дұрыс жұмыс істеуі үшін қолданбаға хабарламаларға рұқсат керек. Параметрлерге кіріп, рұқсат беріңіз." : "Оятқыш дұрыс жұмыс істеуі үшін қолданбаға оятқышты пайдалану құқығын қосу керек. Параметрлерге кіріп, рұқсат беріңіз.")
                             .font(.caption)
                             .foregroundColor(.textLightGray)
                             .multilineTextAlignment(.leading)
                             .padding(.leading, 30)
                     }
+                    .padding(.vertical, 11)
+                    .padding(.horizontal, 16)
+                    .background {
+                        Color.backgroundDeepNavy
+                    }
+                    .cornerRadius(16)
                     .contentShape(Rectangle())
                 }
-                Color.white.opacity(0.1).frame(height: 0.5)
             }
             HStack {
                 HStack(spacing: 8) {
@@ -248,13 +267,13 @@ struct SleepSettingsPage: View {
                 }
                 .foregroundColor(.textSoftWhite)
                 Spacer()
-                Toggle("", isOn: viewModel.isNotificationOnBinding)
+                Toggle("", isOn: viewModel.isAlarmOnBinding)
                     .tint(Color.accentMediumSkyBlue)
                     .frame(height: 20)
             }
             .contentShape(Rectangle())
-            .opacity(viewModel.notificationPermissionGranted == true ? 1 : 0.2)
-            .disabled(viewModel.notificationPermissionGranted != true)
+            .opacity(isAlarmGranted ? 1 : 0.2)
+            .disabled(!isAlarmGranted)
         }
         .padding(.vertical, 11)
         .padding(.horizontal, 16)

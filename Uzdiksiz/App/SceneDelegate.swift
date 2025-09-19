@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import AlarmKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -45,6 +46,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 )
             }
         }
+        checkAlarmPermission()
     }
-
+    
+    private func checkAlarmPermission() {
+        if #available(iOS 26.0, *) {
+            switch AlarmManager.shared.authorizationState {
+            case .notDetermined:
+                AppState.shared.alarmIsPermitted = false
+            case .denied:
+                AppState.shared.alarmIsPermitted = false
+            case .authorized:
+                AppState.shared.alarmIsPermitted = true
+            @unknown default:
+                AppState.shared.alarmIsPermitted = false
+            }
+        }
+    }
 }

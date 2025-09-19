@@ -40,6 +40,9 @@ final class AppState: ObservableObject {
     var notificationIsPermitted: Bool
     
     @Published
+    var alarmIsPermitted: Bool
+    
+    @Published
     var todaySleptDate: Date?
     
     private var cancellables = Set<AnyCancellable>()
@@ -56,6 +59,7 @@ final class AppState: ObservableObject {
         self.lastAlarmOff = storage.lastAlarmOff
         self.remindInAdvance = storage.remindInAdvance
         self.notificationIsPermitted = false
+        self.alarmIsPermitted = false
         $hasCompletedOnboarding.sink {
             storage.hasCompletedOnboarding = $0
         }.store(in: &cancellables)

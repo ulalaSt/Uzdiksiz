@@ -84,6 +84,46 @@ struct ProfileView: View {
                         .contentShape(Rectangle())
                     }
                 }
+                if #available(iOS 26.0, *), sleepTimeViewModel.alarmPermissionGranted != true {
+                    Button {
+                        sleepTimeViewModel.openAppSettings()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "bell.slash.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                    Text("Оятқышқа рұқсат жоқ")
+                                        .font(.footnote.weight(.semibold))
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .foregroundColor(.textSoftWhite)
+                                Spacer()
+                                HStack(spacing: 8) {
+                                    Text("Параметрлерге өту")
+                                        .font(.caption)
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .foregroundColor(Color.textLightGray)
+                            }
+                            Text("Оятқыш дұрыс жұмыс істеуі үшін қолданбаға оятқышты пайдалану құқығын қосу керек. Параметрлерге кіріп, рұқсат беріңіз.")
+                                .font(.caption)
+                                .foregroundColor(.textLightGray)
+                                .multilineTextAlignment(.leading)
+                                .padding(.leading, 30)
+                        }
+                        .padding(.vertical, 11)
+                        .padding(.horizontal, 16)
+                        .background {
+                            Color.backgroundDeepNavy
+                        }
+                        .cornerRadius(16)
+                        .contentShape(Rectangle())
+                    }
+                }
                 Button {
                     sleepTimeViewModel.openSettings(state: .sleep)
                 } label: {

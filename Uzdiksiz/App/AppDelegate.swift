@@ -8,6 +8,7 @@ import UIKit
 import Firebase
 import GoogleSignIn
 import UserNotifications
+import AlarmKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -30,5 +31,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     AppState.shared.notificationIsPermitted = granted
                 }
             }
+        Task {
+            do {
+                try await checkAlarmPermission()
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
+    private func checkAlarmPermission() async throws {
+        if #available(iOS 26.0, *) {
+            switch AlarmManager.shared.authorizationState {
+            case .notDetermined:
+                let status = try await AlarmManager.shared.requestAuthorization()
+                AppState.shared.alarmIsPermitted = status == .authorized
+            case .denied:
+                AppState.shared.alarmIsPermitted = false
+            case .authorized:
+                AppState.shared.alarmIsPermitted = true
+            @unknown default:
+                AppState.shared.alarmIsPermitted = false
+            }
+        }
     }
 }
