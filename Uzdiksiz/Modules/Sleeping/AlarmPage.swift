@@ -52,9 +52,9 @@ struct AlarmPage: View {
                         }
                     }
                 }
-                Text("Басып тұрыңыз")
-                    .font(.body.weight(.medium))
-                    .foregroundColor(.textSoftWhite)
+//                Text("Ояну үшін басыңыз")
+//                    .font(.body.weight(.medium))
+//                    .foregroundColor(.textSoftWhite)
             }
         }
         .padding()

@@ -39,11 +39,14 @@ struct LongPressButton: View {
             )
             .cornerRadius(12)
             .contentShape(Rectangle()) // make whole area tappable
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in startHolding() }
-                    .onEnded { _ in finishHolding() }
-            )
+            .onTapGesture {
+                action()
+            }
+//            .gesture(
+//                DragGesture(minimumDistance: 0)
+//                    .onChanged { _ in startHolding() }
+//                    .onEnded { _ in finishHolding() }
+//            )
     }
     
     private func startHolding() {
