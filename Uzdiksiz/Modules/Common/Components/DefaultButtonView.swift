@@ -8,6 +8,7 @@ import SwiftUI
 
 struct DefaultButtonView: View {
     var title: String
+    var imageName: String? = nil
     var isLoading: Bool = false
     var state: DefaultButtonType = .primary
     var body: some View {
@@ -16,7 +17,16 @@ struct DefaultButtonView: View {
                 ProgressView()
                     .frame(width: 14, height: 14)
             }
-            Text(title)
+            HStack(spacing: 10) {
+                if let imageName {
+                    Image(systemName: imageName)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                }
+                Text(title)
+            }
         }
         .foregroundColor(state == .primary || state == .tertiary ? .textSoftWhite : .backgroundMidnightBlue)
         .font(.headline.weight(.semibold))

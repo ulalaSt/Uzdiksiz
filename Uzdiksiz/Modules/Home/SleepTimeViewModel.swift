@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import SwiftUI
 import AlarmKit
+import AppIntents
 
 protocol SettingsNavigator: NSObjectProtocol {
     func openSettings(state: SleepSettingsState)
@@ -36,10 +37,15 @@ class SleepTimeViewModel: ObservableObject {
     
     static let sleepNotificationID = "dailySleepNotification"
     static let alarmID = "dailyAlarm"
+    static let snoozeAlarmID = "snoozeAlarm"
     private let alarmDurationSeconds = 300
     private let alarmIntervalSeconds = 5
     var alarmIDs: [String] {
         (0..<(alarmDurationSeconds/alarmIntervalSeconds)).map { "\(Self.alarmID)\($0)" }
+    }
+
+    var snoozeAlarmIDs: [String] {
+        (0..<(alarmDurationSeconds/alarmIntervalSeconds)).map { "\(Self.snoozeAlarmID)\($0)" }
     }
 
     static let quotes: [String] = [
@@ -134,7 +140,7 @@ class SleepTimeViewModel: ObservableObject {
     }
     
     func updateAlarmPermission(_ granted: Bool) {
-        if #available(iOS 26.0, *), granted, self.isAlarmOn {
+        if #available(iOS 26.0, *), granted {
             self.alarmPermissionGranted = granted
             if granted, self.isAlarmOn {
                 self.updateAlarm()
@@ -190,11 +196,20 @@ class SleepTimeViewModel: ObservableObject {
     }
     
     func turnOffAlarm() {
-        AppState.shared.lastAlarmOff = Date()
+        DispatchQueue.main.async {
+            AppState.shared.lastAlarmOff = Date()
+            AppState.shared.snoozeAlarmDate = nil
+        }
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: alarmIDs)
         center.removeDeliveredNotifications(withIdentifiers: alarmIDs)
+        removePendingSnooze()
         print("🔕 Alarm stopped by user")
+    }
+    
+    func removePendingSnooze() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: snoozeAlarmIDs)
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: snoozeAlarmIDs)
     }
     
     func timeLeft(for timeType: SleepSettingsState) -> Time {
@@ -268,6 +283,7 @@ class SleepTimeViewModel: ObservableObject {
     func updateAlarm() {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: alarmIDs)
+        center.removeDeliveredNotifications(withIdentifiers: alarmIDs)
         if #available(iOS 26.0, *) {
             let id = getAlarmID()
             Task {
@@ -288,14 +304,20 @@ class SleepTimeViewModel: ObservableObject {
                         }
                         try AlarmManager.shared.cancel(id: alarm.id)
                     }
+                    let secondaryButton = AlarmButton(text: "Қолданбаны ашу", textColor: .white, systemImageName: "app.fill")
                     let alert = AlarmPresentation.Alert(
                         title: "Uzdiksiz Ерте!",
-                        stopButton: .init(text: "Тоқтату", textColor: .red, systemImageName: "stop.fill")
+                        stopButton: .init(text: "Ояну", textColor: .red, systemImageName: "stop.fill"),
+                        secondaryButton: secondaryButton,
+                        secondaryButtonBehavior: .custom
                     )
                     let presentation = AlarmPresentation(alert: alert)
                     let attributes = AlarmAttributes<CustomAlarmAttributes>(presentation: presentation, metadata: .init(), tintColor: .orange)
                     let schedule = Alarm.Schedule.relative(.init(time: .init(hour: wakeTime.hour, minute: wakeTime.minute), repeats: .weekly([.monday, .tuesday, .thursday, .wednesday, .friday, .saturday, .sunday])))
-                    let config = AlarmManager.AlarmConfiguration(schedule: schedule, attributes: attributes)
+                    let config = AlarmManager.AlarmConfiguration(
+                        schedule: schedule,
+                        attributes: attributes,
+                        secondaryIntent: OpenAppIntent(id: id))
 
                     _ = try await AlarmManager.shared.schedule(id: id, configuration: config)
                     print("ALARM UPDATE \(wakeTime.toString()): UPDATE SUCCESS")
@@ -307,11 +329,7 @@ class SleepTimeViewModel: ObservableObject {
             guard isAlarmOn, notificationPermissionGranted == true else {
                 return
             }
-            var referenceDate = wakeTime.date
-            if referenceDate <= Date() {
-                referenceDate = Calendar.current.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
-            }
-
+            var referenceDate = wakeTime.nextDate
             for (i, id) in alarmIDs.enumerated() {
                 let content = UNMutableNotificationContent()
                 content.title = "Оятқышты өшіру үшін басыңыз"
@@ -345,18 +363,133 @@ class SleepTimeViewModel: ObservableObject {
             return new
         }
     }
+    
+    func getSnoozeAlarmID() -> UUID {
+        let key = "snooze_wake_alarm_id"
+        if let saved = UserDefaults.standard.string(forKey: key),
+           let uuid = UUID(uuidString: saved) {
+            return uuid
+        } else {
+            let new = UUID()
+            UserDefaults.standard.set(new.uuidString, forKey: key)
+            return new
+        }
+    }
 
     func hasToTurnOffAlarm() -> Bool {
-        let wakeStart = AppState.shared.wakeTime.date
-        let wakeEnd = Calendar.current.date(byAdding: .second, value: alarmDurationSeconds, to: AppState.shared.wakeTime.date)!
+        let now = Date()
+        let wakeStart = AppState.shared.wakeTime.lastDate
+        let wakeEnd = Calendar.current.date(byAdding: .second, value: alarmDurationSeconds, to: wakeStart)!
         let lastAlarmOff = AppState.shared.lastAlarmOff
-        
-        let isWithinWindow = (wakeStart ... wakeEnd).contains(Date())
-        let hasNotTurnedOffAlarmToday: Bool = {
+        let snoozeDate = AppState.shared.snoozeAlarmDate
+
+        // --- Check if user is within original alarm window ---
+        let isWithinMainWindow = (wakeStart ... wakeEnd).contains(now)
+        let hasNotTurnedOffMain: Bool = {
             guard let off = lastAlarmOff else { return true }
             return off < wakeStart || off > wakeEnd
         }()
+
+        // --- Check if user is within snooze alarm window ---
+        var isWithinSnoozeWindow = false
+        var hasNotTurnedOffSnooze = true
+        if let snooze = snoozeDate {
+            let snoozeEnd = Calendar.current.date(byAdding: .second, value: alarmDurationSeconds, to: snooze)!
+            isWithinSnoozeWindow = (snooze ... snoozeEnd).contains(now)
+            hasNotTurnedOffSnooze = {
+                guard let off = lastAlarmOff else { return true }
+                return off < snooze || off > snoozeEnd
+            }()
+        }
+
+        // Return true if either main alarm or snooze alarm is active
+        return (isWithinMainWindow && hasNotTurnedOffMain) ||
+               (isWithinSnoozeWindow && hasNotTurnedOffSnooze)
+    }
+}
+
+extension SleepTimeViewModel {
+    func addSnoozeAlarm() {
+        let snoozeTime = Calendar.current.date(byAdding: .minute, value: 5, to: Date()) ?? Date().addingTimeInterval(300)
+        AppState.shared.snoozeAlarmDate = snoozeTime
+        if #available(iOS 26.0, *) {
+            let snoozeID = getSnoozeAlarmID()
+            Task {
+                do {
+                    let snoozeAlarm = try AlarmManager.shared.alarms.first(where: { $0.id == snoozeID })
+                    if let snoozeAlarm {
+                        try AlarmManager.shared.cancel(id: snoozeAlarm.id)
+                        print("ALARM UPDATE SNOOZE\(wakeTime.toString()): DELETE SUCCESS")
+                    }
+                    guard isAlarmOn else { return }
+                    let secondaryButton = AlarmButton(text: "Қолданбаны ашу", textColor: .white, systemImageName: "app.fill")
+                    let alert = AlarmPresentation.Alert(
+                        title: "Uzdiksiz Ерте!",
+                        stopButton: .init(text: "Ояну", textColor: .red, systemImageName: "stop.fill"),
+                        secondaryButton: secondaryButton,
+                        secondaryButtonBehavior: .custom
+                    )
+                    let presentation = AlarmPresentation(alert: alert)
+                    let attributes = AlarmAttributes<CustomAlarmAttributes>(presentation: presentation, metadata: .init(), tintColor: .orange)
+                    let schedule = Alarm.Schedule.fixed(snoozeTime)
+                    let config = AlarmManager.AlarmConfiguration(
+                        schedule: schedule,
+                        attributes: attributes,
+                        secondaryIntent: OpenAppIntent(id: snoozeID))
+
+                    _ = try await AlarmManager.shared.schedule(id: snoozeID, configuration: config)
+                    print("ALARM UPDATE SNOOZE \(wakeTime.toString()): UPDATE SUCCESS")
+                } catch {
+                    print("ALARM UPDATE SNOOZE ERROR:", error.localizedDescription)
+                }
+            }
+        } else {
+            for (i, id) in snoozeAlarmIDs.enumerated() {
+                let content = UNMutableNotificationContent()
+                content.title = "Оятқышты өшіру үшін басыңыз"
+                content.body = "5 минут өтті, оянатын уақыт!"
+                content.interruptionLevel = .critical
+                content.sound = UNNotificationSound(named: UNNotificationSoundName("radar.mp3"))
+                
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(((5 * 60) + (alarmIntervalSeconds * i))), repeats: false)
+                let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+                UNUserNotificationCenter.current().add(request) { error in
+                    if let error = error {
+                        print("ALARM UPDATE SNOOZE ERROR:", error.localizedDescription)
+                    } else {
+                        print("ALARM UPDATE SNOOZE scheduled:", id)
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Shortcut to stop current alarm and snooze
+    func snooze() {
+        turnOffAlarm() // stop current alarm
+        addSnoozeAlarm()
+    }
+}
+
+struct OpenAppIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Қолданбаны ашады"
+    static var openAppWhenRun: Bool = true
+    static var isDiscoverable: Bool = false
+    
+    @Parameter(title: "Alarm ID")
+    var id: String
+    
+    init(id: UUID) {
+        self.id = id.uuidString
+    }
+    
+    init() {
         
-        return isWithinWindow && hasNotTurnedOffAlarmToday
+    }
+    func perform() async throws -> some IntentResult {
+        if let alarmID = UUID(uuidString: id) {
+            print(alarmID)
+        }
+        return .result()
     }
 }

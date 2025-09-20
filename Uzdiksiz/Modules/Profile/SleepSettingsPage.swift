@@ -25,8 +25,8 @@ struct SleepSettingsPage: View {
     
     init(state: SleepSettingsState, viewModel: SleepTimeViewModel) {
         self.state = state
-        self.sleepTimeDate = viewModel.sleepTime.date
-        self.wakeTimeDate = viewModel.wakeTime.date
+        self.sleepTimeDate = viewModel.sleepTime.nextDate
+        self.wakeTimeDate = viewModel.wakeTime.nextDate
         self.viewModel = viewModel
     }
     

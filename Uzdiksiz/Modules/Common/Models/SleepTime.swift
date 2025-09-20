@@ -84,14 +84,38 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
         return parts.joined(separator: " ")
     }
     
-    var date: Date {
+    var nextDate: Date {
         let calendar = Calendar.current
         let now = Date()
         var components = calendar.dateComponents([.year, .month, .day], from: now)
         components.hour = hour
         components.minute = minute
         components.second = 0
-        return calendar.date(from: components) ?? now
+        guard let candidate = calendar.date(from: components) else {
+            return now
+        }
+        // If candidate already passed, take tomorrow
+        if candidate <= now {
+            return calendar.date(byAdding: .day, value: 1, to: candidate) ?? candidate
+        }
+        return candidate
+    }
+
+    var lastDate: Date {
+        let calendar = Calendar.current
+        let now = Date()
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = hour
+        components.minute = minute
+        components.second = 0
+        guard let candidate = calendar.date(from: components) else {
+            return now
+        }
+        // If candidate is in the future, take yesterday
+        if candidate > now {
+            return calendar.date(byAdding: .day, value: -1, to: candidate) ?? candidate
+        }
+        return candidate
     }
     
     var isPositive: Bool {
@@ -108,10 +132,7 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
     
     var timeRemaining: Time {
         let now = Date()
-        var target = AppState.shared.wakeTime.date
-        if now > target { // if already past 5 AM, calculate for next day
-            target = Calendar.current.date(byAdding: .day, value: 1, to: target)!
-        }
+        let target = AppState.shared.wakeTime.nextDate
         let diff = Calendar.current.dateComponents([.hour, .minute], from: now, to: target)
         return Time(hour: diff.hour ?? 0, minute: diff.minute ?? 0)
     }

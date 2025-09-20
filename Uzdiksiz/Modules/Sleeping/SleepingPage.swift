@@ -11,7 +11,9 @@ struct SleepingPage: View {
     @ObservedObject var timeViewModel: SleepTimeViewModel
     @ObservedObject var reportsViewModel: SleepReportViewModel
     @State private var currentTime: Date = Date()
-    
+    @State private var timer: Timer?
+    let sleptDate: Date?
+
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: currentTime)
         switch hour {
@@ -28,38 +30,78 @@ struct SleepingPage: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 16) {
+            VStack(spacing: 24) {
                 Text(greeting)
                     .font(.title3.weight(.semibold))
                     .foregroundColor(.textSoftWhite)
                 Text(currentTime, style: .time)
                     .font(.system(size: 64, weight: .black))
                     .foregroundColor(.textSoftWhite)
+                VStack(spacing: 16) {
+                    HStack(spacing: 16) {
+                        if let sleptTimeString {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Ұйқы уақыты")
+                                    .font(.system(.caption2))
+                                    .foregroundColor(.textLightGray)
+                                HStack(spacing: 4) {
+                                    Image(systemName: "bed.double.fill")
+                                    Text("\(sleptTimeString)")
+                                }
+                                .font(.system(.body).weight(.medium))
+                                .foregroundColor(.textSoftWhite)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
+                            .background {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.backgroundDeepNavy)
+                            }
+                        }
+                        VStack(alignment: sleptTimeString == nil ? .center : .leading, spacing: 8) {
+                            Text("Келесі оятқыш")
+                                .font(.system(sleptTimeString == nil ? .caption : .caption2))
+                                .foregroundColor(.textLightGray)
+                            HStack(spacing: 4) {
+                                Image(systemName: "alarm.fill")
+                                Text("\(nextAlarmString)")
+                            }
+                            .font(.system(sleptTimeString == nil ? .title2 : .body).weight(.medium))
+                            .foregroundColor(.colorsYellow)
+                        }
+                        .frame(maxWidth: .infinity, alignment: sleptTimeString == nil ? .center : .leading)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.backgroundDeepNavy)
+                        }
+                    }
+                    if let nextAlarmRemainingString {
+                        Text("Оянуға ")
+                            .font(.system(.body))
+                            .foregroundColor(.textLightGray)
+                        + Text(nextAlarmRemainingString)
+                            .font(.system(.body).weight(.medium))
+                            .foregroundColor(.textSoftWhite)
+                        + Text(" қалды")
+                            .font(.system(.body))
+                            .foregroundColor(.textLightGray)
+                    } else {
+                        Text("Уақыт өтті")
+                            .font(.system(.body))
+                            .foregroundColor(.textLightGray)
+                    }
+                }
             }
             Image("sleeping_moon")
                 .resizable()
                 .scaledToFit()
                 .padding(32)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            VStack(spacing: 8) {
-                HStack(spacing: 10) {
-                    Image(systemName: "alarm.fill")
-                        .font(.body.weight(.medium))
-                        .foregroundColor(.textSoftWhite)
-                    Text("Оятқыш \(AppState.shared.wakeTime.toString())")
-                        .foregroundColor(.textSoftWhite)
-                        .font(.body.weight(.medium))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Capsule().fill(Color.backgroundDeepNavy))
-                Text(AppState.shared.wakeTime.timeRemaining.toString(isDiff: true))
-                    .font(.caption2)
-                    .foregroundColor(.textLightGray)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(spacing: 10) {
-                LongPressButton(title: "Ояну") {
+                Button {
                     Task {
                         do {
                             try await reportsViewModel.wakeUp()
@@ -68,17 +110,69 @@ struct SleepingPage: View {
                             print("Error waking up\(error)")
                         }
                     }
+                } label: {
+                    DefaultButtonView(title: "Ояну")
                 }
-                Text("Басып тұрыңыз")
-                    .font(.body.weight(.medium))
-                    .foregroundColor(.textSoftWhite)
             }
         }
         .padding()
         .backgroundGradient()
-        .onAppear {
-            Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
-                currentTime = Date()
+        .onAppear { startAdaptiveTimer() }
+        .onDisappear {
+            timer?.invalidate()
+        }
+    }
+    var sleptTimeString: String? {
+        if let sleptDate {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "HH:mm"
+            return dateFormatter.string(from: sleptDate)
+        }
+        return nil
+    }
+    var nextAlarm: Date {
+        if let date = AppState.shared.snoozeAlarmDate, date > currentTime {
+            return date
+        }
+        return AppState.shared.wakeTime.nextDate
+    }
+    
+    var nextAlarmString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: nextAlarm)
+    }
+    
+    var nextAlarmRemainingString: String? {
+        let target = nextAlarm
+        let diff = Int(target.timeIntervalSince(currentTime)) // seconds
+        
+        if diff <= 0 {
+            return nil
+        }
+        
+        let hours = diff / 3600
+        let minutes = (diff % 3600) / 60
+        let seconds = diff % 60
+        
+        if hours > 0 {
+            return "\(hours)сағ \(minutes)мин"
+        } else {
+            return "\(minutes)мин \(seconds)сек"
+        }
+    }
+    
+    private func startAdaptiveTimer() {
+        timer?.invalidate()
+
+        let diff = Int(nextAlarm.timeIntervalSince(Date()))
+        let interval: TimeInterval = (diff > 3600) ? 30 : 1
+
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            currentTime = Date()
+            // Re-check whether we need to switch from minute → second updates
+            if diff > 3600 && nextAlarm.timeIntervalSince(Date()) <= 3600 {
+                startAdaptiveTimer()
             }
         }
     }

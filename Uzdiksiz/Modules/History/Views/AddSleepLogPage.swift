@@ -35,12 +35,12 @@ struct AddSleepLogPage: View {
         switch state {
         case .edit(let sleepSession):
             self._date = .init(initialValue: sleepSession.report?.date ?? Date())
-            self._sleepTime = .init(initialValue: sleepSession.startTime.date)
-            self._wakeTime = .init(initialValue: sleepSession.endTime.date)
+            self._sleepTime = .init(initialValue: sleepSession.startTime.nextDate)
+            self._wakeTime = .init(initialValue: sleepSession.endTime.nextDate)
         case .add(let date):
             self._date = .init(initialValue: date)
-            self._sleepTime = .init(initialValue: Time.twentyTwo.date)
-            self._wakeTime = .init(initialValue: Time.five.date)
+            self._sleepTime = .init(initialValue: Time.twentyTwo.nextDate)
+            self._wakeTime = .init(initialValue: Time.five.nextDate)
         }
         self.onSave = onSave
     }

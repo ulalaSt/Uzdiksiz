@@ -28,6 +28,6 @@ final class AlarmCoordinator: Coordinator {
     }
 
     func stop() {
-        // Cleanup if needed
+        navigationController.dismiss(animated: false, completion: nil)
     }
 }

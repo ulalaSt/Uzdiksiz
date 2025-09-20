@@ -13,21 +13,24 @@ final class SleepingCoordinator: Coordinator {
     let sleepLogViewModel: SleepLogViewModel
     let sleepReportViewModel: SleepReportViewModel
     let sleepTimeViewModel: SleepTimeViewModel
-    init(navigationController: UINavigationController, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel, sleepTimeViewModel: SleepTimeViewModel) {
+    let sleptDate: Date?
+    init(navigationController: UINavigationController, sleepLogViewModel: SleepLogViewModel, sleepReportViewModel: SleepReportViewModel, sleepTimeViewModel: SleepTimeViewModel, sleptDate: Date?) {
         self.navigationController = navigationController
         self.sleepLogViewModel = sleepLogViewModel
         self.sleepReportViewModel = sleepReportViewModel
         self.sleepTimeViewModel = sleepTimeViewModel
+        self.sleptDate = sleptDate
     }
 
     func start() {
-        let sleepingView = SleepingPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel)
+        let sleepingView = SleepingPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel, sleptDate: sleptDate)
         let viewController = UIHostingController(rootView: sleepingView)
         viewController.modalPresentationStyle = .fullScreen
         navigationController.present(viewController, animated: false, completion: nil)
     }
 
     func stop() {
+        navigationController.dismiss(animated: false)
         // Cleanup if needed
     }
 }

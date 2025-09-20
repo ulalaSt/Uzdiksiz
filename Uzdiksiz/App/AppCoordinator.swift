@@ -35,17 +35,29 @@ final class AppCoordinator: NSObject, SettingsNavigator, SleepReportsNavigator {
         super.init()
         sleepTimeViewModel.coordinator = self
         sleepReportViewModel.coordinator = self
+        navigationController.view.backgroundColor = .backgroundMidnightBlue
     }
 
     func start() {
         switchFlow()
-        Publishers.CombineLatest4(AppState.shared.$hasCompletedOnboarding, AppState.shared.$hasCompletedInfoSections, AppState.shared.$todaySleptDate, AppState.shared.$lastAlarmOff)
+        let paramsOne = Publishers
+            .CombineLatest3(AppState.shared.$hasCompletedOnboarding, AppState.shared.$hasCompletedInfoSections, AppState.shared.$todaySleptDate)
             .removeDuplicates { lhs, rhs in
-                lhs.0 == rhs.0 && lhs.1 == rhs.1 && lhs.2 == rhs.2 && lhs.3 == rhs.3
+                lhs.0 == rhs.0 && lhs.1 == rhs.1 && lhs.2 == rhs.2
             }
+
+        let paramsTwo = Publishers
+            .CombineLatest(AppState.shared.$lastAlarmOff, AppState.shared.$snoozeAlarmDate)
+            .removeDuplicates { lhs, rhs in
+                lhs.0 == rhs.0 && lhs.1 == rhs.1
+            }
+
+        
+
+        paramsOne.combineLatest(paramsTwo)
             .receive(on: DispatchQueue.main)
             .dropFirst()
-            .sink { [weak self] hasCompletedOnboarding, hasCompletedInfoSections, sleptDate, _ in
+            .sink { [weak self] _, _ in
                 self?.switchFlow()
             }
             .store(in: &cancellables)
@@ -77,8 +89,8 @@ final class AppCoordinator: NSObject, SettingsNavigator, SleepReportsNavigator {
         if AppState.shared.hasCompletedOnboarding {
             if sleepTimeViewModel.hasToTurnOffAlarm() {
                 coordinator = AlarmCoordinator(navigationController: navigationController, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: sleepTimeViewModel)
-            } else if let _ = AppState.shared.todaySleptDate {
-                coordinator = SleepingCoordinator(navigationController: navigationController, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: sleepTimeViewModel)
+            } else if AppState.shared.snoozeAlarmDate != nil || AppState.shared.todaySleptDate != nil {
+                coordinator = SleepingCoordinator(navigationController: navigationController, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: sleepTimeViewModel, sleptDate: AppState.shared.todaySleptDate)
             } else {
                 coordinator = MainTabBarCoordinator(navigationController: navigationController, authViewModel: authViewModel, sleepLogViewModel: sleepLogViewModel, sleepReportViewModel: sleepReportViewModel, timeViewModel: sleepTimeViewModel)
             }

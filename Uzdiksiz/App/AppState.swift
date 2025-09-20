@@ -34,6 +34,9 @@ final class AppState: ObservableObject {
     var lastAlarmOff: Date?
 
     @Published
+    var snoozeAlarmDate: Date?
+
+    @Published
     var remindInAdvance: Time
     
     @Published
@@ -60,6 +63,7 @@ final class AppState: ObservableObject {
         self.remindInAdvance = storage.remindInAdvance
         self.notificationIsPermitted = false
         self.alarmIsPermitted = false
+        self.snoozeAlarmDate = storage.snoozeAlarmDate
         $hasCompletedOnboarding.sink {
             storage.hasCompletedOnboarding = $0
         }.store(in: &cancellables)
@@ -86,6 +90,10 @@ final class AppState: ObservableObject {
         
         $lastAlarmOff.sink {
             storage.lastAlarmOff = $0
+        }.store(in: &cancellables)
+        
+        $snoozeAlarmDate.sink {
+            storage.snoozeAlarmDate = $0
         }.store(in: &cancellables)
         
         $remindInAdvance.sink {

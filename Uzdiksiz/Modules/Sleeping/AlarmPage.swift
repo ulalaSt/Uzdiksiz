@@ -11,6 +11,7 @@ struct AlarmPage: View {
     @ObservedObject var timeViewModel: SleepTimeViewModel
     @ObservedObject var reportsViewModel: SleepReportViewModel
     @State private var currentTime: Date = Date()
+    @State private var isLoading: Bool = false
     
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: currentTime)
@@ -42,15 +43,23 @@ struct AlarmPage: View {
                 .padding(32)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(spacing: 10) {
-                LongPressButton(title: "Ояну") {
+                Button {
+                    timeViewModel.snooze()
+                } label: {
+                    DefaultButtonView(title: "5 минутқа жылжыту", state: .secondary)
+                }
+                Button {
+                    isLoading = true
                     Task {
                         do {
                             try await reportsViewModel.wakeUp()
-                            timeViewModel.turnOffAlarm()
                         } catch {
                             print("Error waking up\(error)")
                         }
+                        timeViewModel.turnOffAlarm()
                     }
+                } label: {
+                    DefaultButtonView(title: "Ояндым", isLoading: isLoading, state: .primary)
                 }
 //                Text("Ояну үшін басыңыз")
 //                    .font(.body.weight(.medium))
