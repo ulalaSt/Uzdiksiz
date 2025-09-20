@@ -39,7 +39,9 @@ struct HomePage: View {
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .backgroundGradient(ignoring: .all)
+        .navigationBarTitle("")
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
     }
         
     func button(title: String, titleIcon: String, titleIconColor: Color, mainInfo: String, description: String) -> some View {

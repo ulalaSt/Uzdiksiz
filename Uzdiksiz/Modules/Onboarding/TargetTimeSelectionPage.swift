@@ -57,7 +57,9 @@ struct TargetTimeSelectionPage: View {
             .padding(.horizontal, 32)
         }
         .backgroundGradient()
+        .navigationBarTitle("")
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
     }
     
     func content(for state: SelectionState) -> some View {

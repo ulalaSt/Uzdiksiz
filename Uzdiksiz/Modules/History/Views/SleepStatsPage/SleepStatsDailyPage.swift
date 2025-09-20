@@ -71,7 +71,9 @@ struct SleepStatsDailyPage: View {
         .padding(.top, 16)
         .padding(.bottom, 32)
         .backgroundGradient(ignoring: .all)
+        .navigationBarTitle("")
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
     }
     
     func pageContent(for date: Date) -> some View {

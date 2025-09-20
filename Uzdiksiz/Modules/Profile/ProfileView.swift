@@ -156,7 +156,9 @@ struct ProfileView: View {
             .padding(.horizontal, 24)
         }
         .backgroundGradient(ignoring: .all)
+        .navigationBarTitle("")
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
     }
     
     private var totalSleepReports: Int {

@@ -110,7 +110,9 @@ struct OnboardingPage: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .backgroundGradient()
+        .navigationBarTitle("")
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
         .allowsHitTesting(showTitle)
     }
     
