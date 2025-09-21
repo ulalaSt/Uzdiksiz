@@ -12,6 +12,7 @@ struct SleepStatsDailyPage: View {
     @State private var currentDate: Date
     @State private var deletionState: Loadable<Void> = .notRequested
     @ObservedObject var viewModel: SleepReportViewModel
+    @EnvironmentObject var appState: AppState
     var onShowGraph: () -> Void
     var onAddSleep: (Date) -> Void
 
@@ -84,27 +85,35 @@ struct SleepStatsDailyPage: View {
                     $0.report?.id == report?.id
                 })
                 VStack(alignment: .leading, spacing: 16) {
+                    let streak = streakEndingOn(date: date)
                     HStack(alignment: .center, spacing: 0) {
-                        Text("Ұйқы сапасы")
-                            .font(.title3.weight(.bold))
-                            .foregroundColor(.textLightGray)
-                        Spacer()
-                        let streak = streakEndingOn(date: date)
-                        if streak > 1 {
-                            HStack(spacing: 3) {
-                                Text("\(streak) күн қатар")
-                                    .font(.footnote.weight(.medium))
+                        HStack(spacing: 3) {
+                            if streak > 1 {
                                 Image("lightning")
                                     .resizable()
                                     .renderingMode(.template)
                                     .scaledToFit()
-                                    .frame(width: 12, height: 15)
+                                    .frame(width: 16, height: 19)
                             }
-                            .foregroundStyle(
-                                LinearGradient(colors: [.softSkyBlue,.softPurple, .vividMagenta], startPoint: .bottomLeading, endPoint: .topTrailing)
-                            )
+                            Text("Ұйқы сапасы")
+                                .font(.title3.weight(.bold))
+                        }
+                        Spacer()
+                        if streak > 1 {
+                            Text("\(streak) күн қатар")
+                                .font(.footnote.weight(.medium))
                         }
                     }
+                    .modify({ view in
+                        if streak > 1 {
+                            view
+                                .foregroundStyle(LinearGradient(colors: [.softSkyBlue,.softPurple, .vividMagenta], startPoint: .bottomLeading, endPoint: .topTrailing)
+                                )
+                        } else {
+                            view
+                                .foregroundStyle(Color.textLightGray)
+                        }
+                    })
                     .padding(.horizontal, 8)
                     HStack(alignment: .top, spacing: 10) {
                         qualityBar(for: report)
@@ -124,7 +133,15 @@ struct SleepStatsDailyPage: View {
                             } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title3.weight(.bold))
+                                    .frame(width: 24, height: 24)
+                                    .modify({ view in
+                                        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                                            view.glassEffect(in: .circle)
+                                        }
+                                    })
+                                    .frame(width: 44, height: 44)
                                     .foregroundColor(Color.textSoftWhite)
+                                    .contentShape(.rect)
                             }
                         }
                         .padding(.horizontal, 8)
@@ -162,10 +179,7 @@ struct SleepStatsDailyPage: View {
                                 }
                             }
                             .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.backgroundDeepNavy)
-                            )
+                            .glassBackground()
                             ForEach(Array(sessions)) { session in
                                 let isNap = session.minutesDuration < 30
                                 HStack(spacing: 8) {
@@ -200,11 +214,7 @@ struct SleepStatsDailyPage: View {
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color.backgroundDeepNavy)
-                                )
-
+                                .glassBackground()
                             }
                         }
 //                        journaling
@@ -330,8 +340,12 @@ struct SleepStatsDailyPage: View {
         }
         .padding(10)
         .background {
-            Circle()
-                .fill(Color.white.opacity(0.05))
+            if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                Color.clear.glassEffect(.clear, in: .circle)
+            } else {
+                Circle()
+                    .fill(Color.white.opacity(0.05))
+            }
         }
     }
     

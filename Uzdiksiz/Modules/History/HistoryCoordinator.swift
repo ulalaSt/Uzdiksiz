@@ -24,7 +24,7 @@ final class HistoryCoordinator: Coordinator {
             self?.navigateToTrends()
         }, onAddSleep: {[weak self] date in
             self?.showAddSleep(date: date)
-        }))
+        }).environmentObject(AppState.shared))
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }

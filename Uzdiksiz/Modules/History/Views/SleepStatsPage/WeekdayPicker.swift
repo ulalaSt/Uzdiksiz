@@ -9,7 +9,7 @@ import SwiftUI
 struct WeekdayPicker: View {
     @Binding var selectedDate: Date
     var progressForDate: (Date) -> Int
-
+    @EnvironmentObject var appState: AppState
     private let calendar = Calendar.current
     private var today: Date { Date() }
 
@@ -125,28 +125,35 @@ struct WeekdayPicker: View {
                 }
                 .padding(4)
                 .contentShape(Rectangle())
-                .background {
+                .modify({ view in
                     if isSelected {
-                        RoundedRectangle(cornerRadius: 8)
-                            .modify({ shape in
-                                if progress == 100 {
-                                    shape.stroke(
-                                        LinearGradient(
-                                            colors: [.softSkyBlue,.softPurple, .vividMagenta],
-                                            startPoint: .bottomLeading,
-                                            endPoint: .topTrailing),
-                                        style: StrokeStyle(lineWidth: 0.5)
-                                    )
-                                } else {
-                                    shape
-                                        .stroke(Color.accentMediumSkyBlue, lineWidth: 0.5)
-                                }
-                            })
-                            .padding(0.25)
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(.white.opacity(0.1))
+                        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                            view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 8))
+                        } else {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .modify({ shape in
+                                        if progress == 100 {
+                                            shape.stroke(
+                                                LinearGradient(
+                                                    colors: [.softSkyBlue,.softPurple, .vividMagenta],
+                                                    startPoint: .bottomLeading,
+                                                    endPoint: .topTrailing),
+                                                style: StrokeStyle(lineWidth: 0.5)
+                                            )
+                                        } else {
+                                            shape
+                                                .stroke(Color.accentMediumSkyBlue, lineWidth: 0.5)
+                                        }
+                                    })
+                                    .padding(0.25)
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.white.opacity(0.1))
+                                view
+                            }
+                        }
                     }
-                }
+                })
                 .onTapGesture {
                     selectedDate = date
                 }

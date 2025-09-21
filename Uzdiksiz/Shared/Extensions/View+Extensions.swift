@@ -27,3 +27,30 @@ extension View {
         }
     }
 }
+
+struct GlassBackgroundModifier<S: Shape>: ViewModifier {
+    @EnvironmentObject private var appState: AppState
+    
+    var shape: S
+    var fallbackColor: Color
+    
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+            content
+                .glassEffect(.clear, in: shape)
+        } else {
+            content
+                .background(fallbackColor)
+                .clipShape(shape)
+        }
+    }
+}
+
+extension View {
+    func glassBackground<S: Shape>(
+        _ shape: S = RoundedRectangle(cornerRadius: 16),
+        fallbackColor: Color = .backgroundDeepNavy
+    ) -> some View {
+        self.modifier(GlassBackgroundModifier(shape: shape, fallbackColor: fallbackColor))
+    }
+}
