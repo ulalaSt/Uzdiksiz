@@ -50,7 +50,7 @@ class SleepSessionDbService {
         var start = startHour * 60 + startMinute
         let end = endHour * 60 + endMinute
 
-        if end <= start {
+        if end < start {
             start -= 24 * 60 // push start into "yesterday"
         }
 

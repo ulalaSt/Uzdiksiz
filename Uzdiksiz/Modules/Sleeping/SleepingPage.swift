@@ -12,6 +12,8 @@ struct SleepingPage: View {
     @ObservedObject var reportsViewModel: SleepReportViewModel
     @State private var currentTime: Date = Date()
     @State private var timer: Timer?
+    @State private var showShortSleepDialog = false
+
     let sleptDate: Date?
 
     private var greeting: String {
@@ -96,12 +98,16 @@ struct SleepingPage: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(spacing: 10) {
                 DefaultButtonView(title: "Ояну") {
-                    Task {
-                        do {
-                            try await reportsViewModel.wakeUp()
-                            timeViewModel.turnOffAlarm()
-                        } catch {
-                            print("Error waking up\(error)")
+                    if let sleptDate, Date().timeIntervalSince(sleptDate) < 600 {
+                        showShortSleepDialog = true
+                    } else {
+                        Task {
+                            do {
+                                try await reportsViewModel.wakeUp()
+                                timeViewModel.turnOffAlarm()
+                            } catch {
+                                print("Error waking up\(error)")
+                            }
                         }
                     }
                 }
@@ -110,6 +116,24 @@ struct SleepingPage: View {
         .padding()
         .backgroundGradient()
         .onAppear { startAdaptiveTimer() }
+        .confirmationDialog("Ұйқы уақыты тым аз", isPresented: $showShortSleepDialog, titleVisibility: .visible) {
+            Button("Қысқа ұйқы ретінде сақтау") {
+                Task {
+                    do {
+                        try await reportsViewModel.wakeUp()
+                        timeViewModel.turnOffAlarm()
+                    } catch {
+                        print("Error waking up short sleep: \(error)")
+                    }
+                }
+            }
+            Button("Ұйқыны өткізіп жіберу", role: .destructive) {
+                AppState.shared.todaySleptDate = nil
+                timeViewModel.turnOffAlarm()
+            }
+            Button("Болдырмау", role: .cancel) {}
+        }
+
         .onDisappear {
             timer?.invalidate()
         }

@@ -44,8 +44,5 @@ struct CalendarPopoverButton: View {
             .preferredColorScheme(.dark)
             .presentationCompactAdaptation(.popover)
         }
-        .onChange(of: selectedDate) { new in
-            print("Selected date: \(new)")
-        }
     }
 }
