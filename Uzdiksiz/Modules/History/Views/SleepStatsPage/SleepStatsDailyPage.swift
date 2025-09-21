@@ -342,14 +342,7 @@ struct SleepStatsDailyPage: View {
                 .rotationEffect(.degrees(-90)) // start from top
         }
         .padding(10)
-        .background {
-            if #available(iOS 26, *), appState.isGlassEffectEnabled {
-                Color.clear.glassEffect(.clear, in: .circle)
-            } else {
-                Circle()
-                    .fill(Color.white.opacity(0.05))
-            }
-        }
+        .glassBackground(Circle(), fallbackColor: Color.white.opacity(0.05))
     }
     
     func sleepInfo(for report: SleepReport?, sessions: [SleepSession]?, date: Date) -> some View {

@@ -128,7 +128,9 @@ struct ProfileView: View {
                 }
                 VStack(spacing: 12) {
                     sleepSettingsCell
-                    glassEffectToggle
+                    if #available(iOS 26, *) {
+                        glassEffectToggle
+                    }
                 }
                 // Glass effect toggle
             }

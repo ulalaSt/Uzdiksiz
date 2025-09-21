@@ -35,7 +35,7 @@ struct GlassBackgroundModifier<S: Shape>: ViewModifier {
     var fallbackColor: Color
     
     func body(content: Content) -> some View {
-        if #available(iOS 26, *), appState.isGlassEffectEnabled ?? false {
+        if #available(iOS 26, *), appState.isGlassEffectEnabled {
             content
                 .glassEffect(.clear, in: shape)
         } else {
