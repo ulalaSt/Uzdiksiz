@@ -14,7 +14,7 @@ struct SleepCircleView: View {
     @State private var isDragging = false
     @State private var sleepTime: Time
     @State private var wakeTime: Time
-    @StateObject private var appState = AppState.shared
+    @EnvironmentObject private var appState: AppState
 
     let minDurationMinutes = 60    // 1h
     let maxDurationMinutes = 20*60 // 20h

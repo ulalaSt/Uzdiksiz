@@ -54,10 +54,7 @@ struct SleepingPage: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 12)
                             .padding(.horizontal, 16)
-                            .background {
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.backgroundDeepNavy)
-                            }
+                            .glassBackground()
                         }
                         VStack(alignment: sleptTimeString == nil ? .center : .leading, spacing: 8) {
                             Text("Келесі оятқыш")
@@ -73,10 +70,7 @@ struct SleepingPage: View {
                         .frame(maxWidth: .infinity, alignment: sleptTimeString == nil ? .center : .leading)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
-                        .background {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.backgroundDeepNavy)
-                        }
+                        .glassBackground()
                     }
                     if let nextAlarmRemainingString {
                         Text("Оянуға ")

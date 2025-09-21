@@ -18,7 +18,7 @@ final class HomeCoordinator: Coordinator {
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: HomePage(viewModel: timeViewModel))
+        let viewController = UIHostingController(rootView: HomePage(viewModel: timeViewModel).injectAppState())
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }

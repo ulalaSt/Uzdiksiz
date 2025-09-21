@@ -130,27 +130,28 @@ struct WeekdayPicker: View {
                         if #available(iOS 26, *), appState.isGlassEffectEnabled {
                             view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 8))
                         } else {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .modify({ shape in
-                                        if progress == 100 {
-                                            shape.stroke(
-                                                LinearGradient(
-                                                    colors: [.softSkyBlue,.softPurple, .vividMagenta],
-                                                    startPoint: .bottomLeading,
-                                                    endPoint: .topTrailing),
-                                                style: StrokeStyle(lineWidth: 0.5)
-                                            )
-                                        } else {
-                                            shape
-                                                .stroke(Color.accentMediumSkyBlue, lineWidth: 0.5)
-                                        }
-                                    })
-                                    .padding(0.25)
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.white.opacity(0.1))
-                                view
-                            }
+                            view
+                                .background {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .modify({ shape in
+                                            if progress == 100 {
+                                                shape.stroke(
+                                                    LinearGradient(
+                                                        colors: [.softSkyBlue,.softPurple, .vividMagenta],
+                                                        startPoint: .bottomLeading,
+                                                        endPoint: .topTrailing),
+                                                    style: StrokeStyle(lineWidth: 0.5)
+                                                )
+                                            } else {
+                                                shape
+                                                    .stroke(Color.accentMediumSkyBlue, lineWidth: 0.5)
+                                            }
+                                        })
+                                        .padding(0.25)
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(.white.opacity(0.1))
+
+                                }
                         }
                     }
                 })

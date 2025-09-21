@@ -12,7 +12,7 @@ struct ProfileView: View {
     @ObservedObject var sleepReportViewModel: SleepReportViewModel
     @ObservedObject var sleepTimeViewModel: SleepTimeViewModel
     @State private var showComingSoon = false
-    @StateObject private var appState = AppState.shared
+    @EnvironmentObject private var appState: AppState
 
     var body: some View {
         ScrollView {
@@ -83,17 +83,7 @@ struct ProfileView: View {
                         }
                         .padding(.vertical, 11)
                         .padding(.horizontal, 16)
-                        .modify({ view in
-                            if #available(iOS 26, *), appState.isGlassEffectEnabled {
-                                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
-                            } else {
-                                view
-                                    .background {
-                                        Color.backgroundDeepNavy
-                                    }
-                                    .cornerRadius(16)
-                            }
-                        })
+                        .glassBackground()
                         .contentShape(Rectangle())
                     }
                 }
@@ -132,17 +122,7 @@ struct ProfileView: View {
                         }
                         .padding(.vertical, 11)
                         .padding(.horizontal, 16)
-                        .modify({ view in
-                            if #available(iOS 26, *), appState.isGlassEffectEnabled {
-                                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
-                            } else {
-                                view
-                                    .background {
-                                        Color.backgroundDeepNavy
-                                    }
-                                    .cornerRadius(16)
-                            }
-                        })
+                        .glassBackground()
                         .contentShape(Rectangle())
                     }
                 }
@@ -219,17 +199,7 @@ struct ProfileView: View {
         .foregroundColor(.textSoftWhite)
         .frame(height: 44)
         .padding(.horizontal, 16)
-        .modify({ view in
-            if #available(iOS 26, *), appState.isGlassEffectEnabled {
-                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
-            } else {
-                view
-                    .background {
-                        Color.backgroundDeepNavy
-                    }
-                    .cornerRadius(16)
-            }
-        })
+        .glassBackground()
         .contentShape(Rectangle())
         .onTapGesture {
             sleepTimeViewModel.openSettings(state: .sleep)
@@ -253,17 +223,7 @@ struct ProfileView: View {
         }
         .frame(height: 44)
         .padding(.horizontal, 16)
-        .modify({ view in
-            if #available(iOS 26, *), appState.isGlassEffectEnabled {
-                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
-            } else {
-                view
-                    .background {
-                        Color.backgroundDeepNavy
-                    }
-                    .cornerRadius(16)
-            }
-        })
+        .glassBackground()
         .contentShape(Rectangle())
     }
 }

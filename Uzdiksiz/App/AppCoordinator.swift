@@ -104,7 +104,7 @@ final class AppCoordinator: NSObject, SettingsNavigator, SleepReportsNavigator {
     func openSettings(state: SleepSettingsState) {
         let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: sleepTimeViewModel, onDismiss: { [weak self] in
             self?.navigationController.setNavigationBarHidden(true, animated: false)
-        }))
+        }).injectAppState())
         navigationController.pushViewController(viewController, animated: true)
         navigationController.setNavigationBarHidden(true, animated: false)
         navigationController.setNavigationBarHidden(false, animated: false)
@@ -117,9 +117,15 @@ final class AppCoordinator: NSObject, SettingsNavigator, SleepReportsNavigator {
                     sessionID: session.id,
                     startTime: start,
                     endTime: end)
-            })
+            }).injectAppState()
         )
         viewController.view.backgroundColor = .clear
         navigationController.present(viewController, animated: true)
+    }
+}
+
+extension View {
+    func injectAppState(_ appState: AppState = .shared) -> some View {
+        self.environmentObject(appState)
     }
 }

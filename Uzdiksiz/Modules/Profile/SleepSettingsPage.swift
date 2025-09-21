@@ -13,6 +13,7 @@ struct SleepSettingsPage: View {
     @State var wakeTimeDate: Date
     @State private var showAdvanceSheet = false
     @Environment(\.dismiss) var dismiss
+    @Namespace var namespace
     var onDismiss: () -> Void
     var wakeTime: Time {
         convertToTime(wakeTimeDate)
@@ -211,10 +212,7 @@ struct SleepSettingsPage: View {
         }
         .padding(.vertical, 11)
         .padding(.horizontal, 16)
-        .background {
-            Color.backgroundDeepNavy
-        }
-        .cornerRadius(16)
+        .glassBackground()
     }
     
     var alarmSection: some View {
@@ -252,10 +250,6 @@ struct SleepSettingsPage: View {
                     }
                     .padding(.vertical, 11)
                     .padding(.horizontal, 16)
-                    .background {
-                        Color.backgroundDeepNavy
-                    }
-                    .cornerRadius(16)
                     .contentShape(Rectangle())
                 }
             }
@@ -280,10 +274,7 @@ struct SleepSettingsPage: View {
         }
         .padding(.vertical, 11)
         .padding(.horizontal, 16)
-        .background {
-            Color.backgroundDeepNavy
-        }
-        .cornerRadius(16)
+        .glassBackground()
     }
     
     var selector: some View {
@@ -302,13 +293,15 @@ struct SleepSettingsPage: View {
                         .contentShape(Rectangle())
                         .background {
                             if state == sleepState {
-                                Capsule().fill(Color.primaryOceanBlue)
+                                Capsule()
+                                    .fill(Color.primaryOceanBlue)
+                                    .matchedGeometryEffect(id: "selector", in: namespace)
                             }
                         }
                 }
             }
         }
-        .background(Capsule().fill(.white.opacity(0.1)))
+        .glassBackground(.capsule, fallbackColor: .white.opacity(0.1))
     }
     
     func convertToTime(_ date: Date) -> Time {

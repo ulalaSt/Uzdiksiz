@@ -23,7 +23,7 @@ final class SleepingCoordinator: Coordinator {
     }
 
     func start() {
-        let sleepingView = SleepingPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel, sleptDate: sleptDate)
+        let sleepingView = SleepingPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel, sleptDate: sleptDate).injectAppState()
         let viewController = UIHostingController(rootView: sleepingView)
         viewController.modalPresentationStyle = .fullScreen
         navigationController.present(viewController, animated: false, completion: nil)

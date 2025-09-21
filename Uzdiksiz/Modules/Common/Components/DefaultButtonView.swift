@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct DefaultButtonView: View {
-    @StateObject var appState: AppState = .shared
+    @EnvironmentObject private var appState: AppState
     var title: String
     var imageName: String? = nil
     var isLoading: Bool = false
@@ -15,7 +15,7 @@ struct DefaultButtonView: View {
     var onTap: () -> Void
     var body: some View {
         if #available(iOS 26, *), appState.isGlassEffectEnabled {
-            DefaultGlassButton(title: "Қазір ұйықтау") {
+            DefaultGlassButton(title: title) {
                 onTap()
             }
         } else {

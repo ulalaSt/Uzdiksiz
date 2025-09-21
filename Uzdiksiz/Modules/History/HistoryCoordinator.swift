@@ -24,7 +24,7 @@ final class HistoryCoordinator: Coordinator {
             self?.navigateToTrends()
         }, onAddSleep: {[weak self] date in
             self?.showAddSleep(date: date)
-        }).environmentObject(AppState.shared))
+        }).injectAppState())
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }
@@ -40,14 +40,14 @@ final class HistoryCoordinator: Coordinator {
                         endTime: wakeTime
                     )
                 }
-            )
+            ).injectAppState()
         )
         viewController.view.backgroundColor = .clear
         navigationController.present(viewController, animated: true)
     }
 
     func navigateToTrends() {
-        let viewController = UIHostingController(rootView: SleepStatsTrendsPage(viewModel: sleepReportViewModel))
+        let viewController = UIHostingController(rootView: SleepStatsTrendsPage(viewModel: sleepReportViewModel).injectAppState())
         viewController.view.backgroundColor = .clear
         navigationController.pushViewController(viewController, animated: true)
     }

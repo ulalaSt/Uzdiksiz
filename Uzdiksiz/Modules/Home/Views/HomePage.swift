@@ -9,8 +9,8 @@ import SwiftUI
 
 struct HomePage: View {
     @ObservedObject var viewModel: SleepTimeViewModel
-    @StateObject private var appState = AppState.shared
-    
+    @EnvironmentObject private var appState: AppState
+
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text(viewModel.todayString())

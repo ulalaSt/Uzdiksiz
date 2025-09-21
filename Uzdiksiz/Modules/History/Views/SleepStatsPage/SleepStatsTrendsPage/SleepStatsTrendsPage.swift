@@ -154,7 +154,7 @@ struct SleepStatsTrendsPage: View {
                     }
             }
         }
-        .background(Capsule().fill(.white.opacity(0.1)))
+        .glassBackground(.capsule, fallbackColor: .white.opacity(0.1))
     }
     
     @ViewBuilder

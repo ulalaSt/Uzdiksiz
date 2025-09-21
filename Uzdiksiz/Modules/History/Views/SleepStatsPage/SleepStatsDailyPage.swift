@@ -189,6 +189,11 @@ struct SleepStatsDailyPage: View {
                                         .font(.title3.weight(.bold))
                                         .foregroundColor(Color.textSoftWhite)
                                     Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .glassBackground()
+                                .overlay(alignment: .trailing, content: {
                                     Menu {
                                         Button {
                                             viewModel.editSleepSessionTapped(session: session)
@@ -208,13 +213,11 @@ struct SleepStatsDailyPage: View {
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: 20, height: 20)
+                                            .frame(width: 44, height: 44)
                                             .foregroundColor(.textLightGray)
                                     }
                                     .buttonStyle(.plain)
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
-                                .glassBackground()
+                                })
                             }
                         }
 //                        journaling

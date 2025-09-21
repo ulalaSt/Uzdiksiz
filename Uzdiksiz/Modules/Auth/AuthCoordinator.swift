@@ -27,7 +27,7 @@ class AuthCoordinator: NSObject, Coordinator {
 
     func start() {
         authViewModel.coordinatorDelegate = self
-        let loginView = LoginView(authViewModel: authViewModel)
+        let loginView = LoginView(authViewModel: authViewModel).injectAppState()
         let hostingController = UIHostingController(rootView: loginView)
         navigationController.setViewControllers([hostingController], animated: false)
     }

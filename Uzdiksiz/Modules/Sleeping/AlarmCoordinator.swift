@@ -21,7 +21,7 @@ final class AlarmCoordinator: Coordinator {
     }
 
     func start() {
-        let alarmPage = AlarmPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel)
+        let alarmPage = AlarmPage(timeViewModel: sleepTimeViewModel, reportsViewModel: sleepReportViewModel).injectAppState()
         let viewController = UIHostingController(rootView: alarmPage)
         viewController.modalPresentationStyle = .fullScreen
         navigationController.present(viewController, animated: false, completion: nil)

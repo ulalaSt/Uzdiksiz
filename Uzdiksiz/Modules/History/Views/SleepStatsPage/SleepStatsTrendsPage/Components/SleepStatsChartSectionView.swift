@@ -84,8 +84,7 @@ struct SleepStatsChartSectionView: View {
                         })))
             }
             .padding(16)
-            .background(Color.backgroundDeepNavy)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .glassBackground()
         }
     }
     

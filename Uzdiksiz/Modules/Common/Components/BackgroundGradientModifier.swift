@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BackgroundGradientModifier: ViewModifier {
     var edges: Edge.Set = .all  // default to all edges
-    @StateObject private var appState = AppState.shared
+    @EnvironmentObject private var appState: AppState
 
     func body(content: Content) -> some View {
         if #available(iOS 26, *), appState.isGlassEffectEnabled {

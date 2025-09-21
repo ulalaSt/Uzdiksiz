@@ -30,12 +30,12 @@ extension View {
 
 struct GlassBackgroundModifier<S: Shape>: ViewModifier {
     @EnvironmentObject private var appState: AppState
-    
+
     var shape: S
     var fallbackColor: Color
     
     func body(content: Content) -> some View {
-        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+        if #available(iOS 26, *), appState.isGlassEffectEnabled ?? false {
             content
                 .glassEffect(.clear, in: shape)
         } else {

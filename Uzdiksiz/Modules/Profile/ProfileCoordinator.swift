@@ -20,7 +20,7 @@ final class ProfileCoordinator: Coordinator {
     }
 
     func start() {
-        let viewController = UIHostingController(rootView: ProfileView(sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: sleepTimeViewModel))
+        let viewController = UIHostingController(rootView: ProfileView(sleepReportViewModel: sleepReportViewModel, sleepTimeViewModel: sleepTimeViewModel).injectAppState())
         viewController.view.backgroundColor = .clear
         navigationController.setViewControllers([viewController], animated: false)
     }

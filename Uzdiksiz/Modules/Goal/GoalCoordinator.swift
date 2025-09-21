@@ -24,7 +24,7 @@ final class GoalCoordinator: Coordinator {
             onGoalAdded: { [weak self] goal in
                 self?.handleGoalAdded(goal)
             }
-        )
+        ).injectAppState()
 
         let viewController = UIHostingController(rootView: goalListView)
         navigationController.setViewControllers([viewController], animated: true)
@@ -38,7 +38,7 @@ final class GoalCoordinator: Coordinator {
         let detailView = GoalDetailPage(goal: goal, viewModel: viewModel, onSubGoalTap: { [weak self] goal in
             self?.showGoalDetail(goal: goal)
         })
-        let vc = UIHostingController(rootView: detailView)
+        let vc = UIHostingController(rootView: detailView.injectAppState())
         navigationController.pushViewController(vc, animated: true)
     }
 

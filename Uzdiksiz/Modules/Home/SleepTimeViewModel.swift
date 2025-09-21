@@ -281,7 +281,8 @@ class SleepTimeViewModel: ObservableObject {
                     let config = AlarmManager.AlarmConfiguration(
                         schedule: schedule,
                         attributes: attributes,
-                        secondaryIntent: OpenAppIntent(id: id))
+                        secondaryIntent: OpenAppIntent(id: id),
+                        sound: .named(""))
 
                     _ = try await AlarmManager.shared.schedule(id: id, configuration: config)
                     print("ALARM UPDATE \(wakeTime.toString()): UPDATE SUCCESS")

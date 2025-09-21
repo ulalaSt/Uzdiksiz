@@ -36,7 +36,7 @@ final class OnboardingCoordinator: Coordinator {
             self?.showTimeSelectorPage()
         })
         
-        let vc = UIHostingController(rootView: onboardingView)
+        let vc = UIHostingController(rootView: onboardingView.injectAppState())
         navigationController.setViewControllers([vc], animated: false)
     }
     
@@ -47,7 +47,7 @@ final class OnboardingCoordinator: Coordinator {
             AppState.shared.hasCompletedOnboarding = true
         }
         
-        let vc = UIHostingController(rootView: targetTimeSelectorView)
+        let vc = UIHostingController(rootView: targetTimeSelectorView.injectAppState())
         navigationController.setViewControllers([vc], animated: true)
     }
 
