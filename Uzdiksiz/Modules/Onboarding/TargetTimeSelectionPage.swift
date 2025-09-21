@@ -33,7 +33,7 @@ struct TargetTimeSelectionPage: View {
                 content(for: .sleep).tag(SelectionState.sleep)
                 content(for: .wake).tag(SelectionState.wake)
             }.tabViewStyle(.page)
-            Button {
+            DefaultButtonView(title: "Сақтау", state: .primary) {
                 switch state {
                 case .sleep:
                     withAnimation {
@@ -50,8 +50,6 @@ struct TargetTimeSelectionPage: View {
                     }
                     onFinish(Time(hour: sleepHour, minute: sleepMinute), Time(hour: wakeHour, minute: wakeMinute))
                 }
-            } label: {
-                DefaultButtonView(title: "Сақтау", state: .primary)
             }
             .padding(.bottom, 32)
             .padding(.horizontal, 32)

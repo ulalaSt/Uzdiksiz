@@ -7,41 +7,54 @@
 import SwiftUI
 
 struct DefaultButtonView: View {
+    @StateObject var appState: AppState = .shared
     var title: String
     var imageName: String? = nil
     var isLoading: Bool = false
     var state: DefaultButtonType = .primary
+    var onTap: () -> Void
     var body: some View {
-        HStack(spacing: 4) {
-            if isLoading {
-                ProgressView()
-                    .frame(width: 14, height: 14)
+        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+            DefaultGlassButton(title: "Қазір ұйықтау") {
+                onTap()
             }
-            HStack(spacing: 10) {
-                if let imageName {
-                    Image(systemName: imageName)
-                        .renderingMode(.template)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
+        } else {
+            Button {
+                onTap()
+            } label: {
+                HStack(spacing: 4) {
+                    if isLoading {
+                        ProgressView()
+                            .frame(width: 14, height: 14)
+                    }
+                    HStack(spacing: 10) {
+                        if let imageName {
+                            Image(systemName: imageName)
+                                .renderingMode(.template)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 16, height: 16)
+                        }
+                        Text(title)
+                    }
                 }
-                Text(title)
-            }
-        }
-        .foregroundColor(state == .primary || state == .tertiary ? .textSoftWhite : .backgroundMidnightBlue)
-        .font(.headline.weight(.semibold))
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity)
-        .background {
-            switch state {
-            case .primary:
-                gradientBg
-            case .secondary:
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.textSoftWhite)
-            case .tertiary:
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.1))
+                .foregroundColor(state == .primary || state == .tertiary ? .textSoftWhite : .backgroundMidnightBlue)
+                .font(.headline.weight(.semibold))
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .background {
+                    switch state {
+                    case .primary:
+                        gradientBg
+                    case .secondary:
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.textSoftWhite)
+                    case .tertiary:
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.white.opacity(0.1))
+                    }
+                }
             }
         }
     }
@@ -78,6 +91,23 @@ struct DefaultButtonView: View {
     }
 }
 
+@available(iOS, introduced: 26)
+struct DefaultGlassButton: View {
+    let title: String
+    let onTap: () -> Void
+    var body: some View {
+        Text(title)
+            .foregroundColor(.textSoftWhite)
+            .font(.headline.weight(.semibold))
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .glassEffect(.clear.interactive(), in: RoundedRectangle(cornerRadius: 12))
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
+    }
+}
 enum DefaultButtonType {
     case primary
     case secondary

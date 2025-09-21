@@ -14,6 +14,7 @@ struct SleepCircleView: View {
     @State private var isDragging = false
     @State private var sleepTime: Time
     @State private var wakeTime: Time
+    @StateObject private var appState = AppState.shared
 
     let minDurationMinutes = 60    // 1h
     let maxDurationMinutes = 20*60 // 20h
@@ -33,22 +34,36 @@ struct SleepCircleView: View {
             let radius = size/2
 
             ZStack {
+                if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                    Color.clear
+                        .glassEffect(.clear, in: Circle())
+                        .padding(16)
+                }
                 ClockFaceView(sleepTime: sleepTime, wakeTime: wakeTime, isDragging: isDragging)
                     .padding(16)
-                Circle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 32)
-                // Arc between sleep and wake
-                Path { path in
-                    path.addArc(center: center,
-                                radius: radius,
-                                startAngle: angle(for: sleepTime),
-                                endAngle: angle(for: wakeTime),
-                                clockwise: false)
+                if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                    Circle()
+                        .stroke(Color.black.opacity(0.04), lineWidth: 32)
+                } else {
+                    Circle()
+                        .stroke(Color.white.opacity(0.1), lineWidth: 32)
                 }
-                .stroke(Color.primaryOceanBlue, lineWidth: 32)
-                .frame(width: geo.size.width, height: geo.size.height)
                 Circle()
                     .stroke(RadialGradient(colors: [.black.opacity(0.25), .clear, .clear, .black.opacity(0.25)], center: .center, startRadius: radius - 16, endRadius: radius + 16), lineWidth: 32)
+                if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                    Color.clear
+                        .glassEffect(.clear.tint(.primaryOceanBlue.opacity(0.4)), in: Ring(startAngle: angle(for: sleepTime), endAngle: angle(for: wakeTime), lineWidth: 32))
+                } else {
+                    Path { path in
+                        path.addArc(center: center,
+                                    radius: radius,
+                                    startAngle: angle(for: sleepTime),
+                                    endAngle: angle(for: wakeTime),
+                                    clockwise: false)
+                    }
+                    .stroke(Color.primaryOceanBlue, lineWidth: 32)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                }
                 let currentAngle = angle(for: Time.current)
                 Image(systemName: "figure.walk")
                     .resizable()
@@ -197,23 +212,58 @@ struct SleepCircleView: View {
         return diff
     }
     
+    @ViewBuilder
     private func handle(imageName: String, at angle: Angle, center: CGPoint, radius: CGFloat) -> some View {
-        Circle()
-            .fill(Color.textSoftWhite)
-            .overlay {
-                Circle()
-                    .stroke(Color.primaryOceanBlue.opacity(0.15), lineWidth: 3)
-                    .padding(1.5)
-                Image(systemName: imageName)
-                    .font(.body)
-                    .foregroundColor(Color.primarySapphireBlue)
-            }
-            .frame(width: 40, height: 40)
-            .position(
-                x: center.x + cos(CGFloat(angle.radians)) * radius,
-                y: center.y + sin(CGFloat(angle.radians)) * radius
-            )
-            .shadow(radius: 5)
+        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+            Image(systemName: imageName)
+                .font(.body)
+                .foregroundColor(Color.primarySapphireBlue)
+                .frame(width: 40, height: 40)
+                .glassEffect(.regular.tint(.white).interactive(), in: Circle())
+                .position(
+                    x: center.x + cos(CGFloat(angle.radians)) * radius,
+                    y: center.y + sin(CGFloat(angle.radians)) * radius
+                )
+        } else {
+            Circle()
+                .fill(Color.textSoftWhite)
+                .overlay {
+                    Circle()
+                        .stroke(Color.primaryOceanBlue.opacity(0.15), lineWidth: 3)
+                        .padding(1.5)
+                    Image(systemName: imageName)
+                        .font(.body)
+                        .foregroundColor(Color.primarySapphireBlue)
+                }
+                .frame(width: 40, height: 40)
+                .position(
+                    x: center.x + cos(CGFloat(angle.radians)) * radius,
+                    y: center.y + sin(CGFloat(angle.radians)) * radius
+                )
+                .shadow(radius: 5)
+        }
+    }
+}
+
+struct Ring: Shape {
+    var startAngle: Angle = .degrees(0)
+    var endAngle: Angle = .degrees(360)
+    var lineWidth: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let radius = min(rect.width, rect.height) / 2
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+
+        var path = Path()
+        path.addArc(center: center,
+                    radius: radius,
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    clockwise: false)
+
+        return path.strokedPath(.init(lineWidth: lineWidth,
+                                      lineCap: .round,
+                                      lineJoin: .round))
     }
 }
 

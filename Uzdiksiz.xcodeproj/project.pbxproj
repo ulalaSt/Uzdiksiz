@@ -286,7 +286,7 @@
 		62DD3B2A2D8D0FE000B8B088 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppLiquidIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Uzdiksiz/Uzdiksiz.entitlements;
 				CODE_SIGN_STYLE = Automatic;
@@ -319,7 +319,7 @@
 		62DD3B2B2D8D0FE000B8B088 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppLiquidIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Uzdiksiz/Uzdiksiz.entitlements;
 				CODE_SIGN_STYLE = Automatic;

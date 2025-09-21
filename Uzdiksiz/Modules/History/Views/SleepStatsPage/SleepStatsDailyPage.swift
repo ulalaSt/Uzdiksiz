@@ -214,10 +214,8 @@ struct SleepStatsDailyPage: View {
                 .opacity(report == nil ? 0.5 : 1)
             }
             if date <= Date(), report(for: date) == nil {
-                Button {
+                DefaultButtonView(title: "+ Ұйқы қосу", state: .tertiary) {
                     onAddSleep(date)
-                } label: {
-                    DefaultButtonView(title: "+ Ұйқы қосу", state: .tertiary)
                 }
                 .padding(.horizontal, 24)
             }

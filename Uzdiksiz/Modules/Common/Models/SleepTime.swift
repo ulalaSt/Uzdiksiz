@@ -132,8 +132,24 @@ struct Time: Comparable, UserDefaultsRepresentableDecoded {
     
     var timeRemaining: Time {
         let now = Date()
-        let target = AppState.shared.wakeTime.nextDate
-        let diff = Calendar.current.dateComponents([.hour, .minute], from: now, to: target)
+        let diff = Calendar.current.dateComponents([.hour, .minute], from: now, to: nextDate)
         return Time(hour: diff.hour ?? 0, minute: diff.minute ?? 0)
     }
+    
+    var timeRemainingString: String? {
+        let diff = Int(nextDate.timeIntervalSince(Date())) // seconds
+        if diff <= 0 {
+            return nil
+        }
+        let hours = diff / 3600
+        let minutes = (diff % 3600) / 60
+        let seconds = diff % 60
+        
+        if hours > 0 {
+            return "\(hours)сағ \(minutes)мин"
+        } else {
+            return "\(minutes)мин \(seconds)сек"
+        }
+    }
+
 }

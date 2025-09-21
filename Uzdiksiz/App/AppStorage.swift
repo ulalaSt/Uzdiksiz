@@ -37,6 +37,10 @@ class AppStorage {
 
     @DefaultsOptional(AppStorageKeys.todaySleptDate)
     var todaySleptDate: Date?
+    
+    // New setting
+    @Defaults(AppStorageKeys.isGlassEffectEnabled, defaultValue: false)
+    var isGlassEffectEnabled: Bool
 }
 
 enum AppStorageKeys {
@@ -50,4 +54,6 @@ enum AppStorageKeys {
     static let snoozeAlarmDate = "snoozeAlarmDate"
     static let remindInAdvance = "remindInAdvance"
     static let todaySleptDate = "todaySleptDate"
+    static let isGlassEffectEnabled = "isGlassEffectEnabled"
 }
+

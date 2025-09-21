@@ -101,7 +101,7 @@ struct SleepingPage: View {
                 .padding(32)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(spacing: 10) {
-                Button {
+                DefaultButtonView(title: "Ояну") {
                     Task {
                         do {
                             try await reportsViewModel.wakeUp()
@@ -110,8 +110,6 @@ struct SleepingPage: View {
                             print("Error waking up\(error)")
                         }
                     }
-                } label: {
-                    DefaultButtonView(title: "Ояну")
                 }
             }
         }

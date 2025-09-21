@@ -12,6 +12,7 @@ struct ProfileView: View {
     @ObservedObject var sleepReportViewModel: SleepReportViewModel
     @ObservedObject var sleepTimeViewModel: SleepTimeViewModel
     @State private var showComingSoon = false
+    @StateObject private var appState = AppState.shared
 
     var body: some View {
         ScrollView {
@@ -22,11 +23,14 @@ struct ProfileView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 100, height: 100)
-                        Button {
+                            .modify({ view in
+                                if #available(iOS 26, *) {
+                                    view
+                                        .glassEffect(.clear, in: .circle)
+                                }
+                            })
+                        DefaultButtonView(title: "Аккаунт ашу") {
                             showComingSoon = true
-                        } label: {
-                            DefaultButtonView(title: "Аккаунт ашу")
-                                .opacity(0.5)
                         }
                         .alert("Функция әзірленуде", isPresented: $showComingSoon) {
                             Button("Жақсы", role: .cancel) {}
@@ -44,6 +48,8 @@ struct ProfileView: View {
                         info(title: "\(averageSleepDurationString)", subtitle: "Орт. ұйқы")
                     }
                 }.padding(.vertical, 32)
+
+                // Notifications permission
                 if sleepTimeViewModel.notificationPermissionGranted != true {
                     Button {
                         sleepTimeViewModel.openAppSettings()
@@ -77,13 +83,22 @@ struct ProfileView: View {
                         }
                         .padding(.vertical, 11)
                         .padding(.horizontal, 16)
-                        .background {
-                            Color.backgroundDeepNavy
-                        }
-                        .cornerRadius(16)
+                        .modify({ view in
+                            if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
+                            } else {
+                                view
+                                    .background {
+                                        Color.backgroundDeepNavy
+                                    }
+                                    .cornerRadius(16)
+                            }
+                        })
                         .contentShape(Rectangle())
                     }
                 }
+
+                // Alarm permission (iOS 26+)
                 if #available(iOS 26.0, *), sleepTimeViewModel.alarmPermissionGranted != true {
                     Button {
                         sleepTimeViewModel.openAppSettings()
@@ -117,39 +132,25 @@ struct ProfileView: View {
                         }
                         .padding(.vertical, 11)
                         .padding(.horizontal, 16)
-                        .background {
-                            Color.backgroundDeepNavy
-                        }
-                        .cornerRadius(16)
+                        .modify({ view in
+                            if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
+                            } else {
+                                view
+                                    .background {
+                                        Color.backgroundDeepNavy
+                                    }
+                                    .cornerRadius(16)
+                            }
+                        })
                         .contentShape(Rectangle())
                     }
                 }
-                Button {
-                    sleepTimeViewModel.openSettings(state: .sleep)
-                } label: {
-                    HStack {
-                        HStack(spacing: 8) {
-                            Image(systemName: "gear")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                            Text("Ұйқы баптаулары")
-                                .font(.footnote.weight(.semibold))
-                        }
-                        .foregroundColor(.textSoftWhite)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .foregroundColor(.textSoftWhite)
-                    .padding(.vertical, 11)
-                    .padding(.horizontal, 16)
-                    .background {
-                        Color.backgroundDeepNavy
-                    }
-                    .cornerRadius(16)
-                    .contentShape(Rectangle())
+                VStack(spacing: 12) {
+                    sleepSettingsCell
+                    glassEffectToggle
                 }
+                // Glass effect toggle
             }
             .padding(.top, 16)
             .padding(.bottom, 16)
@@ -199,4 +200,71 @@ struct ProfileView: View {
             Text(subtitle).font(.caption.weight(.medium)).foregroundColor(Color.textLightGray)
         }
     }
+    
+    private var sleepSettingsCell: some View {
+        HStack {
+            HStack(spacing: 8) {
+                Image(systemName: "gear")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
+                Text("Ұйқы баптаулары")
+                    .font(.footnote.weight(.semibold))
+            }
+            .foregroundColor(.textSoftWhite)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+        }
+        .foregroundColor(.textSoftWhite)
+        .frame(height: 44)
+        .padding(.horizontal, 16)
+        .modify({ view in
+            if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
+            } else {
+                view
+                    .background {
+                        Color.backgroundDeepNavy
+                    }
+                    .cornerRadius(16)
+            }
+        })
+        .contentShape(Rectangle())
+        .onTapGesture {
+            sleepTimeViewModel.openSettings(state: .sleep)
+        }
+    }
+    
+    private var glassEffectToggle: some View {
+        HStack {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 18, height: 18)
+                Text("Шыны эффектісі")
+                    .font(.footnote.weight(.semibold))
+            }
+            .foregroundColor(.textSoftWhite)
+            Spacer()
+            Toggle("", isOn: $appState.isGlassEffectEnabled)
+                .labelsHidden()
+        }
+        .frame(height: 44)
+        .padding(.horizontal, 16)
+        .modify({ view in
+            if #available(iOS 26, *), appState.isGlassEffectEnabled {
+                view.glassEffect(.clear, in: RoundedRectangle(cornerRadius: 16))
+            } else {
+                view
+                    .background {
+                        Color.backgroundDeepNavy
+                    }
+                    .cornerRadius(16)
+            }
+        })
+        .contentShape(Rectangle())
+    }
 }
+

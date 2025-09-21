@@ -189,7 +189,7 @@ struct AddSleepLogPage: View {
                     .multilineTextAlignment(.center)
             }
             Spacer()
-            Button {
+            DefaultButtonView(title: "Сақтау") {
                 let sleep = Time(
                     hour: Calendar.current.component(.hour, from: sleepTime),
                     minute: Calendar.current.component(.minute, from: sleepTime)
@@ -217,8 +217,6 @@ struct AddSleepLogPage: View {
                         }
                     }
                 }
-            } label: {
-                DefaultButtonView(title: "Сақтау")
             }
             .padding(.top, 16)
         }

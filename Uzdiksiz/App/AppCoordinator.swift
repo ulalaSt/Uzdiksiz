@@ -102,7 +102,9 @@ final class AppCoordinator: NSObject, SettingsNavigator, SleepReportsNavigator {
     }
     
     func openSettings(state: SleepSettingsState) {
-        let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: sleepTimeViewModel))
+        let viewController = UIHostingController(rootView: SleepSettingsPage(state: state, viewModel: sleepTimeViewModel, onDismiss: { [weak self] in
+            self?.navigationController.setNavigationBarHidden(true, animated: false)
+        }))
         navigationController.pushViewController(viewController, animated: true)
         navigationController.setNavigationBarHidden(true, animated: false)
         navigationController.setNavigationBarHidden(false, animated: false)

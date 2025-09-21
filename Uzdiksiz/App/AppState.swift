@@ -13,6 +13,9 @@ final class AppState: ObservableObject {
     let storage: AppStorage
 
     @Published
+    var isGlassEffectEnabled: Bool
+
+    @Published
     var hasCompletedOnboarding: Bool
 
     @Published
@@ -52,6 +55,7 @@ final class AppState: ObservableObject {
         
     private init(storage: AppStorage) {
         self.storage = storage
+        self.isGlassEffectEnabled = storage.isGlassEffectEnabled
         self.hasCompletedOnboarding = storage.hasCompletedOnboarding
         self.hasCompletedInfoSections = storage.hasCompletedInfoSections
         self.sleepTime = storage.sleepTime
@@ -64,6 +68,11 @@ final class AppState: ObservableObject {
         self.notificationIsPermitted = false
         self.alarmIsPermitted = false
         self.snoozeAlarmDate = storage.snoozeAlarmDate
+
+        $isGlassEffectEnabled.sink {
+            storage.isGlassEffectEnabled = $0
+        }.store(in: &cancellables)
+
         $hasCompletedOnboarding.sink {
             storage.hasCompletedOnboarding = $0
         }.store(in: &cancellables)

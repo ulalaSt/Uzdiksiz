@@ -51,11 +51,9 @@ struct LoginView: View {
                         .font(.system(size: 12, weight: .medium))
                         .multilineTextAlignment(.center)
                 }
-                Button {
+                DefaultButtonView(title: state.title, isLoading: authViewModel.user.isLoading) {
                     textfieldState = nil
                     auth()
-                } label: {
-                    DefaultButtonView(title: state.title, isLoading: authViewModel.user.isLoading)
                 }
                 HStack(spacing: 16) {
                     Rectangle().fill(Color(red: 237/255, green: 241/255, blue: 243/255))

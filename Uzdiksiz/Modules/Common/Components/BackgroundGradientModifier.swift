@@ -9,17 +9,33 @@ import SwiftUI
 
 struct BackgroundGradientModifier: ViewModifier {
     var edges: Edge.Set = .all  // default to all edges
+    @StateObject private var appState = AppState.shared
 
     func body(content: Content) -> some View {
-        content
-            .background(
-                LinearGradient(
-                    colors: [.backgroundDeepNavy, .backgroundMidnightBlue],
-                    startPoint: .top,
-                    endPoint: .bottom
+        if #available(iOS 26, *), appState.isGlassEffectEnabled {
+            content
+                .background(
+                    Color.backgroundMidnightBlue.opacity(0.7)
+                        .ignoresSafeArea(edges: edges) // respect the edges parameter
                 )
-                .ignoresSafeArea(edges: edges) // respect the edges parameter
-            )
+                .background(
+                    Image("apple_bg")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea(edges: edges) // respect the edges parameter
+                )
+
+        } else {
+            content
+                .background(
+                    LinearGradient(
+                        colors: [.backgroundDeepNavy, .backgroundMidnightBlue],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea(edges: edges) // respect the edges parameter
+                )
+        }
     }
 }
 
@@ -28,3 +44,4 @@ extension View {
         self.modifier(BackgroundGradientModifier(edges: edges))
     }
 }
+

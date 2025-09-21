@@ -13,6 +13,7 @@ struct SleepSettingsPage: View {
     @State var wakeTimeDate: Date
     @State private var showAdvanceSheet = false
     @Environment(\.dismiss) var dismiss
+    var onDismiss: () -> Void
     var wakeTime: Time {
         convertToTime(wakeTimeDate)
     }
@@ -23,11 +24,12 @@ struct SleepSettingsPage: View {
     
     @ObservedObject var viewModel: SleepTimeViewModel
     
-    init(state: SleepSettingsState, viewModel: SleepTimeViewModel) {
+    init(state: SleepSettingsState, viewModel: SleepTimeViewModel, onDismiss: @escaping () -> Void) {
         self.state = state
         self.sleepTimeDate = viewModel.sleepTime.nextDate
         self.wakeTimeDate = viewModel.wakeTime.nextDate
         self.viewModel = viewModel
+        self.onDismiss = onDismiss
     }
     
     var isAlarmGranted: Bool {
@@ -67,6 +69,7 @@ struct SleepSettingsPage: View {
             }
             ToolbarItem(placement: .topBarLeading) {
                 Button {
+                    onDismiss()
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")

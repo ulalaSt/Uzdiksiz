@@ -82,10 +82,8 @@ struct LogSleepView: View {
                 Text(error).foregroundColor(.red)
             }
 
-            Button {
+            DefaultButtonView(title: "Сақтау") {
                 saveLog()
-            } label: {
-                DefaultButtonView(title: "Сақтау")
             }
         }
         .padding(16)

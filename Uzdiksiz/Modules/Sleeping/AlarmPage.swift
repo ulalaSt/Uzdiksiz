@@ -43,12 +43,10 @@ struct AlarmPage: View {
                 .padding(32)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             VStack(spacing: 10) {
-                Button {
+                DefaultButtonView(title: "5 минутқа жылжыту", state: .secondary) {
                     timeViewModel.snooze()
-                } label: {
-                    DefaultButtonView(title: "5 минутқа жылжыту", state: .secondary)
                 }
-                Button {
+                DefaultButtonView(title: "Ояндым", isLoading: isLoading, state: .primary) {
                     isLoading = true
                     Task {
                         do {
@@ -58,8 +56,6 @@ struct AlarmPage: View {
                         }
                         timeViewModel.turnOffAlarm()
                     }
-                } label: {
-                    DefaultButtonView(title: "Ояндым", isLoading: isLoading, state: .primary)
                 }
 //                Text("Ояну үшін басыңыз")
 //                    .font(.body.weight(.medium))

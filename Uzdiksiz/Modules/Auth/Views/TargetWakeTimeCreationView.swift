@@ -37,14 +37,13 @@ struct TargetWakeTimeCreationView: View {
             .colorScheme(.dark)
             .datePickerStyle(.wheel)
             Spacer()
-            Button {
+            DefaultButtonView(title: "Ояну уақытын сақтау") {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "HH:mm"
                 let timeString = formatter.string(from: selectedTime)
                 viewModel.saveExpectedWakeTime(timeString)
-            } label: {
-                DefaultButtonView(title: "Ояну уақытын сақтау")
             }
+
         }
         .padding(24)
     }

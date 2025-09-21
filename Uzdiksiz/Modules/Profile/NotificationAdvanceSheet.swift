@@ -70,11 +70,9 @@ struct NotificationAdvanceSheet: View {
             .padding(.vertical, 16)
             .colorScheme(.dark)
             .environment(\.colorScheme, .dark)
-            Button {
+            DefaultButtonView(title: "Сақтау", state: .primary) {
                 remindInAdvance = Time(hour: tempHour, minute: tempMinute)
                 dismiss()
-            } label: {
-                DefaultButtonView(title: "Сақтау", state: .primary)
             }
             .frame(maxWidth: .infinity)
             Spacer()

@@ -63,7 +63,7 @@ struct OnboardingPage: View {
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: showPage ? .always : .never))
                 .toolbar(.hidden, for: .tabBar)
                 if showPage {
-                    Button {
+                    DefaultButtonView(title: buttonTitle, state: state == .welcome ? .primary : .secondary) {
                         switch state {
                         case .welcome:
                             withAnimation {
@@ -80,8 +80,6 @@ struct OnboardingPage: View {
                         case .areyouready:
                             onFinish()
                         }
-                    } label: {
-                        DefaultButtonView(title: buttonTitle, state: state == .welcome ? .primary : .secondary)
                     }
                     .padding(.bottom, 32)
                     .padding(.horizontal, 32)

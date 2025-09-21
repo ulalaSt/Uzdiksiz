@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomePage: View {
     @ObservedObject var viewModel: SleepTimeViewModel
+    @StateObject private var appState = AppState.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -16,23 +17,19 @@ struct HomePage: View {
                 .font(.title3.weight(.bold))
                 .foregroundColor(.textLightGray)
             HStack(spacing: 16) {
-                Button {
-                    viewModel.openSettings(state: .sleep)
-                } label: {
-                    button(title: "Ұйқы", titleIcon: "bed.double.fill", titleIconColor: .accentBrightViolet, mainInfo: viewModel.sleepTime.toString(), description: viewModel.timeLeft(for: .sleep).toString(isDiff: true))
-                }
-                Button {
-                    viewModel.openSettings(state: .wake)
-                } label: {
-                    button(title: "Оятқыш", titleIcon: "alarm.fill", titleIconColor: .colorsYellow, mainInfo: viewModel.wakeTime.toString(), description: viewModel.timeLeft(for: .wake).toString(isDiff: true))
-                }
+                button(title: "Ұйқы", titleIcon: "bed.double.fill", titleIconColor: .accentBrightViolet, mainInfo: viewModel.sleepTime.toString(), description: viewModel.sleepTime.timeRemainingString ?? "Уақыт өтті")
+                    .onTapGesture {
+                        viewModel.openSettings(state: .sleep)
+                    }
+                button(title: "Оятқыш", titleIcon: "alarm.fill", titleIconColor: .colorsYellow, mainInfo: viewModel.wakeTime.toString(), description: viewModel.wakeTime.timeRemainingString ?? "Уақыт өтті")
+                    .onTapGesture {
+                        viewModel.openSettings(state: .wake)
+                    }
             }
             SleepCircleView(sleepTime: viewModel.sleepTimeBinding, wakeTime: viewModel.wakeTimeBinding)
             Spacer()
-            Button {
+            DefaultButtonView(title: "Қазір ұйықтау") {
                 viewModel.startSleep()
-            } label: {
-                DefaultButtonView(title: "Қазір ұйықтау")
             }
         }
         .padding(.horizontal, 24)
@@ -69,7 +66,16 @@ struct HomePage: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.backgroundDeepNavy)
-        .cornerRadius(12)
+        .contentShape(Rectangle())
+        .modify({ view in
+            if #available(iOS 26.0, *), appState.isGlassEffectEnabled {
+                view.glassEffect(.clear.interactive(), in: .rect(cornerRadius: 12))
+            } else {
+                view
+                    .background(Color.backgroundDeepNavy)
+                    .cornerRadius(12)
+            }
+        })
     }
 }
+
